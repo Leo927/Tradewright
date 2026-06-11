@@ -33,6 +33,26 @@ give veterans a reason to re-run every format that drops them. The third deferre
 (lockout-cadence seasonal trials) stays deferred — this spec amends 003's deferral decision
 for these two features only.
 
+## Clarifications
+
+### Session 2026-06-11
+
+- Q: Should relics be tradable or bound to the character that earned them? → A: Fully
+  tradable — relics follow the all-goods-trade norm (002 FR-123); no bound item class
+  exists in Tradewright.
+- Q: Can a character hold duplicate copies of the same relic (earned plus bought)? → A: One
+  copy at a time — acquiring an owned relic via trade is blocked with explanation; the source
+  pays each character at most once ever; after selling, the market remains a path back.
+- Q: How many weekly fixed-seed expedition attempts count toward the depth leaderboard? → A:
+  Unlimited attempts; the character's best depth that week posts to the leaderboard.
+- Q: Can a dissenting member exit individually at a landing when the leader calls descend? →
+  A: Yes — any member may opt out during the ready-check, banking their personal pool share;
+  the rest descend with party-size scaling adjusted. Mid-floor abandonment still forfeits the
+  unbanked share.
+- Q: Do descents have a finite bottom floor or are they unbounded? → A: Unbounded — no
+  authored final floor; pools remix indefinitely by seed and the climbing difficulty curve is
+  the practical limit; depth records and leaderboards are open-ended.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Chase and Equip a Relic (Priority: P1)
@@ -50,7 +70,8 @@ build."
 
 **Independent Test**: Seed one relic with a mettle-trial source; a test player completes the
 source, receives the relic exactly once, equips it, and combat logs show the signature
-modifier's stated effect; a second copy can never be obtained.
+modifier's stated effect; the source never pays a second copy, and a market purchase of an
+already-owned relic is blocked.
 
 **Acceptance Scenarios**:
 
@@ -69,9 +90,10 @@ modifier's stated effect; a second copy can never be obtained.
 5. **Given** a player who completes a source whose relic they already own, **When** the reward
    resolves, **Then** they receive the disclosed duplicate compensation (materials/coin)
    instead of a second copy.
-6. **Given** any relic, **When** the player attempts to list, escrow, or ship it, **Then** the
-   game explains that relics are bound to the character — and this bound status was visible in
-   the compendium before they ever pursued it.
+6. **Given** an owned relic, **When** the player lists, escrows, or ships it, **Then** it
+   trades under the standard trade rules like any other gear, carrying its awakening state
+   (unsealed slots and locked modifiers) with it, and the compendium updates both characters'
+   ownership state.
 
 ---
 
@@ -139,7 +161,9 @@ durability/recovery costs.
    accumulate in the staked venture pool.
 3. **Given** a cleared floor, **When** the party reaches the landing, **Then** the leader
    calls withdraw or descend after a ready-check, with the pool's current value and the next
-   floor's multiplier and difficulty both shown before the choice.
+   floor's multiplier and difficulty both shown before the choice; during the ready-check any
+   member may instead opt out individually, banking their personal pool share, while the rest
+   descend at adjusted party-size scaling.
 4. **Given** a withdraw decision, **Then** the run ends, the venture pool pays out in full to
    every member (personal rolls), and the descent's depth is recorded.
 5. **Given** a party wipe mid-floor, **Then** the run ends keeping all base haul, the unbanked
@@ -194,16 +218,20 @@ records depth with no material rewards attached.
 - Member leaves permanently mid-descent → AI holds until the landing; at landings the leader
   may backfill via the group board (003 FR-224); the joiner shares pool payouts only from
   floors they were present for.
+- Member opts out at a landing → exits with their personal pool share paid in full; the
+  remaining party descends at adjusted scaling. Only mid-floor abandonment forfeits the
+  unbanked share — the landing is always a safe personal exit.
 - Leader disconnects at a landing decision → leadership auto-transfers after the grace window
   (003 FR-224); the run is never stuck.
 - Duplicate relic from any source (including delve milestones) → disclosed compensation in
-  materials/coin; a character can never hold two copies.
+  materials/coin; a character can never hold two copies — a trade that would deliver an
+  owned relic is blocked with explanation before any payment.
 - Relic whose signature modifier targets a school the player respecs or swaps away from →
   modifier goes inert and is flagged in the loadout (002 inert-rule pattern), never an error.
 - Relic equipped when its category's equip limit would be exceeded by a loadout import/swap →
   blocked with explanation and a one-tap swap path.
-- Attempt to trade, escrow, or ship a relic → clearly messaged as bound; awakening and
-  delve-exclusive materials trade normally.
+- Trading, escrowing, or shipping a relic → behaves as any other gear item; the awakening
+  state travels with the item; awakening and delve-exclusive materials trade normally.
 - V1 (solo version) → delves fully playable solo with scaling; relics with multiplayer-only
   sources are visible in the compendium and honestly labeled, never silently absent
   (003 FR-262 pattern).
@@ -231,16 +259,20 @@ records depth with no material rewards attached.
   never a silent failure.
 - **FR-303**: Every relic MUST have a disclosed source in a challenge format (mettle trial,
   afflicted dungeon level, raid, world boss, invasion, or delve depth milestone), published
-  in a relic compendium visible to all players. A character acquires each relic at most once;
-  completing a source while owning its relic pays a disclosed duplicate compensation.
-  Relics are bound to the character: never tradable, escrowable, or shippable — the first
-  and only bound item class — and this status MUST be visible before pursuit. All materials
+  in a relic compendium visible to all players. A character earns each relic from its source
+  at most once; completing a source while owning its relic pays a disclosed duplicate
+  compensation. Relics are fully tradable, escrowable, and shippable like all other goods
+  (002 FR-123) — no bound item class exists — and a traded relic carries its awakening state
+  with it. A character MUST never hold more than one copy of the same relic: acquiring an
+  owned relic via trade is blocked with a clear explanation, and after selling, the market
+  remains a path back while the source never pays the same character twice. All materials
   related to relics (awakening, craft-mod) remain ordinary economy items.
 - **FR-304**: Relics MUST arrive dormant: signature modifier active, gear score fixed at the
   top of the relic's tier band (no gear-score roll — consistent with the crafted-gear
   determinism rule, 003 FR-270), remaining modifier slots sealed. Each relic MUST define an
   awakening track of disclosed steps (deed requirement + material cost per step) that unseal
-  slots; progress is permanent and per character.
+  slots; unsealed slots and locked modifiers are permanent item state that travels with the
+  relic on trade, while deed progress toward an incomplete step is per character.
 - **FR-305**: Unsealed relic slots MUST be filled by the player locking a chosen modifier
   through the established craft-mod mechanism (003 FR-271), with re-locking available at a
   disclosed material cost; the signature modifier MUST never be replaceable, removable, or
@@ -270,9 +302,12 @@ records depth with no material rewards attached.
   each landing the party chooses withdraw (run ends, staked rewards pay out) or descend
   (stake carries and grows); the choice is made by the leader after a ready-check, with the
   current pool value and the next floor's multiplier and difficulty disclosed before
-  deciding. The auto AI never chooses descend: a party with no live leader auto-withdraws at
-  the landing. Leadership transfer and landing-time backfill follow 003 FR-224; backfilled
-  members share pool payouts only from floors they were present for.
+  deciding. During the ready-check any member MAY individually opt out: they exit the run at
+  the landing, their personal pool share pays out in full, and the remaining party descends
+  with difficulty scaling adjusted to its new size — a member's stake is never risked by
+  another player's choice. The auto AI never chooses descend: a party with no live leader
+  auto-withdraws at the landing. Leadership transfer and landing-time backfill follow 003
+  FR-224; backfilled members share pool payouts only from floors they were present for.
 - **FR-313**: Delve rewards MUST flow in two disclosed streams: (a) base haul — XP, mastery,
   and standard loot from kills, banked instantly and never at risk; and (b) a venture bonus
   pool — delve-exclusive materials and gear rolls accumulated per cleared floor under a
@@ -283,11 +318,15 @@ records depth with no material rewards attached.
 - **FR-314**: Enemy strength and the bonus multiplier MUST scale with depth on disclosed,
   content-tunable curves; floor encounters use the challenge mechanic vocabulary
   (003 FR-201/202) with boss-grade floors at disclosed intervals; per-site personal-best
-  depth is recorded per character. Entry is never limited; the reward-side cap lever
-  (003 reserve policy) is the only supply-control contingency.
+  depth is recorded per character. Descents are unbounded: no authored final floor exists —
+  content pools remix indefinitely by seed and the climbing difficulty curve is the
+  practical limit, so depth records and leaderboards are open-ended. Entry is never limited;
+  the reward-side cap lever (003 reserve policy) is the only supply-control contingency.
 - **FR-315**: Each site MUST offer a weekly fixed-seed expedition alongside the random-seed
   mode: one shared seed per site per week, with a per-site, recognition-only depth
   leaderboard (titles/flair; no material rewards), consistent with 003's leaderboard policy.
+  Attempts at the weekly seed are unlimited (entry is never limited, FR-314); a character's
+  best depth that week is what posts to the leaderboard.
 - **FR-316**: Delves MUST carry their economic weight: delve-exclusive materials MUST be
   demanded by recipes (003 FR-260) and MUST be among the sources of craft-mod materials
   (003 FR-271); selected relic awakening tracks MUST demand delve materials so the two
@@ -302,13 +341,13 @@ records depth with no material rewards attached.
 
 ### Key Entities
 
-- **Relic**: A unique, named, character-bound gear item — tier, fixed top-of-band gear
-  score, permanent signature modifier, sealed/unsealed modifier slots, disclosed source,
-  awakening track, equip-limit category.
+- **Relic**: A unique, named, fully tradable gear item — tier, fixed top-of-band gear
+  score, permanent signature modifier, sealed/unsealed modifier slots (awakening state
+  travels with the item), disclosed source, awakening track, equip-limit category.
 - **Signature Modifier**: A relic-exclusive, build-defining modifier; never obtainable,
   replaceable, or removable elsewhere.
 - **Awakening Track**: Per-relic disclosed step sequence (deed + materials → unseal slot);
-  per-character permanent progress.
+  unsealed state is permanent item state, deed progress is per character.
 - **Relic Compendium**: The public catalog of all relics, sources, modifiers, and ownership
   state.
 - **Delve Site**: A regional location generating procedural descents from authored pools;
@@ -335,8 +374,9 @@ records depth with no material rewards attached.
 - **SC-303**: The trophy feeds the economy: 100% of awakening tracks require at least one
   market-tradable material, and relic-driven demand is observable in economy telemetry for
   every track's materials.
-- **SC-304**: Acquisition integrity: 0 audited cases of duplicate relic ownership, relic
-  trading, or a relic granted without its disclosed source being met.
+- **SC-304**: Acquisition integrity: 0 audited cases of a character holding two copies of
+  the same relic, of a relic granted by a source without its disclosed requirement being
+  met, or of a source paying the same character the relic more than once.
 - **SC-305**: Phone-fit descents: ≥ 90% of audited descents reach their first landing within
   10 minutes, and 100% of landings offer a working withdraw that pays the pool.
 - **SC-306**: The stake is tension, not ruin: 0 audited cases of any delve outcome costing
@@ -352,7 +392,7 @@ records depth with no material rewards attached.
 
 ## Scope Boundaries
 
-**In scope**: the relic gear tier (signature modifiers, equip limits, bound acquisition,
+**In scope**: the relic gear tier (signature modifiers, equip limits, tradable acquisition,
 duplicate compensation, compendium, awakening tracks, craft-mod slot locking); delve sites
 and procedural descents (1–3 players, floors/landings, withdraw-or-descend stakes, two-stream
 rewards, depth scaling, personal bests, weekly fixed-seed expeditions with recognition
@@ -383,13 +423,11 @@ across all 003 formats plus delve depth milestones; V1 solo delves and at least 
   system; this spec un-defers the unique gear tier and the procedural small-group mode.
   Seasonal lockout trials remain deferred. 003's Out of Scope note stands as historical
   record.
-- **Bound relics are a conscious default**: the inspiration's unique tier was non-tradable,
-  and binding preserves the "earned, not bought" identity of a build-defining trophy in a
-  game where everything else is purchasable. This introduces Tradewright's first bound item
-  class — a deliberate divergence from the all-goods-trade norm (002 FR-123), kept narrow:
-  exactly one item class, with all surrounding materials fully tradable so the economy still
-  participates in every chase. If review prefers tradable relics, the change is isolated to
-  FR-303. This is the top candidate for `/speckit-clarify`.
+- **Tradable relics (clarified 2026-06-11)**: the inspiration's unique tier was non-tradable,
+  but review chose to keep relics inside the all-goods-trade norm (002 FR-123) rather than
+  introduce a bound item class. Tradewright therefore has no bound items: the trophy identity
+  is carried by the disclosed source and the compendium's provenance, not by binding, and the
+  market becomes an additional legitimate path to any relic.
 - **Extraction redesign rationale**: the inspiration's mode risked the run's collected loot
   on failure. Tradewright splits rewards into an untouchable base stream and a staked bonus
   stream that is never "owned" until banked, so the push-or-bank decision survives while
