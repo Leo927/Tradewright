@@ -1,22 +1,20 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.1.0 → 1.2.0 (MINOR — Development Workflow materially expanded)
-Modified principles: none
+Version change: 1.2.0 → 1.3.0 (MINOR — new principle added)
+Modified principles: none renamed or redefined
 Added sections:
-  - Development Workflow: mandatory commit-and-push rule (every completed unit
-    of work is committed with a descriptive message and pushed immediately)
+  - Core Principle VII. UI Design Fidelity (implementation follows the UI design
+    artifact faithfully; deviations update the design first)
+  - Quality Gate 6 — Design fidelity
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — Constitution Check version reference
-    updated to v1.2.0 (no new plan-time gate: commit/push is a workflow rule,
-    not a design constraint)
-  ✅ .specify/templates/tasks-template.md — no change needed (already instructs
-    "Commit after each task or logical group")
+  ✅ .specify/templates/plan-template.md — version reference updated to v1.3.0;
+    new Constitution Check gate: UI work identifies its design artifact
+  ✅ .specify/templates/tasks-template.md — no change needed
   ✅ .specify/templates/spec-template.md — no change needed
   ⚠ README.md / docs/quickstart.md — do not exist yet; document local test commands when created
-Follow-up TODOs: repository has no git remote yet — pushes are blocked until one
-  is configured (e.g., gh repo create / git remote add origin)
+Follow-up TODOs: none
 -->
 
 # TradeWright Constitution
@@ -132,6 +130,29 @@ than none.
 them for genuinely non-inferable knowledge keeps the ones that remain
 trustworthy and the code as the single source of truth.
 
+### VII. UI Design Fidelity
+
+UI implementation MUST follow the UI design faithfully. When a design artifact
+exists for a screen or flow — mockup, wireframe, design spec, design tokens —
+the implementation MUST match its layout, spacing, typography, colors, labels,
+component states, and interaction behavior. Implementers MUST NOT improvise
+visual or interaction changes during implementation.
+
+- The design artifact is the source of truth for UI work. Per Principle IV it
+  lives with authored content, not inside implementation code.
+- If a design proves impractical, ambiguous, or incomplete during
+  implementation, the design artifact MUST be updated (or the deviation
+  explicitly signed off and recorded in the feature's spec/plan) BEFORE the
+  divergent implementation merges. Silent drift is a constitution violation.
+- Playwright tests for a flow SHOULD assert the design-driven properties that
+  define it (structure, labels, visible states), so fidelity regressions fail
+  CI rather than waiting for a human to notice.
+
+**Rationale**: When implementation silently diverges, design artifacts stop
+being trustworthy and every review becomes a matter of opinion. Keeping design
+as the single source of truth extends the authoring/implementation separation
+(Principle IV) to the visual layer.
+
 ## Quality Gates & Testing Standards
 
 These gates apply to every pull request:
@@ -151,6 +172,9 @@ These gates apply to every pull request:
 - **Gate 5 — Comment discipline**: New/changed code contains no comments that
   restate the code, narrate changes, or address reviewers; remaining comments
   state non-inferable constraints or rationale only.
+- **Gate 6 — Design fidelity**: UI changes match the referenced design
+  artifact; any deviation is reflected in an updated design artifact or a
+  recorded sign-off before merge.
 
 Playwright tests MUST be deterministic: no arbitrary sleeps, use web-first
 assertions and test fixtures. Flaky tests are fixed or quarantined with a
@@ -193,4 +217,4 @@ constitution wins.
   principles above. Every PR review verifies the Quality Gates. Deviations
   MUST be justified in the plan's Complexity Tracking table or rejected.
 
-**Version**: 1.2.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11
+**Version**: 1.3.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11

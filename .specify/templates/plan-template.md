@@ -40,7 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` (v1.2.0):
+Gates derived from `.specify/memory/constitution.md` (v1.3.0):
 
 - [ ] **Test-First Quality (I)**: Plan includes unit test tasks for all new/changed
   logic and Playwright E2E tasks for all new/changed user-facing flows. Tests are
@@ -56,6 +56,9 @@ Gates derived from `.specify/memory/constitution.md` (v1.2.0):
 - [ ] **GUI–Logic Boundary (V)**: GUI and logic communicate only through the
   defined serializable contract interface; logic has no GUI/DOM/framework
   dependencies and could move to a separate server without GUI changes.
+- [ ] **UI Design Fidelity (VII)**: Each UI story/flow in the plan identifies
+  the design artifact it implements; implementation tasks reference it and do
+  not deviate without a recorded design update or sign-off.
 
 Violations MUST be justified in Complexity Tracking below or the plan reworked.
 
