@@ -31,9 +31,15 @@
 
 ## Notes
 
+- Revised 2026-06-11 per user direction: New World-style build depth (active abilities/magic,
+  mastery + two-branch perk trees, respec) is IN scope; only action-based execution (aiming,
+  dodging, reflex input) is removed. Tactics rules are the automation replacement; optional
+  tap-to-cast must never beat what tactics can express (FR-166/SC-108). Re-validated: all
+  items still pass.
 - Zero [NEEDS CLARIFICATION] markers. Scope-significant defaults documented in Assumptions:
-  combat occupies the single activity slot; no-death retreat model; PvP and group combat out of
-  scope. Revisit via `/speckit-clarify` if any default is wrong.
+  combat occupies the single activity slot; no-death retreat model; 2 schools/3 ability slots
+  at launch; PvP and group combat out of scope. Revisit via `/speckit-clarify` if any default
+  is wrong.
 - This spec supersedes 001's blanket combat exclusion (001 scope boundary updated in the same
   change); 001's permanent exclusion of action/dexterity gameplay remains binding.
 - FR numbering starts at FR-101 to avoid collision with 001's FR-001..062 — cross-references
