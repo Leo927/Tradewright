@@ -314,6 +314,13 @@ arbitrage (buy low → ship → sell high) yields the predicted profit after tax
 - **FR-051**: All taxes and fees MUST be sinks (coin leaves the player economy) in Phase 1.
 - **FR-052**: Every economic mutation (trade, fee, tax, caravan loss, production) MUST be recorded
   so a player's coin and item history is auditable in their transaction log.
+- **FR-053**: The economy MUST include authored coin faucets — points where coin enters the
+  player economy (e.g., NPC trader purchases on settlement order books) — alongside the sinks
+  of FR-051; player-to-player trade alone is zero-sum and is not a faucet. Faucet and sink
+  rates MUST be content-tunable, and aggregate faucet/sink flows MUST be observable via
+  economy telemetry so monetary imbalance (inflation or deflation) is detectable and
+  correctable without code changes. (New World's November 2021 deflation/barter crisis —
+  endgame sinks outpacing faucets — is the motivating failure case.)
 
 **Presentation & Platform**
 
@@ -409,7 +416,18 @@ currency, transaction history, phone-first UI.
   Exact counts are content decisions, not code constraints.
 - **Structure porting**: recipe tree shapes, refining input:output ratio patterns, and tier
   progression structure follow New World's publicly documented trade-skill systems; every name,
-  item, location, and text string is original.
+  item, location, and text string is original. Caravan logistics are original to Tradewright —
+  New World never had caravans (goods moved on encumbered characters); the "fused with New
+  World's economy systems" framing covers markets, crafting interdependence, and territory,
+  not hauling.
+- **Localized markets are a conscious divergence, not a port**: New World launched with
+  per-settlement trading posts and unified them into a single global market on 2021-11-18
+  (Update 1.1) after localization produced fragmented liquidity, dead towns, and unrewarded
+  hauling tedium — New World: Aeternum (2024) has one global market. Tradewright keeps
+  localization deliberately because each documented failure cause is answered structurally:
+  NPC traders floor liquidity in every settlement (research R4), hauling is rewarded
+  progression gameplay (FR-040–045) rather than unpaid travel, and asymmetric resources
+  (FR-030) guarantee price spreads worth playing. SC-007 is the live health check on this bet.
 - **Caravan durations**: routes run roughly 2–6 hours for caravans; personal travel is materially
   shorter (minutes to tens of minutes). Values are content-tunable per route.
 - **Risk model**: route risk is a disclosed probability of losing a fraction of cargo, resolved

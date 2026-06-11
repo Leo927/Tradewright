@@ -186,3 +186,15 @@ targets (SC-006, SC-007 budgets).
 Game mechanics are not copyrightable; expression (names, text, art, exact data tables) is.
 Original numbers tuned to our own success criteria are both safer and better-balanced for an
 idle game with different session patterns than an MMO.
+
+**Audit addendum (2026-06-11)**: New World: Aeternum ended content development in October
+2025, was delisted on 2026-01-15, and its servers shut down on 2027-01-31. Two consequences:
+(1) the "publicly documented" systems this research cites will become unverifiable — the key
+references (trade-skill structures; trading-post history including the 2021-11-18 market
+globalization; the November 2021 deflation crisis; the entry-cap history) must be archived
+into `docs/reference/` while sources still exist; (2) New World is a *closed case study* —
+its post-launch reversals (market globalization, entry-cap oscillation, crafted gear-score
+RNG removal in 2023) are design evidence to mine, not just a feature catalog. The denylist
+in the content-schema contract extends beyond item/place names to the inspiration's
+feature/system names (e.g., "Soul Trial", "Mutator", "Outpost Rush", "Azoth", "Aeternum")
+after the audit found spec 003's original draft reusing "soul trials" as a format name.

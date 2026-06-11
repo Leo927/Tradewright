@@ -515,13 +515,19 @@ combat-material economy integration; phone-first combat UI.
   its blanket exclusion of combat is superseded).
 - PvP combat of any kind (decided 2026-06-11: Tradewright is PvE-only; territory contests stay
   economic).
-- Challenge and group combat content — solo boss trials, dungeons, mutated tiers, raids,
-  invasions, elite zones, world events, world bosses — specified separately in
+- Challenge and group combat content — solo boss trials (mettle trials), dungeons, afflicted
+  difficulty tiers, raids, invasions, elite zones, world events, world bosses — specified
+  separately in
   [spec 003](../003-challenge-group-combat/spec.md), which builds on this spec's control modes
   (FR-180–184).
 - Combat's role in Phase 2 territory contests (stays economic per 001 unless a Phase 2 spec
   decides otherwise).
 - Pets, mercenaries, or multiple simultaneous expeditions per character.
+- Attribute systems and multi-school loadouts (2026-06-11 audit note): the inspiration pairs
+  each attribute threshold with both a combat and a trade-skill bonus — a natural cross-pillar
+  hook for a game whose whole thesis is fighter/producer/hauler interdependence — and allows
+  two equipped weapon schools with hot-swap. Both are recorded as future build-depth
+  candidates, deliberately not specified here.
 
 ## Assumptions
 

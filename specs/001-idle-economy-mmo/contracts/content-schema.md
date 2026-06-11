@@ -44,7 +44,10 @@ inputs/outputs→items, settlement→activities/npc-profile, route→settlements
 7. NPC sanity: priceBounds min× < 1 < max×; production and consumption rates nonzero for traded
    staples (markets can't flatline).
 8. Originality lint: name/description strings are checked against a denylist of inspiration-game
-   terms (New World / Ironwood / Melvor item and place names) to enforce FR-024 mechanically.
+   terms (New World / Ironwood / Melvor item and place names, plus their feature/system names —
+   e.g. "Soul Trial", "Mutator", "Outpost Rush", "Azoth", "Aeternum") to enforce FR-024
+   mechanically. (Denylist scope extended 2026-06-11 after the spec audit found a feature-name
+   collision in spec 003's draft.)
 
 ## Authoring rules
 

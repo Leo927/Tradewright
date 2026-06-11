@@ -39,4 +39,4 @@
   narrowed to standard content, scope boundary now points here.
 - FR numbering starts at FR-201 (001 uses 001–062, 002 uses 101–184).
 - Dependency: builds on 002 and 001; multiplayer formats require the online version (V2);
-  soul trials work in solo V1.
+  mettle trials (solo boss trials) work in solo V1.
