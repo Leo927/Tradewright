@@ -63,8 +63,8 @@ names (its solo bosses are literally called "Soul Trials"; its modifier system "
   concurrent contributors, with graceful soft-handling beyond it (overflow participants still
   earn contribution credit).
 - Q: What is the launch entry-limit policy for repeatable challenge content? → A: No limits at
-  launch — unlimited entries and full rewards every run; daily/weekly limits remain a
-  content-tunable lever applied only if economy telemetry shows exclusive-material oversupply.
+  launch — unlimited entries and full rewards every run. (Refined below: the held-in-reserve
+  lever is reward-side caps; entry is never limited.)
 - Q: What qualifies as "meaningful participation" for the guaranteed reward floor (FR-242)?
   → A: Contribution Record ≥ a disclosed percentage of the median contributor's score
   (launch default 10%, content-tunable) — AFK bystanders earn nothing; genuine low-power
@@ -110,6 +110,28 @@ names (its solo bosses are literally called "Soul Trials"; its modifier system "
 - Q: Do mettle trial completion ranks affect that run's rewards? → A: Yes — trial ranks use
   the same disclosed score-bracket mechanism as afflictions: the run's rank scales its payout
   on top of the trial's tier; personal-best ranks are recorded for recognition.
+- Q: How do world bosses relate to the inspiration's actual system (rotating limited-time
+  featured bosses, not persistent spawns)? → A: Adopt the rotating model — one featured
+  world boss per published multi-day window on a disclosed rotation; bosses are not all
+  persistently available.
+- Q: Which oversupply contingency lever does the spec hold in reserve? → A: Reward-side
+  caps — entry stays unlimited permanently; if economy telemetry shows exclusive-material
+  oversupply, the disclosed, content-tunable lever caps the exclusive-material/bonus
+  portion of rewards per day/week while base rewards stay full (the inspiration's
+  corrected late-life pattern). Entry caps are off the table.
+- Q: How is the invasion defense roster selected when signups exceed the 50-slot cap? → A:
+  Random draw at roster lock from all signups; non-drawn signups form an ordered waitlist
+  that backfills no-shows. (Phase 2 governance may later add a small reserved-pick block,
+  mirroring the inspiration's governor picks.)
+- Q: Should ladder progression require a minimum score bracket on the previous level, as
+  the inspiration did (Silver-or-better to unlock the next difficulty)? → A: No — keep
+  any-clear: any recorded clear of the previous level/trial unlocks the next; score
+  brackets affect payout only. A deliberate divergence from the inspiration's score-gated
+  ladder, favoring attendance-based progression.
+- Q: Should Tradewright include an analog of the inspiration's unique build-defining gear
+  tier (its "Artifacts" — equip-limited, unique perk, upgrade track)? → A: Defer — recorded
+  in Out of Scope as a consciously deferred inspiration feature; drop-exclusive modifiers
+  (FR-271) remain the launch chase items. Revisit once spec 002's build system is planned.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -253,8 +275,9 @@ The open world itself offers group-scale combat without dungeon scheduling: elit
 (regions whose enemies assume a full party — each engagement is isolated to one party, and a
 player without a party fights as a solo party of one), eruption events (timed incursions that
 pop up regionally and ask whoever is present to clear waves together, no party needed), and
-world bosses (massive enemies on published spawn windows that regional players gather to
-bring down, with contribution-based rewards).
+world bosses (massive enemies appearing on a disclosed rotation — one featured boss per
+published multi-day window — that regional players gather to bring down, with
+contribution-based rewards).
 
 **Why this priority**: Ambient togetherness — the world feels alive and social without
 scheduling. Lowest mechanical novelty (reuses auto/active combat on shared enemies).
@@ -275,9 +298,10 @@ the stated curve.
    region are notified, can join with one tap, fight in waves (auto or active), and earn
    contribution-scaled rewards when it resolves — including caravan-route effects while it
    rages (event regions raise route risk, tying the living world back to logistics).
-3. **Given** a world boss spawn window, **Then** it is published in advance on the region's
-   board; the fight supports many simultaneous contributors; rewards scale with contribution
-   with a guaranteed floor for any meaningful participation.
+3. **Given** the world-boss rotation, **Then** the current featured boss and its multi-day
+   window are published in advance on the region's board; the fight supports many
+   simultaneous contributors; rewards scale with contribution with a guaranteed floor for
+   any meaningful participation.
 
 ---
 
@@ -299,7 +323,9 @@ stated temporary degradation with a contribution-based repair path.
 **Acceptance Scenarios**:
 
 1. **Given** a scheduled invasion, **Then** the settlement's players see the warboard signup
-   with timing, roster limit, and station plan; signups commit to a slot.
+   with timing, roster limit, and station plan; signups commit to a slot, and if signups
+   exceed the roster cap the 50 defenders are drawn randomly at roster lock with the rest
+   waitlisted to backfill no-shows.
 2. **Given** the invasion running, **Then** defenders fight waves at their stations (auto or
    active), surge mechanics demand coordinated answers, and the defense's aggregate
    performance determines the outcome.
@@ -337,9 +363,10 @@ stated temporary degradation with a contribution-based repair path.
 - Player in a dungeon when the offline cap would hit → instanced group content runs in live
   sessions only; the cap question does not arise inside it (idle accrual is paused while in a
   live instance).
-- Reward farming by re-running → launch ships with no entry limits and full rewards every
-  run; daily/weekly limits exist as a content-tunable lever, applied per format only if
-  economy telemetry shows exclusive-material oversupply, and always disclosed up front.
+- Reward farming by re-running → entry is never limited; launch ships with full rewards
+  every run. If economy telemetry shows exclusive-material oversupply, the content-tunable
+  lever caps the exclusive-material/bonus portion of rewards per day/week (base rewards
+  stay full), applied per format and always disclosed up front.
 - V1 (solo version): mettle trials fully available; all multiplayer formats visibly labeled as
   online-version content, never silently absent.
 
@@ -424,7 +451,10 @@ stated temporary degradation with a contribution-based repair path.
 - **FR-241**: Eruption events MUST spawn on regional cadences, notify present players, scale
   within stated bounds to participation, pay contribution-scaled rewards, and raise affected
   caravan-route risk while active (logistics tie-in).
-- **FR-242**: World bosses MUST spawn on published windows, support a design target of ~50
+- **FR-242**: World bosses MUST run as a disclosed rotation — one featured boss per
+  published multi-day window (structure per the inspiration's 2025 world-boss events;
+  boss roster, window length, and cadence are content-tunable). Each featured boss MUST
+  be announced in advance on regional boards, support a design target of ~50
   concurrent contributors (overflow participants beyond the target still earn contribution
   credit — never silently uncredited), and reward by contribution with a guaranteed floor.
   The floor qualifies any participant whose Contribution Record is ≥ a disclosed percentage
@@ -438,7 +468,9 @@ stated temporary degradation with a contribution-based repair path.
   when full, an invasion is scheduled with stated advance notice (e.g., 48 hours) on the
   warboard. Invasions use warboard signups with station assignment (UI lanes) and resolve
   from aggregate defense performance. The defense roster is capped at 50 players at launch
-  (content-tunable), matching the FR-242 mass-combat concurrency target.
+  (content-tunable), matching the FR-242 mass-combat concurrency target. When signups
+  exceed the cap, the roster is drawn randomly from all signups at a disclosed roster-lock
+  time; non-drawn signups form an ordered waitlist that backfills no-shows at start.
 - **FR-251**: Defense failure consequences MUST be temporary, settlement-level, and repairable
   through contribution (materials, coin, labor) — never destruction of player property;
   success MUST grant settlement-wide benefits so non-fighters have a stake. Contribution
@@ -554,10 +586,14 @@ invasions with contribution repair; personal loot; format-exclusive economy mate
   station assignments; a chat decision belongs to a social spec).
 - Cross-server play, seasonal resets, or competitive seasons beyond weekly affliction boards.
 - Spectating, replays, or build-sharing portals (future quality-of-life).
-- Two inspiration PvE formats identified in the 2026-06-11 audit and consciously deferred:
+- Three inspiration features identified in the 2026-06-11 audits and consciously deferred:
   procedural small-group dungeons (the inspiration's late-life 3-player "Catacombs" mode — a
-  strong phone-session fit) and lockout-cadence seasonal trials. Both are candidates for a
-  future content spec; deferring them amends the "keep ALL PvE formats" input decision.
+  strong phone-session fit, though its extraction-style loot-loss-on-failure must be
+  redesigned to honor no-ruin (FR-204) if ever ported), lockout-cadence seasonal trials, and
+  a unique build-defining gear tier (the inspiration's "Artifacts": equip-limited unique
+  items with upgrade tracks — the marquee chase reward of its solo trials, raids, and world
+  bosses; revisit once 002's build system is planned). All are candidates for a future
+  content spec; deferring them amends the "keep ALL PvE formats" input decision.
 
 ## Assumptions
 
@@ -585,13 +621,26 @@ invasions with contribution repair; personal loot; format-exclusive economy mate
   feature/system names join the content denylist (001 content-schema, world-integrity test 8).
 - **Original extensions, honestly labeled**: the inspiration's solo trials were a flat
   once-per-day rotation of three endgame bosses; the tier ladder, prior-clear gating, and
-  score-bracket ranks here are Tradewright extensions, not ports. Likewise the threat-meter
-  invasion trigger and contribution repair are original analogs of its systems, not copies.
-- **Entry-limit divergence**: the inspiration ran entry caps (15 dungeon runs/day, 25 modified
-  runs/week, weekly trial lockouts) as its standard oversupply control for most of its life.
-  Tradewright deliberately inverts that default — uncapped at launch, caps held as a disclosed
-  content lever — accepting the burden of watching exclusive-material supply via economy
-  telemetry instead.
+  score-bracket ranks here are Tradewright extensions, not ports. The any-clear ladder gate
+  is a deliberate divergence: the inspiration required a minimum score rank on a level to
+  unlock the next; Tradewright unlocks on any recorded clear, with score brackets affecting
+  payout only. Likewise the threat-meter
+  invasion trigger and contribution repair are original analogs of its systems, not copies
+  (the inspiration's invasions were triggered by *neglected* corruption events; Tradewright
+  inverts this — settlement activity builds threat).
+- **World-boss rotation matches the source's real system**: the inspiration had no
+  persistent world bosses; its world-boss system (added mid-2025) ran one featured boss per
+  published multi-day window on rotation. FR-242 adopts that rotating structure (verified
+  2026-06-11 research); the contribution floor and ~50-target concurrency handling remain
+  Tradewright designs.
+- **Supply-control divergence, corrected against research (2026-06-11)**: the inspiration's
+  dungeon entry caps were 15 runs/day plus 25 modified runs/week, raised to 35/week in 2023;
+  its trials, raids, and world bosses never capped entry — only bonus loot (1–2 bonus
+  spoils/week, capped daily bonus boxes with weekly pity). Its trajectory moved away from
+  entry gating (tuning orbs removed 2022) toward uncapped entry with capped bonus rewards.
+  Tradewright adopts that end state from the start: entry is never limited; the
+  held-in-reserve, disclosed content lever is capping the exclusive-material/bonus portion
+  of rewards per day/week, triggered only by economy telemetry showing oversupply.
 - **The inspiration is a closed case study**: New World: Aeternum ended content development in
   October 2025, was delisted 2026-01-15, and shuts down 2027-01-31. Its documentation is
   archived per 001 research R12; its post-launch reversals (market globalization, entry-cap
