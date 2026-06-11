@@ -40,7 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` (v1.3.0):
+Gates derived from `.specify/memory/constitution.md` (v1.4.0):
 
 - [ ] **Test-First Quality (I)**: Plan includes unit test tasks for all new/changed
   logic and Playwright E2E tasks for all new/changed user-facing flows. Tests are
@@ -59,6 +59,10 @@ Gates derived from `.specify/memory/constitution.md` (v1.3.0):
 - [ ] **UI Design Fidelity (VII)**: Each UI story/flow in the plan identifies
   the design artifact it implements; implementation tasks reference it and do
   not deviate without a recorded design update or sign-off.
+- [ ] **Explorable UX (VIII)**: Each UI surface's design artifact states its
+  primary task and what is deferred to deeper layers; primary screens stay
+  clean, depth is reachable via visible affordances, primary actions are never
+  buried.
 
 Violations MUST be justified in Complexity Tracking below or the plan reworked.
 

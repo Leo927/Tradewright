@@ -1,18 +1,18 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.2.0 → 1.3.0 (MINOR — new principle added)
+Version change: 1.3.0 → 1.4.0 (MINOR — new principle added)
 Modified principles: none renamed or redefined
 Added sections:
-  - Core Principle VII. UI Design Fidelity (implementation follows the UI design
-    artifact faithfully; deviations update the design first)
-  - Quality Gate 6 — Design fidelity
+  - Core Principle VIII. Explorable UX — Progressive Disclosure (clean primary
+    surfaces, depth behind exploration, Apple HIG as touchstone)
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — version reference updated to v1.3.0;
-    new Constitution Check gate: UI work identifies its design artifact
+  ✅ .specify/templates/plan-template.md — version reference updated to v1.4.0;
+    new Constitution Check gate: UI surfaces declare primary task vs deferred depth
   ✅ .specify/templates/tasks-template.md — no change needed
-  ✅ .specify/templates/spec-template.md — no change needed
+  ✅ .specify/templates/spec-template.md — no change needed (principle VIII is
+    enforced at design/plan time; no new mandatory spec section)
   ⚠ README.md / docs/quickstart.md — do not exist yet; document local test commands when created
 Follow-up TODOs: none
 -->
@@ -153,6 +153,32 @@ being trustworthy and every review becomes a matter of opinion. Keeping design
 as the single source of truth extends the authoring/implementation separation
 (Principle IV) to the visual layer.
 
+### VIII. Explorable UX — Progressive Disclosure
+
+UX design MUST follow progressive disclosure in the spirit of Apple's design
+philosophy (clarity, deference, depth): nice and neat up front, with deep
+information discoverable behind exploration.
+
+- **Clean primary surfaces**: each screen presents only what its primary task
+  needs. A design that stacks advanced options, dense data, or secondary
+  actions onto the first screen MUST be reworked before implementation.
+- **Depth through exploration**: detailed information and advanced controls
+  live one level deeper — drill-downs, expansions, detail views — reached
+  through obvious affordances. Hidden MUST NOT mean undiscoverable: every
+  deeper layer is reachable from a visible, self-explanatory entry point.
+- **Never bury the primary action**: progressive disclosure applies to
+  secondary content only; the main task is always immediately actionable.
+- Every UI design artifact (per Principle VII) MUST state the surface's
+  primary task and list what is deliberately deferred to deeper layers, so
+  reviewers can check the split rather than guess it.
+- When a UX decision is contested, default to the simpler, calmer surface.
+
+**Rationale**: First impressions and day-to-day use happen on the primary
+surface; expert needs are occasional. Optimizing the surface for legibility
+and pushing depth behind exploration serves both without compromise, and
+stating the task/depth split in the design artifact makes "neat up front"
+reviewable instead of subjective.
+
 ## Quality Gates & Testing Standards
 
 These gates apply to every pull request:
@@ -217,4 +243,4 @@ constitution wins.
   principles above. Every PR review verifies the Quality Gates. Deviations
   MUST be justified in the plan's Complexity Tracking table or rejected.
 
-**Version**: 1.3.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11
+**Version**: 1.4.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11
