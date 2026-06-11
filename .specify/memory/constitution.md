@@ -1,18 +1,19 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.3.0 → 1.4.0 (MINOR — new principle added)
+Version change: 1.4.0 → 1.5.0 (MINOR — new principle added)
 Modified principles: none renamed or redefined
 Added sections:
-  - Core Principle VIII. Explorable UX — Progressive Disclosure (clean primary
-    surfaces, depth behind exploration, Apple HIG as touchstone)
+  - Core Principle IX. Latency-Tolerant Client (UI never blocks on server
+    round-trips; optimistic updates with reconciliation; contract designed
+    for asynchrony)
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — version reference updated to v1.4.0;
-    new Constitution Check gate: UI surfaces declare primary task vs deferred depth
+  ✅ .specify/templates/plan-template.md — version reference updated to v1.5.0;
+    new Constitution Check gate: interactions classified as local-immediate vs
+    server-confirmed, no blocking UI on round-trips
   ✅ .specify/templates/tasks-template.md — no change needed
-  ✅ .specify/templates/spec-template.md — no change needed (principle VIII is
-    enforced at design/plan time; no new mandatory spec section)
+  ✅ .specify/templates/spec-template.md — no change needed
   ⚠ README.md / docs/quickstart.md — do not exist yet; document local test commands when created
 Follow-up TODOs: none
 -->
@@ -179,6 +180,37 @@ and pushing depth behind exploration serves both without compromise, and
 stating the task/depth split in the design artifact makes "neat up front"
 reviewable instead of subjective.
 
+### IX. Latency-Tolerant Client
+
+Client-server architecture MUST be designed around user experience, not
+implementation convenience. The anti-pattern this principle forbids: every
+interaction silently waiting on a server round-trip before the UI reacts.
+
+- **Immediate feedback, always**: the UI MUST acknowledge every interaction
+  instantly — locally, without waiting for the network. No interaction may
+  leave the interface frozen or unresponsive pending a server reply.
+- **Optimistic by default**: where the client can predict the outcome
+  (validation it can run locally, state it already holds), it MUST apply the
+  change optimistically and reconcile when the server confirms. If the server
+  rejects, the client rolls back visibly and explains why — never silently.
+- **Honest pending states**: where the outcome genuinely requires the server
+  (authoritative results, data the client lacks), the UI shows an explicit
+  in-progress state scoped to that operation; unrelated interactions stay
+  responsive.
+- **The contract enables this**: the GUI–logic contract (Principle V) MUST be
+  asynchronous and support optimistic application + reconciliation — fire
+  commands without blocking, receive confirmations/corrections as events.
+  A contract that forces request-blocked interaction is a design defect even
+  while logic still runs in-process.
+- Designs and plans for interactive features MUST classify each interaction:
+  local-immediate, optimistic-with-reconciliation, or server-confirmed-with-
+  pending-state. "Blocks the UI" is not a permitted category.
+
+**Rationale**: Logic will move to a server (Principle V); if responsiveness
+is not designed into the contract now, every interaction inherits a round-trip
+when it does. Games where each button click waits on the server demonstrate
+the failure mode: technically correct, miserable to use.
+
 ## Quality Gates & Testing Standards
 
 These gates apply to every pull request:
@@ -243,4 +275,4 @@ constitution wins.
   principles above. Every PR review verifies the Quality Gates. Deviations
   MUST be justified in the plan's Complexity Tracking table or rejected.
 
-**Version**: 1.4.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11
+**Version**: 1.5.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11

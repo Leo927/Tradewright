@@ -40,7 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` (v1.4.0):
+Gates derived from `.specify/memory/constitution.md` (v1.5.0):
 
 - [ ] **Test-First Quality (I)**: Plan includes unit test tasks for all new/changed
   logic and Playwright E2E tasks for all new/changed user-facing flows. Tests are
@@ -63,6 +63,10 @@ Gates derived from `.specify/memory/constitution.md` (v1.4.0):
   primary task and what is deferred to deeper layers; primary screens stay
   clean, depth is reachable via visible affordances, primary actions are never
   buried.
+- [ ] **Latency-Tolerant Client (IX)**: Each interaction in the plan is
+  classified as local-immediate, optimistic-with-reconciliation, or
+  server-confirmed-with-pending-state; no interaction blocks the UI on a
+  round-trip, and the GUI–logic contract stays asynchronous.
 
 Violations MUST be justified in Complexity Tracking below or the plan reworked.
 
