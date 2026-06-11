@@ -385,7 +385,10 @@ currency, transaction history, phone-first UI.
 
 - Phase 2 territory control: companies/guilds, settlement ownership, player-set taxes, facility
   upgrades, war-effort contribution races.
-- Combat, action gameplay, or any real-time dexterity mechanics (excluded permanently by design).
+- Action gameplay and real-time dexterity mechanics (excluded permanently by design). Combat
+  itself is specified separately as UI-based, autoable combat in
+  [spec 002](../002-idle-auto-combat/spec.md), which supersedes this spec's original blanket
+  combat exclusion.
 - Monetization, purchases, or premium currency.
 - Player-to-player direct trading/gifting outside the market (prevents untracked transfers).
 - Chat or social systems beyond seeing market activity.
