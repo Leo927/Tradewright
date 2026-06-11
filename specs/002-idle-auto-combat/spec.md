@@ -26,6 +26,16 @@ timers, buffs/debuffs, and a combat log. Watching live, a player may tap a ready
 trigger it manually; automation must always be expressive enough that hands-off play loses
 nothing strategically. Offline, tactics run the show.
 
+Combat has **two control modes**. **Auto mode** is the default described above: the tactics AI
+runs everything, online or offline — this is how all farmable content (hunting grounds) plays.
+**Active mode** is live tactical control for designated challenge content (boss fights,
+dungeons, and the other formats specified in spec 003): the player drives the fight in real
+time — tapping abilities, provisions, and stance choices against boss mechanics — still with
+zero aiming, dodging, or reflex input; it is decision-making under time pressure, not
+execution skill. The simple auto AI remains available inside active encounters to cover easy
+stretches or a player who steps away. Challenge content is where active play may legitimately
+outperform automation; everyday content never requires it.
+
 Combat stays wired into the economy: gear and provisions are crafted goods, durability and
 repairs are sinks, respecs cost coin, and enemies drop combat-exclusive materials that recipes
 need. A fighter is a third viable playstyle next to producer and hauler.
@@ -383,6 +393,23 @@ tier 1.
 - **FR-174**: Gear MAY carry perk modifiers (content-defined) that interact with school
   abilities and passives; equipped gear perks apply only while durability > 0.
 
+**Control Modes (Auto / Active)**
+
+- **FR-180**: All standard hunting-ground content MUST be fully completable in auto mode
+  (tactics AI), online and offline; active control is never required for it.
+- **FR-181**: Designated challenge content (defined in spec 003: boss fights, dungeons, and
+  related formats) MUST support active mode: live, real-time tactical control where the player
+  triggers abilities, provisions, and stance choices directly — with no aiming, dodging,
+  movement, or reflex mechanics; all inputs are discrete UI choices on visible timers.
+- **FR-182**: Within an active-mode encounter, the player MUST be able to toggle the auto AI on
+  at any time (per ability or wholesale); the AI runs the configured tactics until the player
+  retakes control. Stepping away never voids the encounter — the AI fights on at its level.
+- **FR-183**: Active mode MAY outperform the auto AI on challenge content (that is its point);
+  the tactics-parity guarantee (FR-166, SC-108) applies to standard autoable content only.
+- **FR-184**: Boss-grade enemies in challenge content MUST express difficulty through visible,
+  decision-answerable mechanics (phases, telegraphed heavy attacks with reaction windows of
+  seconds-not-frames, adds, enrage timers) — never through input dexterity.
+
 **Gear & Provisions**
 
 - **FR-120**: Gear MUST occupy defined equipment slots (including the school's weapon/focus),
@@ -465,9 +492,10 @@ tier 1.
   improves expedition yield ≥ 25% over the default build at equal gear — and at least 2
   materially different builds per school sit within 10% of each other (no single solved
   build).
-- **SC-108**: Tactics parity: for every launch enemy, the best outcome achievable by live
-  manual tap-casting is reproducible by tactics rules alone (0 cases where manual play is
-  strictly required to reach a result).
+- **SC-108**: Tactics parity on standard content: for every launch hunting-ground enemy, the
+  best outcome achievable by live manual tap-casting is reproducible by tactics rules alone
+  (0 cases where manual play is strictly required). Designated challenge content (spec 003) is
+  explicitly exempt — there, active control may be rewarded.
 - **SC-109**: All combat screens pass the established phone-portrait usability bar (001
   SC-009).
 
@@ -485,8 +513,12 @@ combat-material economy integration; phone-first combat UI.
 - Anything action-based: aiming, dodging, movement, positioning, reflex timing, input-skill
   rewards — permanently excluded by design (001's exclusion of action gameplay stands; only
   its blanket exclusion of combat is superseded).
-- PvP combat of any kind.
-- Group/party combat, raids, or multiplayer expeditions (future consideration).
+- PvP combat of any kind (decided 2026-06-11: Tradewright is PvE-only; territory contests stay
+  economic).
+- Challenge and group combat content — solo boss trials, dungeons, mutated tiers, raids,
+  invasions, elite zones, world events, world bosses — specified separately in
+  [spec 003](../003-challenge-group-combat/spec.md), which builds on this spec's control modes
+  (FR-180–184).
 - Combat's role in Phase 2 territory contests (stays economic per 001 unless a Phase 2 spec
   decides otherwise).
 - Pets, mercenaries, or multiple simultaneous expeditions per character.
