@@ -485,7 +485,9 @@ activity visible. It depends on Stories 1–3 producing goods worth trading.
 **Independent Test**: Two test players can complete a full trade (one lists a sell order, the
 other buys it — from the same settlement or remotely); the listing is visible from every
 settlement, lives on exactly one book, and the purchased goods land in the buyer's storage at
-the listing's settlement.
+the listing's settlement. In V1 (single-player worlds) the counterparty is proxied by
+self-crossing orders plus NPC trader purchases (FR-054); distinct-wallet two-party trade is
+fully exercised in V2.
 
 **Acceptance Scenarios**:
 

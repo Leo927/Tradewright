@@ -242,8 +242,11 @@ apps/
 ├── client/              # React PWA. GUI ONLY — no game rules anywhere in here.
 │   ├── src/
 │   │   ├── transport/   #   LocalTransport (in-process) / RemoteTransport (V2 WebSocket)
-│   │   ├── screens/     #   settlement, skills, market, caravans, map, summary, combat,
-│   │   │                #   encounter HUD, group board, challenges, relics, delve
+│   │   ├── persistence/ #   IndexedDB save/load — V1 device-local saves (FR-003)
+│   │   ├── notifications/ # V1 device-scheduled notification delivery (FR-064)
+│   │   ├── screens/     #   settlement, skills, market, transactions, caravans, map,
+│   │   │                #   summary, storage, settings, combat, encounter HUD,
+│   │   │                #   group board, challenges, relics, delve
 │   │   ├── components/  #   shared UI primitives
 │   │   └── state/       #   GUI-side view state (subscriptions to contract events)
 │   └── tests/e2e/       #   Playwright flows, phone viewport
