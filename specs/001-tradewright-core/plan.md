@@ -207,7 +207,7 @@ income-parity mandates (SC-006/007/105/106/205, SC-303) are asserted pairwise bu
 model yet shows them holding jointly at launch content scale. Its shape is now fixed:
 research R16 (economy) defines the simulated-actor behavior model, the "healthy world"
 and "equivalent investment" definitions, and the deterministic green/red criterion.
-Run and tune it during M1 content tuning (tasks T093), before the recipe set is
+Run and tune it during M1 content tuning (task T110), before the recipe set is
 declared launch-shaped.
 
 ## Project Structure
@@ -273,9 +273,10 @@ apps/
 │   │   ├── persistence/ #   IndexedDB save/load — V1 device-local saves (FR-003)
 │   │   ├── notifications/ # V1 device-scheduled notification delivery (FR-064)
 │   │   ├── i18n/        #   react-intl setup, locale switch, value-format helpers (FR-072/073)
-│   │   ├── screens/     #   settlement, skills, market, transactions, caravans, map,
-│   │   │                #   summary, storage, settings, combat, encounter HUD,
-│   │   │                #   group board, challenges, relics, delve
+│   │   ├── screens/     #   create-character, settlement-home, activities, crafting,
+│   │   │                #   market, transactions, caravans, map, return-summary,
+│   │   │                #   storage, settings, combat, encounter HUD, group board,
+│   │   │                #   challenges, relics, delve
 │   │   ├── components/  #   shared UI primitives
 │   │   └── state/       #   GUI-side view state (subscriptions to contract events)
 │   └── tests/e2e/       #   Playwright flows, phone viewport
@@ -361,9 +362,8 @@ runs in every milestone — each story's acceptance includes the pseudo-locale p
 
 Tasks are regenerated per milestone with `/speckit-tasks` scoped to that milestone's
 stories — the former whole-feature tasks.md for relics/delves was dropped as stale in the
-merge; it predated the combat design pass it depends on. The current M0+M1 tasks.md
-predates the i18n fold and needs regeneration before implementation resumes (its scope
-note says so).
+merge; it predated the combat design pass it depends on. The current M0+M1 tasks.md was
+regenerated 2026-06-12 with the i18n foundation folded in and is current.
 
 ## Complexity Tracking
 

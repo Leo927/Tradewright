@@ -446,8 +446,9 @@ locale.
 
 ### User Story 1 - Begin Life as a Settler (Priority: P1)
 
-A new player creates an account, names their character, chooses a starting settlement, and is
-guided to assign their character to a first gathering activity. Progress accrues visibly in real
+A new player creates a character — naming them and choosing a starting settlement — and is
+guided to assign their character to a first gathering activity. (In V2 the character is bound
+to an account created at registration; V1 requires no account — FR-001/FR-003.) Progress accrues visibly in real
 time — a progress bar fills per action, output items accumulate in local storage, and skill
 experience grows toward the next level.
 
@@ -455,13 +456,13 @@ experience grows toward the next level.
 loop nothing else has value. It is the MVP that proves the idle engine, the content data model,
 and the phone-first UI.
 
-**Independent Test**: A fresh player can register, reach a settlement screen, start a gathering
+**Independent Test**: A fresh player can create a character, reach a settlement screen, start a gathering
 activity, and after a known interval observe the predicted number of completed actions, items in
 storage, and experience gained — with no market or caravan features present.
 
 **Acceptance Scenarios**:
 
-1. **Given** a first-time visitor, **When** they complete account creation and character setup,
+1. **Given** a first-time visitor, **When** they complete character setup (in V2 under account registration, FR-001),
    **Then** they arrive in their chosen starting settlement with an empty inventory, a starter
    amount of currency, and all skills at level 1.
 2. **Given** a character with no active assignment, **When** the player selects a gathering
