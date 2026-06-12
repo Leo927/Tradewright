@@ -70,9 +70,9 @@ Principle IV content seam, the deterministic simulation core, and the client she
 - [ ] T019 [P] Zod schemas for NpcMarketProfile (NpcItemEntry, floorBuyList, floorBudgetPerPeriod, sweep), NotificationCategoryDef, and WorldTuningDef (worldTickSeconds, marketCadenceTicks, offlineCapHours, caravanDurationBand) in `packages/content/schemas/npc-profiles.ts`, `packages/content/schemas/notifications.ts`, and `packages/content/schemas/world.ts`
 - [ ] T020 Content loader: parse + validate all `data/*.json` against schemas, export typed defs + `contentVersion`, fail fast on any error, in `packages/content/src/loader.ts`; wire `npm run validate:content`
 - [ ] T021 Referential-integrity gate tests (activity→skill, inputs/outputs→items, settlement→activities/npc-profile, route→settlements, npc entry→items) in `packages/content/tests/referential.test.ts`
-- [ ] T022 World-integrity gate tests 1–7 plus the route-duration gate (recipe DAG; every input obtainable; ≥1 tier-1 gathering activity per settlement; route graph connected; asymmetry: no single settlement's local resources can produce >60% of launch recipes (SC-006); tier coverage; NPC sanity bounds; every route's caravan duration within the authored `caravanDurationBand` and personal travel duration shorter than the caravan's on the same route — FR-040/044) in `packages/content/tests/world-integrity.test.ts`
+- [ ] T022 World-integrity gate tests 1–7 plus the route-duration and skill-family gates (recipe DAG; every input obtainable; ≥1 tier-1 gathering activity per settlement; route graph connected; asymmetry: no single settlement's local resources can produce >60% of launch recipes (SC-006); tier coverage; NPC sanity bounds; every route's caravan duration within the authored `caravanDurationBand` and personal travel duration shorter than the caravan's on the same route — FR-040/044; skill-family minimums: ≥3 gathering, ≥2 refining, ≥2 crafting, hauling present — spec Assumptions) in `packages/content/tests/world-integrity.test.ts`
 - [ ] T023 Originality-denylist lint test (gate 8): name/description strings checked against inspiration-term denylist in `packages/content/tests/originality.test.ts` with denylist data in `packages/content/tests/denylist.json` (FR-024)
-- [ ] T024 [P] Author starter content: `packages/content/data/skills.json` (~7 trade skills incl. hauling, original names, xp curves tuned to idle pacing) and `packages/content/data/items.json` (tiered gathered/refined/finished goods with weights)
+- [ ] T024 [P] Author starter content: `packages/content/data/skills.json` (≥ 3 gathering + 2 refining + 2 crafting skills plus the hauling progression — ~8 skill tracks per the spec's skill-family minimums, original names, xp curves tuned to idle pacing) and `packages/content/data/items.json` (tiered gathered/refined/finished goods with weights)
 - [ ] T025 [P] Author starter content: `packages/content/data/activities.json` — gathering, refining, and crafting chains where refining consumes gathered goods and ≥1 finished-good recipe consumes outputs of two different skills (FR-021)
 - [ ] T026 [P] Author starter content: `packages/content/data/settlements.json` (≥4 settlements, asymmetric activityTags, facilities with station/storage tiers, fee/tax rates, storage expansion curves) and `packages/content/data/routes.json` (connected graph, 2–6 h caravan bands, risk levels) (FR-030/037)
 - [ ] T027 [P] Author starter content: `packages/content/data/npc-profiles.json` (per-settlement entries, regionally-varied floorBuyList, sweep budgets — FR-054), `packages/content/data/notification-categories.json` (caravan-arrival, offline-cap-reached, committed-start-approaching, order-filled-expired — FR-064), and `packages/content/data/world.json` (60 s world tick, market cadence, 24 h offline cap, 2–6 h caravan duration band — the single authored source for engine pacing tunables)
@@ -149,7 +149,7 @@ storage-full mid-absence shows halt time and reason (quickstart US2).
 
 ### Tests for User Story 2 (write first) ⚠️
 
-- [ ] T053 [P] [US2] Engine unit tests: offline ≡ online property (same inputs: tick-replay state equals live-tick state to the unit, SC-005), cap behavior + cap-reached reporting, storage-full halt mid-absence, negative-elapsed clamp (clock set backwards grants nothing), 24 h catch-up completes within the SC-002 compute budget in `packages/engine/tests/offline.test.ts`
+- [ ] T053 [P] [US2] Engine unit tests: offline ≡ online property (same inputs: tick-replay state equals live-tick state to the unit, SC-005), cap behavior + cap-reached reporting, storage-full halt mid-absence, negative-elapsed clamp (clock set backwards grants nothing), 24 h catch-up completes within a named CI compute-budget constant (the CI-runner proxy for SC-002's 3 s mid-range-phone target; the derivation is recorded at the constant) in `packages/engine/tests/offline.test.ts`
 - [ ] T054 [P] [US2] Playwright flow (quickstart US2): activity running → advance test clock 8 h → reload → summary modal matches deterministic prediction; cap and halt variants in `apps/client/tests/e2e/offline.spec.ts`
 
 ### Implementation for User Story 2
@@ -179,15 +179,15 @@ missing-input assignment is rejected with the exact shortfall (quickstart US3).
 
 ### Tests for User Story 3 (write first) ⚠️
 
-- [ ] T060 [P] [US3] Engine unit tests: input consumption at stated ratios (atomic consume+produce per action), insufficient-input rejection listing exact missing items+quantities, inputs-exhausted halt (online + via catch-up), station-tier gate (refining/crafting requires local station effective tier ≥ activity tier), cross-settlement materials unusable in `packages/engine/tests/crafting.test.ts`
+- [ ] T060 [P] [US3] Engine unit tests: input consumption at stated ratios (atomic consume+produce per action), insufficient-input rejection listing exact missing items+quantities, inputs-exhausted halt (online + via catch-up), station-tier gate (refining/crafting requires local station effective tier ≥ activity tier), cross-settlement materials unusable with the holding settlement(s) named in the rejection (spec edge case) in `packages/engine/tests/crafting.test.ts`
 - [ ] T061 [P] [US3] Playwright flow (quickstart US3): refine seeded inputs → craft a two-skill finished good → missing-input rejection shows shortfall → locked recipe shows required tier in `apps/client/tests/e2e/crafting.spec.ts`
 
 ### Implementation for User Story 3
 
 - [ ] T062 [US3] Engine: input-consuming action resolution (consume inputs + produce outputs + XP atomically; halt `inputs-exhausted` with report) extending `packages/engine/src/skills/activities.ts`
 - [ ] T063 [US3] Engine: station gating — facility effective-tier lookup per settlement, assignment validation against `stationFamily` (FR-037) in `packages/engine/src/world/facilities.ts`
-- [ ] T064 [US3] Adapter: GetActivities lock reasons extended with missing inputs (item+qty) and station-tier locks; GetSettlementFacilities query in `packages/engine/src/adapter/local-game-host.ts`
-- [ ] T065 [US3] Client: recipe/craft browser per design artifact — inputs/outputs/ratios, locked recipes with tier shown, missing-input explanation on attempt in `apps/client/src/screens/crafting.tsx`
+- [ ] T064 [US3] Adapter: GetActivities lock reasons extended with missing inputs (item+qty, plus the settlement(s) where missing items are stored when they exist elsewhere — spec edge case) and station-tier locks; GetSettlementFacilities query in `packages/engine/src/adapter/local-game-host.ts`
+- [ ] T065 [US3] Client: recipe/craft browser per design artifact — inputs/outputs/ratios, locked recipes with tier shown, missing-input explanation on attempt naming the settlement(s) where the missing items are stored when held elsewhere in `apps/client/src/screens/crafting.tsx`
 
 **Checkpoint**: US1–US3 — full produce loop (gather → refine → craft) playable and tested.
 
@@ -195,9 +195,10 @@ missing-input assignment is rejected with the exact shortfall (quickstart US3).
 
 ## Phase 6: User Story 4 — Trade at the Local Market (Priority: P4)
 
-**Goal**: Per-settlement independent order books — limit orders with escrow, price-time
-matching with partial fills, fees/taxes as sinks, NPC price drift + the FR-054 coin
-faucet (FR-031–036, FR-050–054; research R4/R13).
+**Goal**: Per-settlement order books linked into one globally browsable market (matching
+never crosses settlements) — limit orders with escrow, price-time matching with partial
+fills, fees/taxes as sinks, NPC price drift + the FR-054 coin faucet (FR-031–036,
+FR-050–054; research R4/R13).
 
 **Independent Test**: One player lists a sell order, another (or the NPC principal) buys
 it in the same settlement; the listing is visible from every settlement via the linked
@@ -268,7 +269,7 @@ milestone's validation pass.
 - [ ] T087 Design artifact for the storage and settings screens (storage capacity view + expansion purchase with escalating cost and facility-tier cap disclosure; per-category notification opt-ins with honest capability notes; primary/deferred split per Principle VIII) in `specs/001-tradewright-core/design/storage-settings.md` (Principle VII — before T088/T090)
 - [ ] T088 ExpandStorage end-to-end: engine coin-sink purchase at escalating disclosed costs capped by storage-facility effective tier (FR-023/037), adapter command, purchase UI on the storage screen per design artifact, unit tests in `packages/engine/src/world/storage.ts`, `packages/engine/src/adapter/local-game-host.ts`, `apps/client/src/screens/storage.tsx`, `packages/engine/tests/storage-expansion.test.ts`
 - [ ] T089 Notification model: engine-side notifiable-moment scheduler over known timers (caravan ETA, offline cap, order fill/expiry), NotificationPrefs state (all categories off by default), SetNotificationPref/GetNotificationPrefs in adapter, unit tests (FR-064, research R15) in `packages/engine/src/world/notifications.ts` and `packages/engine/tests/notifications.test.ts`
-- [ ] T090 V1 device-scheduled notification delivery adapter via service worker + Notification API with honest capability notes (iOS installed-PWA requirement), per-category opt-in settings UI per design artifact in `apps/client/src/notifications/scheduler.ts` and `apps/client/src/screens/settings.tsx`
+- [ ] T090 V1 device-scheduled notification delivery adapter via service worker + Notification API with honest capability notes (iOS installed-PWA requirement; the committed-start-approaching category labeled as online-version content per the FR-262 pattern — no V1 M1 moment fires it), per-category opt-in settings UI per design artifact in `apps/client/src/notifications/scheduler.ts` and `apps/client/src/screens/settings.tsx`
 - [ ] T091 [P] Playwright flows for the Phase 8 screens: storage expansion (escalating cost disclosed → purchase → capacity grows → facility-tier cap explained at max) in `apps/client/tests/e2e/storage.spec.ts`; notification settings (all categories off by default → opt in per category → preference persists across reload) in `apps/client/tests/e2e/settings.spec.ts`
 - [ ] T092 [P] Economy telemetry surface: per-settlement faucet/sink flow counters per period queryable for tuning (FR-053) in `packages/engine/src/npc/telemetry.ts` with tests in `packages/engine/tests/telemetry.test.ts`
 - [ ] T093 Joint economy model (plan "Known Design Gaps" tuning precondition): simulation script over launch content checking SC-006 (no single settlement's local resources produce >60% of launch recipes) and SC-007 (arbitrage profitability ±50% income parity) jointly, implementing the behavior model and healthy-world/equivalent-investment definitions of research R16 with all simulation parameters (actor counts, warm-up, window, seeds, decision cadence) as named constants in the test; tune `packages/content/data/*.json` until green, in `packages/content/tests/economy-model.test.ts`
