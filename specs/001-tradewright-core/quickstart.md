@@ -233,7 +233,7 @@ npm run validate:content  # standalone content build + integrity tests
 
 ### Validation scenarios
 
-#### 1. Mettle trial — active control matters (US1, SC-201)
+#### 1. Mettle trial — active control matters (US14, SC-201)
 
 1. `npm run dev`, create/load a character meeting trial 1's tier gate.
 2. Open Challenges → Trial Ladder: trial 1 unlocked; later trials show requirements
@@ -249,7 +249,7 @@ npm run validate:content  # standalone content build + integrity tests
    clear than the piloted run (SC-201). Unit suite asserts this deterministically:
    `npm test -- encounter/trial-ai-gap`.
 
-#### 2. Dungeon party with interdependence (US2, SC-202/203)
+#### 2. Dungeon party with interdependence (US15, SC-202/203)
 
 V1 runs this via the scripted co-player test harness; V2 runs it live.
 
@@ -264,7 +264,7 @@ V1 runs this via the scripted co-player test harness; V2 runs it live.
    path still banks the haul (SC-203, FR-204). Backfill between encounters: replacement
    joins via the board, is loot-eligible only for bosses fought while present.
 
-#### 3. Affliction rotation & gear counters (US3, FR-272)
+#### 3. Affliction rotation & gear counters (US16, FR-272)
 
 1. `npm test -- worldevents/rotation`: `rotation(worldSeed, isoWeek)` returns the same
    set for the same week on every run; consecutive weeks differ per the authored pools.
@@ -276,7 +276,7 @@ V1 runs this via the scripted co-player test harness; V2 runs it live.
    lands in a disclosed bracket scaling payout; the leaderboard records the score
    (recognition only — verify no material reward attaches to placement).
 
-#### 4. Open world: party isolation, events, world boss floor (US5, SC-209)
+#### 4. Open world: party isolation, events, world boss floor (US18, SC-209)
 
 1. `npm test -- worldevents/elite-isolation`: two parties engage the same elite-zone
    roster; each fight is its own instance — no cross-party effects; solo engage produces
@@ -288,7 +288,7 @@ V1 runs this via the scripted co-player test harness; V2 runs it live.
 3. Event tie-in: while a seeded eruption event is active, `GetRoutes` shows the raised
    risk on affected routes; it reverts on resolution (FR-241).
 
-#### 5. Invasion lifecycle (US6, FR-250/251)
+#### 5. Invasion lifecycle (US19, FR-250/251)
 
 1. `npm test -- worldevents/invasion-lifecycle`: drive settlement activity until the
    threat meter (visible via `GetWarboard`) fills; an invasion schedules with the
@@ -365,7 +365,7 @@ npm run validate:content  # standalone content build + integrity tests
 
 ### Validation scenarios
 
-#### 1. Relic chase: source pays once, build changes (US1, SC-301/304)
+#### 1. Relic chase: source pays once, build changes (US20, SC-301/304)
 
 1. `npm run dev`; open the Relic Compendium with a fresh character.
 2. **Expected**: every authored relic visible — name, tier, full signature modifier,
@@ -376,13 +376,13 @@ npm run validate:content  # standalone content build + integrity tests
    sealed, gear score at top of tier band, no roll), the compendium marks it owned.
 5. Equip it; run a fight and check the combat log.
 6. **Expected**: the signature modifier's stated effect appears in combat math and log
-   (US1-AS3); equipping a second relic of the same category is blocked with the guided
-   swap, never silently (US1-AS4).
+   (US20-AS3); equipping a second relic of the same category is blocked with the guided
+   swap, never silently (US20-AS4).
 7. Complete the same source again: `npm test -- relics/grant-once` asserts the duplicate
    compensation pays instead of a second copy, deterministically, and that the grant
    record blocks every repeat forever (SC-304).
 
-#### 2. Relic trade: tradable, never duplicated (US1-AS6, FR-303)
+#### 2. Relic trade: tradable, never duplicated (US20-AS6, FR-303)
 
 1. `npm test -- relics/trade`: list, escrow, and ship a relic between two characters;
    awakening state (unsealed slots + locked modifiers) arrives intact with the item;
@@ -391,11 +391,11 @@ npm run validate:content  # standalone content build + integrity tests
 3. **Expected**: blocked with `RELIC_ALREADY_OWNED` *before any payment*; after the owner
    sells their copy, the same purchase succeeds — the market remains a path back.
 
-#### 3. Awakening track (US2, SC-303)
+#### 3. Awakening track (US21, SC-303)
 
 1. With a dormant relic and seeded materials: open the awakening track.
 2. **Expected**: every step shows deed requirement, material cost, unseal target, and
-   live progress (US2-AS1).
+   live progress (US21-AS1).
 3. Satisfy step 1's deed via play (or the seeded deed-counter fixture), confirm the step.
 4. **Expected**: materials consumed from local storage, slot unsealed, step recorded on
    the item; confirming without the deed or materials fails with the specific error.
@@ -406,7 +406,7 @@ npm run validate:content  # standalone content build + integrity tests
 7. `npm test -- content/awakening-economy`: every track demands ≥ 1 market-tradable
    material (SC-303).
 
-#### 4. Delve core loop: stake without ruin (US3, SC-305/306)
+#### 4. Delve core loop: stake without ruin (US22, SC-305/306)
 
 1. `npm test -- delve/two-stream`: a scripted 3-player party clears two floors — base
    haul (XP, mastery, standard loot) banks instantly per kill; venture ledgers accrue
@@ -427,7 +427,7 @@ npm run validate:content  # standalone content build + integrity tests
    multiplier curve, full stake rules, and session expectation; first landing is
    reachable inside ~10 minutes of entry (SC-305 pacing).
 
-#### 5. Depth ladder & weekly expedition (US4, SC-307)
+#### 5. Depth ladder & weekly expedition (US23, SC-307)
 
 1. `npm test -- delve/determinism`: same site, same seed, same party inputs → identical
    floor layouts and encounter sequences; distinct seeds → materially different descents
