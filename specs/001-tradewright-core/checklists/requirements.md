@@ -53,7 +53,7 @@ Merged 2026-06-11 from the former specs 001/002/003/004 requirement checklists (
 
 ### Requirement Completeness
 
-- [x] No [NEEDS CLARIFICATION] markers remain
+- [ ] No [NEEDS CLARIFICATION] markers remain
 - [x] Requirements are testable and unambiguous
 - [x] Success criteria are measurable
 - [x] Success criteria are technology-agnostic (no implementation details)
@@ -159,13 +159,11 @@ Merged 2026-06-11 from the former specs 001/002/003/004 requirement checklists (
 - All items pass. Zero [NEEDS CLARIFICATION] markers: every open question was resolved with
   an informed default recorded in Assumptions, consistent with the conventions established
   by the former specs 001–003.
-- Strongest candidate for `/speckit-clarify`: relic tradability. The spec defaults to
-  character-bound relics (mirroring the inspiration; preserves the trophy identity), which
-  introduces Tradewright's first bound item class — a deliberate, narrow divergence from the
-  all-goods-trade norm. The decision is isolated to FR-303 if reversed.
-- Secondary clarify candidates: the relic equip limit (defaulted to one weapon/focus + one
-  armor/trinket) and the landing decision protocol (defaulted to leader-calls-after-
-  ready-check with AI auto-withdraw).
+- Relic tradability, the relic equip limit, and the landing decision protocol — originally
+  flagged here as clarify candidates — were all resolved in the 2026-06-11 clarification
+  rounds (relics fully tradable, no bound item class; one weapon/focus + one armor/trinket;
+  leader-calls-after-ready-check with individual opt-out and AI auto-withdraw). See the
+  spec's Clarifications section.
 - The delve stake model is a mandated redesign, not an open question: FR-204 (no-ruin)
   required replacing the inspiration's extraction-style loot loss before this mode could be
   specified.

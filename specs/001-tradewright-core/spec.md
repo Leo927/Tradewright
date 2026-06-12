@@ -280,6 +280,31 @@ history. All referenced requirement numbers remain valid in this document.
   authored final floor; pools remix indefinitely by seed and the climbing difficulty curve is
   the practical limit; depth records and leaderboards are open-ended.
 
+### Session 2026-06-11 (core-game audit round)
+
+- Q: What is a character's "tier" for the hard entry gates on mettle trials (FR-211) and
+  affliction levels (FR-223)? → A: The highest tier reached across the character's combat
+  skills (FR-103) — reuses the existing per-skill tier structure, no new system.
+- Q: What is the stat vocabulary for the combat core? → A: Clone New World's full attribute
+  model now (un-deferring it from Scope Boundaries): five core attributes (original names;
+  analogs of STR/DEX/INT/FOC/CON), each school scales from its designated attribute(s), the
+  Constitution-analog drives health, gear grants attribute points plus an armor-rating
+  analog (physical + elemental) for mitigation. See FR-107.
+- Q: How do multi-combatant fights resolve (enemy targeting, ally-targeted effects, role
+  emergence)? → A: Port New World's threat model — each enemy keeps a per-combatant threat
+  table (damage, healing-generated threat, taunt-style amplifiers from abilities/gear perks)
+  and attacks the highest-threat combatant; the ability vocabulary gains ally-targeted
+  effects and tactics gain ally-health/party triggers, so tank/healer/damage roles emerge
+  as in New World. See FR-108.
+- Q: Do enemies drop coin directly? → A: No — NW-faithful: creatures drop materials and
+  gear, never raw coin. Fighter income flows through selling drops; NPC trader purchases
+  (FR-053) remain the economy's sole coin faucet.
+- Q: How are settlement facilities modeled so invasion consequences (FR-251) have a defined
+  target? → A: Port New World's settlement structure — tiered crafting stations (one per
+  craft family) plus storage as facilities; station tier caps the recipe tier craftable at
+  that settlement; invasion failure downgrades station tiers, repair restores them, and
+  Phase 2 territory upgrades reuse the same model. See FR-037.
+
 ## User Scenarios & Testing *(mandatory)*
 
 The stories below form one priority ladder across the four pillars: P1–P5 economy core,
@@ -1253,6 +1278,14 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   hauling, or word of mouth.
 - **FR-036**: Expired or cancelled orders MUST return escrowed goods/coin in full (fees per
   FR-034 excepted).
+- **FR-037**: Each settlement MUST have facilities modeled on New World's settlement
+  structure: tiered crafting stations (one per craft family) and storage. A station's tier
+  caps the recipe tier craftable at that settlement — refining and crafting activities
+  require a local station of sufficient tier alongside the skill-tier gate (FR-015) —
+  extending regional asymmetry (FR-030) to production capability. Facility tiers are the
+  target of invasion degradation and contribution repair (FR-251); Phase 2 territory
+  upgrades reuse the same model. Station families, tiers, and caps are authored content
+  data (FR-024).
 
 **Caravans & Travel**
 
@@ -1281,8 +1314,10 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 - **FR-052**: Every economic mutation (trade, fee, tax, caravan loss, production) MUST be recorded
   so a player's coin and item history is auditable in their transaction log.
 - **FR-053**: The economy MUST include authored coin faucets — points where coin enters the
-  player economy (e.g., NPC trader purchases on settlement order books) — alongside the sinks
-  of FR-051; player-to-player trade alone is zero-sum and is not a faucet. Faucet and sink
+  player economy — alongside the sinks of FR-051; player-to-player trade alone is zero-sum
+  and is not a faucet. NPC trader purchases on settlement order books are the sole coin
+  faucet: enemies never drop coin (drop tables pay materials and gear only, FR-111), so
+  combat is coin-positive only by selling drops. Faucet and sink
   rates MUST be content-tunable, and aggregate faucet/sink flows MUST be observable via
   economy telemetry so monetary imbalance (inflation or deflation) is detectable and
   correctable without code changes. (New World's November 2021 deflation/barter crisis —
@@ -1315,6 +1350,22 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   online.
 - **FR-106**: Combat outcomes MUST be reproducible: identical character, build, tactics, enemy,
   and starting conditions produce identical expedition results — no reload-to-reroll.
+- **FR-107**: The character stat model MUST port New World's documented attribute system
+  (all names original, FR-024): five core attributes (analogs of Strength / Dexterity /
+  Intelligence / Focus / Constitution). Each combat school designates one or two scaling
+  attributes that drive its ability and basic-attack magnitudes together with mastery
+  (FR-161); the Constitution-analog drives the health pool; gear grants attribute points
+  (FR-120) and an armor-rating analog (physical and elemental) that drives mitigation.
+  Attribute names, per-school scaling assignments, and derivation curves are authored
+  content data.
+- **FR-108**: Multi-combatant resolution MUST port New World's threat model: each enemy
+  maintains a per-combatant threat table — damage dealt, healing-generated threat, and
+  taunt-style amplifiers from abilities and gear perks — and targets the highest-threat
+  combatant at each tick, deterministically (FR-106 binding). The ability effect vocabulary
+  (FR-161) MUST include ally-targeted effects (heals, shields, buffs) and the tactics
+  condition set (FR-166) MUST include ally-health and party-state triggers, so the sustain,
+  damage, and control roles dungeons assume (FR-221) emerge from builds. Solo combat is the
+  single-combatant case of the same resolution.
 
 **Enemies & Hunting Grounds**
 
@@ -1333,7 +1384,8 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   trees. Launch minimum: 2 schools, at least one of them magic-flavored.
 - **FR-161**: Each school MUST define active abilities with: cooldown, effect (damage, heal,
   damage-over-time, buff, debuff, shield — effect vocabulary defined in content), magnitude
-  scaling from stats/mastery, and unlock source (mastery level or tree node).
+  scaling from the school's designated scaling attributes (FR-107) and mastery, and unlock
+  source (mastery level or tree node).
 - **FR-162**: Players MUST slot a limited number of active abilities (3 slots at launch) for an
   expedition; unslotted abilities do not participate.
 - **FR-163**: School mastery MUST level independently per school from XP earned fighting with
@@ -1347,8 +1399,8 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 
 - **FR-166**: Players MUST be able to configure, per expedition loadout: ability priority order
   and per-ability trigger conditions from a defined condition set (at minimum: on-cooldown/
-  always, own-health thresholds, enemy-health thresholds, buff/debuff presence, expedition
-  start). The condition set MUST be expressive enough to encode any strategy achievable by
+  always, own-health thresholds, enemy-health thresholds, ally-health and party-state
+  thresholds (FR-108), buff/debuff presence, expedition start). The condition set MUST be expressive enough to encode any strategy achievable by
   manual tap-casting.
 - **FR-167**: Every school MUST ship with a default tactics rotation so combat works with zero
   configuration.
@@ -1393,8 +1445,9 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 **Gear & Provisions**
 
 - **FR-120**: Gear MUST occupy defined equipment slots (including the school's weapon/focus),
-  carry stats, tier, weight, durability, and optional perks (FR-174), and MUST be craftable
-  via existing crafting skills and/or tradable on markets.
+  carry stats per the attribute model (attribute points and armor rating, FR-107), tier,
+  weight, durability, and optional perks (FR-174), and MUST be craftable via existing
+  crafting skills and/or tradable on markets.
 - **FR-121**: Provisions MUST auto-consume during combat per player-configured thresholds and
   MUST be craftable goods.
 - **FR-122**: Durability MUST decrease with combat use; depleted gear grants no stats or perks
@@ -1480,7 +1533,9 @@ numbering preserved)*
   tier; personal-best ranks are recorded for recognition.
 - **FR-211**: Trial unlocking uses both hard gates, mirroring affliction qualification
   (FR-223): a recorded clear of the previous trial on the ladder (the first trial is open
-  by default) AND a disclosed character tier for the target trial. A recommended gear-score
+  by default) AND a disclosed character tier for the target trial. A character's tier is
+  defined as the highest tier reached across their combat skills (FR-103); this definition
+  applies wherever "character tier" gates content. A recommended gear-score
   band is displayed per trial as advisory guidance only — it never blocks entry;
   under-geared players enter with an honest warning. Locked trials always show their
   requirements.
@@ -1500,8 +1555,9 @@ numbering preserved)*
 - **FR-223**: A weekly affliction rotation MUST apply stacked, fully-disclosed modifiers to a
   subset of dungeons across at least 3 difficulty levels, with qualification gates, scoring,
   and weekly leaderboards. Qualification for level N requires BOTH a recorded clear of the
-  previous level (the base dungeon for level 1) AND a disclosed character tier for the
-  target level; both hard gates are per player and shown on the group board. A recommended
+  previous level (the base dungeon for level 1) AND a disclosed character tier (highest
+  combat-skill tier, per the FR-211 definition) for the target level; both hard gates are
+  per player and shown on the group board. A recommended
   gear-score band per level is displayed as advisory guidance only — it never blocks entry;
   under-geared players enter with an honest warning. Each run's score MUST land in a
   disclosed score bracket that scales that run's reward payout on top of affliction level;
@@ -1560,7 +1616,8 @@ numbering preserved)*
   exceed the cap, the roster is drawn randomly from all signups at a disclosed roster-lock
   time; non-drawn signups form an ordered waitlist that backfills no-shows at start.
 - **FR-251**: Defense failure consequences MUST be temporary, settlement-level, and repairable
-  through contribution (materials, coin, labor) — never destruction of player property;
+  through contribution (materials, coin, labor) — degrading facility tiers per the
+  settlement facility model (FR-037), never destruction of player property;
   success MUST grant settlement-wide benefits so non-fighters have a stake. Contribution
   repair is the primary, rewarded path (restores quickly, pays contributors per FR-264);
   absent contribution, degraded facilities MUST self-restore over a stated multi-day window so
@@ -1709,9 +1766,9 @@ and the content integrity tests enforce them in CI.
 production-focused play (SC-007); combat-focused play earns within ±50% of both (SC-106).
 Parity is measured at equivalent investment and verified against a healthy world.
 
-**Coin faucets**: NPC trader purchases on settlement order books (FR-053). Player-to-player
-trade is zero-sum and is not a faucet. [NEEDS CLARIFICATION: whether enemies drop coin
-directly — see Open Questions, Q4.]
+**Coin faucets**: NPC trader purchases on settlement order books — the sole faucet (FR-053).
+Enemies never drop coin; fighting is coin-positive only via selling drops. Player-to-player
+trade is zero-sum and is not a faucet.
 
 **Coin sinks**: listing fees and sales taxes (FR-034, FR-051), caravan dispatch costs and
 risk mitigation (FR-040, FR-043), gear repair (FR-122), respec fees (FR-173), modifier
@@ -1722,7 +1779,7 @@ the standing warning.
 **Open modeling debt**: the parity and demand claims above are asserted pairwise by their
 source requirements; no joint economic model yet demonstrates they can all hold
 simultaneously at launch content scale. Building that model is flagged as pre-implementation
-design work (Open Questions, Q4 note).
+design work for the planning phase.
 
 ### Key Entities
 
@@ -1738,8 +1795,9 @@ design work (Open Questions, Q4 note).
   or a caravan.
 - **Recipe**: A transformation (refining or crafting) defining input items/quantities → output
   items/quantities and required skill tier.
-- **Settlement**: A world location with local resource availability, per-player storage, a
-  trading post (order book), tax/fee rates, and routes to connected settlements.
+- **Settlement**: A world location with local resource availability, per-player storage,
+  tiered crafting-station facilities (FR-037), a trading post (order book), tax/fee rates,
+  and routes to connected settlements.
 - **Market Order**: A standing buy or sell offer (item, quantity, unit price, duration, owner)
   local to one settlement; escrows goods or coin.
 - **Trade**: An executed match between orders; records item, quantity, price, tax, parties, time.
@@ -1752,6 +1810,9 @@ design work (Open Questions, Q4 note).
 
 **Combat core**
 
+- **Attribute**: One of five core character attributes (analogs of Strength / Dexterity /
+  Intelligence / Focus / Constitution, original names); granted by gear, designated per
+  school for ability scaling, with the Constitution-analog driving health (FR-107).
 - **Combat School**: A weapon discipline or magic school — mastery track + ability roster +
   two perk-tree branches. Original flavor; New World-class structural depth.
 - **Active Ability**: Authored definition — cooldown, effect type, magnitude scaling, unlock
@@ -1920,32 +1981,11 @@ design work (Open Questions, Q4 note).
 
 ## Open Questions
 
-Gaps the 2026-06-11 holistic audit surfaced — terms and systems the merged design uses but
-never defines. Each needs a clarification round before its layer is planned.
+Of the six gaps the 2026-06-11 holistic audit surfaced, five (Q1–Q5: character tier, stat
+vocabulary, group-combat semantics, combat coin faucets, settlement facilities) were resolved
+in the core-game clarification round — see Clarifications — and are integrated into the
+requirements. One remains:
 
-- **Q1 — Character tier** [NEEDS CLARIFICATION]: FR-211 and FR-223 use "a disclosed
-  character tier" as a hard entry gate, but no requirement defines what a character's tier
-  is. Skills have per-skill tiers (FR-015) and combat skills have tiers (FR-103); a
-  character-level tier needs a definition (e.g., highest combat-skill tier, or a composite).
-- **Q2 — Stat vocabulary** [NEEDS CLARIFICATION]: gear "carries stats" (FR-120), abilities
-  scale "from stats/mastery" (FR-161), and loadouts show "stat totals" — but no stat list
-  exists anywhere. The attribute system was deliberately deferred (Scope Boundaries); a
-  minimal stat vocabulary (health, damage, mitigation, …?) must be defined for the combat
-  core to be plannable.
-- **Q3 — Group-combat semantics** [NEEDS CLARIFICATION]: dungeons assume sustain, damage,
-  and control roles emerging from builds (FR-221, SC-202), which implies ally-targeted
-  effects (heals, mitigation), enemy targeting/threat rules, and multi-combatant resolution
-  — none of which the solo combat model (FR-101–106) defines. These semantics must be
-  specified before group content is planned.
-- **Q4 — Combat coin faucets** [NEEDS CLARIFICATION]: drop tables specify materials and
-  gear, never coin. If enemies drop no coin, fighting is coin-positive only via selling
-  drops — defensible, but FR-053's faucet accounting must say so explicitly. The wider
-  joint economy model (Economy Budget section) is open design work alongside this.
-- **Q5 — Settlement facilities** [NEEDS CLARIFICATION]: invasion consequences degrade
-  "facility tiers (crafting station tiers, storage capacity)" (Story 19, FR-251), but the
-  settlement definition (FR-030–036) includes no facilities or crafting stations. Either a
-  minimal facility model joins the settlement entity, or degradation must target only
-  defined properties (e.g., storage capacity, market fees).
 - **Q6 — Combat onboarding** [NEEDS CLARIFICATION]: no story specifies when or how a new
   player first meets combat — whether hunting grounds are visible from the start, when a
   school is chosen, and what the default kit is. The Player Journey section needs this
@@ -1954,7 +1994,8 @@ never defines. Each needs a clarification round before its layer is planned.
 ## Scope Boundaries
 
 **In scope (the core game)**: accounts and characters; idle skilling with offline accrual;
-items, recipes, and per-settlement storage; settlements with independent local markets;
+items, recipes, and per-settlement storage; settlements with independent local markets and
+tiered crafting-station facilities; the five-attribute stat model with per-school scaling;
 caravans and character travel; single currency with faucet/sink telemetry; transaction
 history; auto-resolving PvE expeditions; combat schools (incl. magic) with active abilities,
 limited slots, tactics rules with shipped defaults, optional live tap-to-cast; per-school
@@ -1997,10 +2038,10 @@ UI throughout.
 - Monetization, purchases, or premium currency.
 - Player-to-player direct trading/gifting outside the market (prevents untracked transfers).
 - Multi-character support (one character per account at launch).
-- Attribute systems and multi-school loadouts — recorded as future build-depth candidates
-  (the inspiration pairs attribute thresholds with both combat and trade-skill bonuses, a
-  natural cross-pillar hook; see Open Questions Q2 for the minimal stat vocabulary needed
-  meanwhile).
+- Multi-school loadouts — recorded as a future build-depth candidate. (The attribute system
+  itself was un-deferred on 2026-06-11 and is now in scope, FR-107; attribute thresholds
+  granting trade-skill bonuses — the inspiration's cross-pillar hook — remain a future
+  candidate.)
 - Lockout-cadence seasonal trials (the one inspiration feature still consciously deferred).
 - Pets, mercenaries, or multiple simultaneous expeditions per character.
 - Cross-server play, seasonal resets, or competitive seasons beyond weekly recognition
