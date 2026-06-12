@@ -1,7 +1,7 @@
 <!-- SPECKIT START -->
 For additional context about technologies to be used, project structure,
 shell commands, and other important information, read the current plan
-at specs/003-challenge-group-combat/plan.md
+at specs/004-artifacts-catacomb/plan.md
 <!-- SPECKIT END -->
 
 The current feature under specification is `specs/004-artifacts-catacomb/`
