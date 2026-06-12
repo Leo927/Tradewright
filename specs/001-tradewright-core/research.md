@@ -287,6 +287,44 @@ lock for four timer categories; Web Push is sufficient); engagement/retention
 notifications (prohibited outright by FR-064 — excluded from the model, not just the
 launch set).
 
+### R16 — Joint economy model: scripted-actor simulation with operational SC-006/007 definitions
+
+**Decision**: The joint economy model (tasks T093) is a deterministic simulation script over
+launch content with an explicitly recorded behavior model. Population: a fixed count of
+scripted actors per settlement, split into two archetypes — **producers** (gather → refine →
+craft locally, picking the highest-expected-margin recipe available to them each decision
+tick, selling on the local order book) and **haulers** (scan all routes each decision tick,
+dispatch caravans on the highest post-tax, post-risk expected profit, buying low and selling
+high). Both archetypes are greedy-rational and act independently — no coordination.
+**Healthy world** means: all launch settlements and routes active, NPC faucet budgets running
+at authored values (FR-053/054), and the simulation past a recorded warm-up period so every
+market carries player-supplied stock and prices have moved off their seeded initial values.
+**Equivalent investment** means: equal starting coin, no starting stock or gear, and an equal
+per-day decision budget (same decision-tick cadence for both archetypes). **Income** is net
+worth gain (coin plus inventory valued at current local sell prices) per simulated day over
+the measurement window. Green/red is deterministic: across the recorded seed list, (a) every
+24-hour window of the measurement window offers ≥ 1 route with positive post-tax, post-risk
+expected profit, and (b) median hauler income is within ±50% of median producer income
+(SC-007); SC-006's ≤ 60% self-sufficiency is checked statically against the same content
+snapshot. All parameters — actor counts, warm-up length, measurement-window length, seed
+list, decision-tick cadence, starting coin — live as named constants in
+`packages/content/tests/economy-model.test.ts`; changing one is a reviewed content-tuning
+decision, not test noise.
+
+**Rationale**: SC-007 is "verified against a healthy world", but the spec leaves the world
+undefined (Economy Budget, "open modeling debt"). Recording the behavior model and parameters
+in one place makes T093's criterion deterministic — the same content snapshot either passes
+or fails with no judgment call — and makes a red run diagnosable (which archetype starved,
+which route died). Greedy-rational actors are the right floor: if parity fails even under
+optimal simple play, real players will feel the gap. Simulation (not closed form) is required
+because the price-drift feedback (R4/R13) and caravan risk variance are dynamic.
+
+**Alternatives considered**: organic playtest data (not reproducible, not CI-able); a
+closed-form spreadsheet model (cannot capture stock-pressure price feedback or risk
+variance); adaptive/learning agents (non-deterministic and over-engineered for a tuning
+gate); burying the parameters in test setup without naming them (re-opens the ambiguity this
+entry exists to close).
+
 ## Part II — Challenge & Group Layer (former 003)
 
 Inherits the economy core's research (R1–R8 in Part I: PWA, monorepo, contract shape, NPC

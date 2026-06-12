@@ -178,8 +178,11 @@ The two gaps recorded at merge time are closed:
 One named work item remains (not a design gap — a tuning precondition): the **joint
 economy model** (spec, Economy Budget "open modeling debt") — the recipe-demand and
 income-parity mandates (SC-006/007/105/106/205, SC-303) are asserted pairwise but no
-model yet shows them holding jointly at launch content scale. Build it during M1 content
-tuning, before the recipe set is declared launch-shaped.
+model yet shows them holding jointly at launch content scale. Its shape is now fixed:
+research R16 (economy) defines the simulated-actor behavior model, the "healthy world"
+and "equivalent investment" definitions, and the deterministic green/red criterion.
+Run and tune it during M1 content tuning (tasks T093), before the recipe set is
+declared launch-shaped.
 
 ## Project Structure
 

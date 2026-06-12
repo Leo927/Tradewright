@@ -1882,7 +1882,9 @@ and the content integrity tests enforce them in CI.
 
 **Income parity (three playstyles)**: hauling-focused play earns within ±50% of
 production-focused play (SC-007); combat-focused play earns within ±50% of both (SC-106).
-Parity is measured at equivalent investment and verified against a healthy world.
+Parity is measured at equivalent investment and verified against a healthy world; both
+terms are operationally defined by the joint economy model's behavior model (research R16,
+economy).
 
 **Coin faucets**: NPC trader purchases on settlement order books — the sole faucet (FR-053),
 operating as standing floor-price buy orders on curated raw goods plus periodic demand
@@ -1898,8 +1900,10 @@ the standing warning.
 
 **Open modeling debt**: the parity and demand claims above are asserted pairwise by their
 source requirements; no joint economic model yet demonstrates they can all hold
-simultaneously at launch content scale. Building that model is flagged as pre-implementation
-design work for the planning phase.
+simultaneously at launch content scale. The model's shape — simulated-actor behavior,
+"healthy world" and "equivalent investment" definitions, and its deterministic green/red
+criterion — is fixed in research R16 (economy); running it against launch content and
+tuning until green remains M1 content-tuning work.
 
 ### Key Entities
 
