@@ -118,8 +118,11 @@ stay alive permanently**:
 | Persistence | On device | Server-authoritative |
 | Time integrity | Best-effort (clock cheating affects only the cheater's solo world) | Fully authoritative (FR-017) |
 
-Two honest caveats this table makes explicit rather than burying:
+Honest caveats this table makes explicit rather than burying:
 
+- **V1 saves are device-local**: V1 requires no account and has no cloud sync or backup;
+  losing the device loses the solo world. Account-bound, cross-device state (FR-003) is a
+  V2 property.
 - **The player-driven-economy thesis fully holds only in V2.** V1's markets are an NPC
   simulation of the same structures. V1 is a complete, permanently supported solo game and
   the development/test harness; V2 is the product the economic design argues for.
@@ -336,6 +339,23 @@ history. All referenced requirement numbers remain valid in this document.
   with the honest "designed for N players" warning; difficulty stays tuned for the design
   size. Delves remain the only party-scaled format (FR-311). Resolves the tension between
   FR-221's former "fixed party size" wording and the no-artificial-lockout edge case.
+- Q: Does FR-003 (account-bound, cross-device-consistent state) apply to V1 (solo)? → A: No —
+  V1 is device-local only: no account required, saves live on the device with no cloud sync
+  or backup, and device loss loses the solo world. FR-003 and the two-devices-one-account
+  single-authoritative-state guarantees are rescoped to V2 only.
+- Q: What can a V2 player do while the client has no network connection? → A: Hybrid —
+  last-known state stays browsable read-only (honestly "as of" labeled); mutations scoped to
+  the player's own state (assigning/changing activities, tactics edits, loadout changes) are
+  accepted optimistically, queued, and reconciled on reconnect with visible rollback if the
+  server rejects; mutations requiring shared multiplayer state (market orders and trades,
+  party/group actions, live instanced content) are blocked offline with an honest
+  explanation. Queued mutations take effect at server receipt per authoritative time
+  (FR-017). See FR-063.
+- Q: Do notifications ever reach the player outside the app (push)? → A: Yes — per-category
+  opt-in push notifications, off by default, for a disclosed set of timer/schedule events the
+  player chose: caravan arrival, offline cap reached, approaching start of a committed
+  raid/invasion, market order filled/expired; never promotional. All other "notified"
+  language in this spec means in-app surfaces only. See FR-064.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1144,8 +1164,9 @@ records depth with no material rewards attached.
   here, with the location where they are stored.
 - Player dispatches a caravan, then travels their character on the same route → both timers run
   independently.
-- Account plays on two devices simultaneously → a single authoritative game state; no duplication
-  of progress, currency, or items.
+- Account plays on two devices simultaneously (V2) → a single authoritative game state; no
+  duplication of progress, currency, or items. (V1 has no account or cross-device state — each
+  device is its own world, FR-003.)
 
 **Combat core**
 
@@ -1166,7 +1187,8 @@ records depth with no material rewards attached.
 - Conflicting triggers in the same tick (two abilities ready, conditions met) → priority order
   decides, deterministically.
 - Enemy roster above the player's tier → visible but locked with requirements shown.
-- Two devices, one account → single authoritative expedition state.
+- Two devices, one account (V2) → single authoritative expedition state (V1 worlds are
+  device-local, FR-003).
 - Combat summary and general offline summary both pending → one unified return summary.
 
 **Challenge & group**
@@ -1249,12 +1271,15 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 
 **Account & Character**
 
-- **FR-001**: System MUST let a player create an account, create exactly one named character, and
-  choose a starting settlement from the launch set.
+- **FR-001**: System MUST let a player create exactly one named character and choose a starting
+  settlement from the launch set. In V2 the character is bound to a player account created at
+  registration; V1 requires no account (FR-003).
 - **FR-002**: A character MUST exist in exactly one settlement (or in transit between two) at any
   moment; the character's location determines which activities, storage, and market they can use.
-- **FR-003**: Game state MUST be account-bound and consistent across devices; the same account on
-  a second device sees the same authoritative state.
+- **FR-003**: In V2, game state MUST be account-bound and consistent across devices; the same
+  account on a second device sees the same authoritative state. V1 game state is device-local
+  only: no account, no cloud sync, no backup — losing the device loses the solo world, an
+  accepted V1 trade-off.
 - **FR-004**: V1 (solo) and V2 (online) worlds MUST be permanently separate: no character,
   item, coin, or progression state ever migrates between them in either direction — a V2
   character starts fresh. Rationale: client-held V1 saves cannot be trusted by the
@@ -1380,6 +1405,23 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   phone-sized portrait display, with one-handed reach for primary actions.
 - **FR-062**: Every interaction MUST respond immediately; operations that take time (caravans,
   actions, orders) show their pending state without blocking any other part of the UI.
+- **FR-063**: When the V2 client has no network connection, last-known game state MUST remain
+  browsable read-only with an honest offline indicator and "as of" timestamp. Mutations
+  scoped to the player's own state (e.g., assigning or changing an activity, editing tactics,
+  changing loadout) MUST be accepted optimistically, queued, and reconciled on reconnect —
+  server rejections roll back visibly, never silently. Mutations that require shared
+  multiplayer state (placing or filling market orders, party and group-board actions,
+  entering live instanced content) MUST be blocked while offline with an honest explanation.
+  Queued mutations take effect at server receipt time per authoritative time (FR-017); the
+  client reconciles any optimistic prediction against the server's resolution. V1 has no
+  server dependency (FR-003) and is unaffected.
+- **FR-064**: The game MUST offer out-of-app (push) notifications as per-category opt-ins,
+  off by default, limited to a disclosed set of timer/schedule events: caravan arrival,
+  offline cap reached, approaching start of a raid or invasion the player committed to, and
+  market order filled/expired (launch set; content-tunable). Promotional or engagement-bait
+  notifications MUST NOT exist. Except where a player has opted in, "notified" throughout
+  this specification means in-app surfaces only (summaries, boards, badges). The capability
+  applies to both versions (device-scheduled in V1, server-pushed in V2).
 
 ### Functional Requirements — Combat Core
 
@@ -1846,8 +1888,9 @@ design work for the planning phase.
 
 **Economy core**
 
-- **Account / Character**: The player's identity; one character per account; has a location
-  (settlement or in transit), a coin wallet, skill levels, and an optional active assignment.
+- **Account / Character**: The player's identity — one character per account in V2; in V1 the
+  character lives in a device-local world with no account (FR-003). Has a location (settlement
+  or in transit), a coin wallet, skill levels, and an optional active assignment.
 - **Skill**: A named progression track (gathering, refining, crafting, or hauling family) with an
   experience curve and tier thresholds that gate content.
 - **Activity**: A repeatable unit of idle work tied to a skill and a settlement's available
@@ -2143,8 +2186,8 @@ UI throughout.
 - **Order presence rule**: placing and managing orders requires the character to be at the
   settlement; standing orders continue to work after the character leaves.
 - **One character per account** at launch; multi-character support is a future consideration.
-- **Authentication**: standard account registration/login appropriate for a persistent online
-  game; no specific provider assumed.
+- **Authentication**: V2 uses standard account registration/login appropriate for a persistent
+  online game; no specific provider assumed. V1 requires no account or login (FR-003).
 
 ### Combat
 
