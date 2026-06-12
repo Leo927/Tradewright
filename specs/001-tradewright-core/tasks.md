@@ -67,21 +67,21 @@ Principle IV content seam, the deterministic simulation core, and the client she
 
 - [ ] T017 [P] Zod schemas for SkillDef (family, xpCurve, tiers) and ItemDef (tier, weight, basePrice) in `packages/content/schemas/skills.ts` and `packages/content/schemas/items.ts` — unknown fields are errors
 - [ ] T018 [P] Zod schemas for ActivityDef (inputs/outputs, xpPerAction, settlementTags, stationFamily), SettlementDef + FacilityDef (stations per craft family, storage, baseTier, storageExpansion cost curve), RouteDef (durations, risk, mitigation, dispatchCost) in `packages/content/schemas/activities.ts`, `packages/content/schemas/settlements.ts`, `packages/content/schemas/routes.ts`
-- [ ] T019 [P] Zod schemas for NpcMarketProfile (NpcItemEntry, floorBuyList, floorBudgetPerPeriod, sweep) and NotificationCategoryDef in `packages/content/schemas/npc-profiles.ts` and `packages/content/schemas/notifications.ts`
+- [ ] T019 [P] Zod schemas for NpcMarketProfile (NpcItemEntry, floorBuyList, floorBudgetPerPeriod, sweep), NotificationCategoryDef, and WorldTuningDef (worldTickSeconds, marketCadenceTicks, offlineCapHours, caravanDurationBand) in `packages/content/schemas/npc-profiles.ts`, `packages/content/schemas/notifications.ts`, and `packages/content/schemas/world.ts`
 - [ ] T020 Content loader: parse + validate all `data/*.json` against schemas, export typed defs + `contentVersion`, fail fast on any error, in `packages/content/src/loader.ts`; wire `npm run validate:content`
 - [ ] T021 Referential-integrity gate tests (activity→skill, inputs/outputs→items, settlement→activities/npc-profile, route→settlements, npc entry→items) in `packages/content/tests/referential.test.ts`
-- [ ] T022 World-integrity gate tests 1–7 (recipe DAG; every input obtainable; ≥1 tier-1 gathering activity per settlement; route graph connected; asymmetry ≤60% of recipe inputs per settlement (SC-006); tier coverage; NPC sanity bounds) in `packages/content/tests/world-integrity.test.ts`
+- [ ] T022 World-integrity gate tests 1–7 plus the route-duration gate (recipe DAG; every input obtainable; ≥1 tier-1 gathering activity per settlement; route graph connected; asymmetry ≤60% of recipe inputs per settlement (SC-006); tier coverage; NPC sanity bounds; every route's caravan duration within the authored `caravanDurationBand` and personal travel duration shorter than the caravan's on the same route — FR-040/044) in `packages/content/tests/world-integrity.test.ts`
 - [ ] T023 Originality-denylist lint test (gate 8): name/description strings checked against inspiration-term denylist in `packages/content/tests/originality.test.ts` with denylist data in `packages/content/tests/denylist.json` (FR-024)
 - [ ] T024 [P] Author starter content: `packages/content/data/skills.json` (~7 trade skills incl. hauling, original names, xp curves tuned to idle pacing) and `packages/content/data/items.json` (tiered gathered/refined/finished goods with weights)
 - [ ] T025 [P] Author starter content: `packages/content/data/activities.json` — gathering, refining, and crafting chains where refining consumes gathered goods and ≥1 finished-good recipe consumes outputs of two different skills (FR-021)
 - [ ] T026 [P] Author starter content: `packages/content/data/settlements.json` (≥4 settlements, asymmetric activityTags, facilities with station/storage tiers, fee/tax rates, storage expansion curves) and `packages/content/data/routes.json` (connected graph, 2–6 h caravan bands, risk levels) (FR-030/037)
-- [ ] T027 [P] Author starter content: `packages/content/data/npc-profiles.json` (per-settlement entries, regionally-varied floorBuyList, sweep budgets — FR-054) and `packages/content/data/notification-categories.json` (caravan-arrival, offline-cap-reached, committed-start-approaching, order-filled-expired — FR-064)
+- [ ] T027 [P] Author starter content: `packages/content/data/npc-profiles.json` (per-settlement entries, regionally-varied floorBuyList, sweep budgets — FR-054), `packages/content/data/notification-categories.json` (caravan-arrival, offline-cap-reached, committed-start-approaching, order-filled-expired — FR-064), and `packages/content/data/world.json` (60 s world tick, market cadence, 24 h offline cap, 2–6 h caravan duration band — the single authored source for engine pacing tunables)
 
 ### Engine deterministic core (`@tradewright/engine`, research R5/R6/R7/R8)
 
-- [ ] T028 Unit tests (write first): injected clock, seeded PRNG state advance/restore, 60 s tick scheduling, fast-forward replay cap at 1440 ticks, identical-inputs⇒identical-state in `packages/engine/tests/simulation.test.ts`
+- [ ] T028 Unit tests (write first): injected clock, seeded PRNG state advance/restore, tick scheduling at the authored tick length, fast-forward replay capped at the authored offline cap (1440 ticks at launch values), identical-inputs⇒identical-state in `packages/engine/tests/simulation.test.ts`
 - [ ] T029 Implement `Clock` interface + seeded PRNG living in save state (no `Date.now()`/`Math.random()` anywhere in engine) in `packages/engine/src/simulation/clock.ts` and `packages/engine/src/simulation/rng.ts`
-- [ ] T030 Implement world tick loop (60 s ticks, market cadence every N ticks) + offline fast-forward replay (elapsed-tick loop, 24 h cap) in `packages/engine/src/simulation/tick.ts`
+- [ ] T030 Implement world tick loop + offline fast-forward replay (elapsed-tick loop), with tick length, market cadence, and offline cap all read from the authored WorldTuning content (60 s / 24 h launch values — never hardcoded in the engine) in `packages/engine/src/simulation/tick.ts`
 - [ ] T031 Define runtime state types — PlayerCharacter, ActivityAssignment, SettlementStorage, MarketOrder, Trade, CaravanShipment, NpcMarketState, Transaction, EventSummary, NotificationPrefs, SaveGame — in `packages/engine/src/world/state.ts` (data-model.md Part I)
 - [ ] T032 SaveGame Zod validation + `formatVersion` migration framework (validate on load, migrate forward) in `packages/engine/src/world/save.ts` with tests in `packages/engine/tests/save.test.ts`
 - [ ] T033 Wallet + append-only Transaction log primitives (wallet never negative; every coin/item mutation records a Transaction — FR-052, conservation invariant) in `packages/engine/src/world/ledger.ts` with tests in `packages/engine/tests/ledger.test.ts`
@@ -145,7 +145,7 @@ storage-full mid-absence shows halt time and reason (quickstart US2).
 
 ### Design artifact
 
-- [ ] T052 [US2] Design artifact for the return-summary surface (summary modal content, cap/halt messaging, acknowledge flow; primary/deferred split) in `specs/001-tradewright-core/design/return-summary.md`
+- [ ] T052 [US2] Design artifact for the return-summary surface (summary modal content, cap/halt messaging, acknowledge flow; primary/deferred split) — including row treatments for the order-fill/expiry and caravan-arrival event kinds that join the summary in US4/US5 (FR-014) — in `specs/001-tradewright-core/design/return-summary.md`
 
 ### Tests for User Story 2 (write first) ⚠️
 
@@ -154,7 +154,7 @@ storage-full mid-absence shows halt time and reason (quickstart US2).
 
 ### Implementation for User Story 2
 
-- [ ] T055 [US2] EventSummary accumulation during fast-forward (actions, items, XP/levels, halts with when/why, net coin; cleared on acknowledgement) in `packages/engine/src/simulation/summary.ts`
+- [ ] T055 [US2] EventSummary accumulation during fast-forward (actions, items, XP/levels, halts with when/why, net coin; cleared on acknowledgement) in `packages/engine/src/simulation/summary.ts` — built around typed event kinds so US4/US5 append order and caravan events without restructuring (FR-014)
 - [ ] T056 [US2] V1 time integrity: persist `lastSeenWallClock` + monotonic mark in SaveGame, clamp negative elapsed, accept forward up to cap in `packages/engine/src/simulation/clock.ts`; optional HTTP-Date network time probe host-side in `apps/client/src/transport/time-probe.ts` (research R8)
 - [ ] T057 [US2] Adapter: GetSummary query, CollectSummary command, SummaryReady event; run catch-up on host boot before first query in `packages/engine/src/adapter/local-game-host.ts`
 - [ ] T058 [US2] Client: return summary modal per design artifact, shown on boot when a summary is pending in `apps/client/src/screens/return-summary.tsx`
@@ -221,6 +221,7 @@ NPC sell depth raises the quote next market tick (quickstart US4).
 - [ ] T073 [US4] Adapter: PlaceOrder, CancelOrder commands; GetMarket (presence-gated to current settlement, FR-035), GetMyOrders, GetTransactions (paged) queries; OrderFilled/OrderPartiallyFilled/OrderExpired/OrderCancelled events with proceeds & tax in `packages/engine/src/adapter/local-game-host.ts`
 - [ ] T074 [US4] Client: trading post screens per design artifact — item list with best bid/ask, item detail (depth, recent trades), order placement form with full fee disclosure before confirm, my-orders with status in `apps/client/src/screens/market.tsx`
 - [ ] T075 [US4] Client: transaction-log screen (paged audit history, FR-052) in `apps/client/src/screens/transactions.tsx`
+- [ ] T076 [US4] Extend EventSummary for market events: order fills/expiries resolved during absence appear in the return summary with proceeds and tax detail (FR-014) — accumulation in `packages/engine/src/simulation/summary.ts`, unit tests added to `packages/engine/tests/offline.test.ts`, summary-modal assertion added to `apps/client/tests/e2e/offline.spec.ts`
 
 **Checkpoint**: US1–US4 — production converts to profit on living local markets.
 
@@ -237,21 +238,22 @@ profit equals spread − taxes − fees − dispatch − risk losses (quickstart
 
 ### Design artifact
 
-- [ ] T076 [US5] Design artifact for map/routes, caravan composition, and shipment-tracking screens (weight gauge, duration/risk/cost pre-confirm, in-transit progress; primary/deferred split) in `specs/001-tradewright-core/design/caravans-map.md`
+- [ ] T077 [US5] Design artifact for map/routes, caravan composition, and shipment-tracking screens (weight gauge, duration/risk/cost pre-confirm, in-transit progress; primary/deferred split) in `specs/001-tradewright-core/design/caravans-map.md`
 
 ### Tests for User Story 5 (write first) ⚠️
 
-- [ ] T077 [P] [US5] Engine unit tests: dispatch validation (weight ≤ capacity, slot limit with explanation, costs payable), risk rolled exactly once per shipment from state RNG, mitigation reduces loss by factor, arrival deposits into destination storage (online and via catch-up), hauling skill levels by completed shipments growing capacity/slots, personal travel halts assignment + location transitions (FR-002/044) in `packages/engine/tests/caravan.test.ts`
-- [ ] T078 [P] [US5] Playwright flow (quickstart US5): buy low in A → dispatch caravan to B (weight/duration/risk/costs shown pre-confirm) → advance clock → travel to B → sell high → profit matches prediction; UI never blocks during transit; over-limit dispatch explains slot availability in `apps/client/tests/e2e/caravan.spec.ts`
+- [ ] T078 [P] [US5] Engine unit tests: dispatch validation (weight ≤ capacity, slot limit with explanation, costs payable), risk rolled exactly once per shipment from state RNG, mitigation reduces loss by factor, arrival deposits into destination storage (online and via catch-up), hauling skill levels by completed shipments growing capacity/slots, personal travel halts assignment + location transitions (FR-002/044) in `packages/engine/tests/caravan.test.ts`
+- [ ] T079 [P] [US5] Playwright flow (quickstart US5): buy low in A → dispatch caravan to B (weight/duration/risk/costs shown pre-confirm) → advance clock → travel to B → sell high → profit matches prediction; UI never blocks during transit; over-limit dispatch explains slot availability in `apps/client/tests/e2e/caravan.spec.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T079 [US5] Caravan module: shipment lifecycle (manifest escrow from storage, departAt/arriveAt timers independent of assignment, seeded risk resolution + mitigation, delivery deposit, caravan-loss Transactions) in `packages/engine/src/caravan/shipments.ts`
-- [ ] T080 [US5] Hauling progression: skill XP per completed shipment driving capacity and concurrent-slot growth (FR-041) in `packages/engine/src/caravan/hauling.ts`
-- [ ] T081 [US5] Personal travel: locationState `traveling` transitions on route travelMinutes, assignment halt `travel`, arrival enables destination activities/market/storage in `packages/engine/src/world/travel.ts`
-- [ ] T082 [US5] Adapter: DispatchCaravan, TravelTo commands; GetRoutes (durations/risk/costs from current settlement), GetShipments (progress + ETA) queries; CaravanArrived (with risk outcome detail), TravelArrived events in `packages/engine/src/adapter/local-game-host.ts`
-- [ ] T083 [US5] Client: map/routes screen per design artifact (destination, caravan + personal durations, risk, costs) in `apps/client/src/screens/map.tsx`
-- [ ] T084 [US5] Client: caravan composition flow (weight gauge, mitigation option, full cost pre-confirm) + shipment tracking with arrival countdown in `apps/client/src/screens/caravans.tsx`
+- [ ] T080 [US5] Caravan module: shipment lifecycle (manifest escrow from storage, departAt/arriveAt timers independent of assignment, seeded risk resolution + mitigation, delivery deposit, caravan-loss Transactions) in `packages/engine/src/caravan/shipments.ts`
+- [ ] T081 [US5] Hauling progression: skill XP per completed shipment driving capacity and concurrent-slot growth (FR-041) in `packages/engine/src/caravan/hauling.ts`
+- [ ] T082 [US5] Personal travel: locationState `traveling` transitions on route travelMinutes, assignment halt `travel`, arrival enables destination activities/market/storage in `packages/engine/src/world/travel.ts`
+- [ ] T083 [US5] Adapter: DispatchCaravan, TravelTo commands; GetRoutes (durations/risk/costs from current settlement), GetShipments (progress + ETA) queries; CaravanArrived (with risk outcome detail), TravelArrived events in `packages/engine/src/adapter/local-game-host.ts`
+- [ ] T084 [US5] Client: map/routes screen per design artifact (destination, caravan + personal durations, risk, costs) in `apps/client/src/screens/map.tsx`
+- [ ] T085 [US5] Client: caravan composition flow (weight gauge, mitigation option, full cost pre-confirm) + shipment tracking with arrival countdown in `apps/client/src/screens/caravans.tsx`
+- [ ] T086 [US5] Extend EventSummary for caravan events: arrivals (with risk outcome detail) and personal-travel completions resolved during absence appear in the return summary (FR-014) — accumulation in `packages/engine/src/simulation/summary.ts`, unit tests added to `packages/engine/tests/offline.test.ts`, summary-modal assertion added to `apps/client/tests/e2e/offline.spec.ts`
 
 **Checkpoint**: US1–US5 — the complete M1 solo loop: gather → refine → craft → arbitrage between towns.
 
@@ -262,15 +264,17 @@ profit equals spread − taxes − fees − dispatch − risk losses (quickstart
 **Purpose**: Remaining M1 requirements that span stories, economy tuning, and the
 milestone's validation pass.
 
-- [ ] T085 ExpandStorage end-to-end: engine coin-sink purchase at escalating disclosed costs capped by storage-facility effective tier (FR-023/037), adapter command, purchase UI on the storage screen, unit tests in `packages/engine/src/world/storage.ts`, `packages/engine/src/adapter/local-game-host.ts`, `apps/client/src/screens/storage.tsx`, `packages/engine/tests/storage-expansion.test.ts`
-- [ ] T086 Notification model: engine-side notifiable-moment scheduler over known timers (caravan ETA, offline cap, order fill/expiry), NotificationPrefs state (all categories off by default), SetNotificationPref/GetNotificationPrefs in adapter, unit tests (FR-064, research R15) in `packages/engine/src/world/notifications.ts` and `packages/engine/tests/notifications.test.ts`
-- [ ] T087 V1 device-scheduled notification delivery adapter via service worker + Notification API with honest capability notes (iOS installed-PWA requirement), per-category opt-in settings UI in `apps/client/src/notifications/scheduler.ts` and `apps/client/src/screens/settings.tsx`
-- [ ] T088 [P] Economy telemetry surface: per-settlement faucet/sink flow counters per period queryable for tuning (FR-053) in `packages/engine/src/npc/telemetry.ts` with tests in `packages/engine/tests/telemetry.test.ts`
-- [ ] T089 Joint economy model (plan "Known Design Gaps" tuning precondition): simulation script over launch content checking SC-006 (≤60% self-sufficiency) and SC-007 (arbitrage profitability ±50% income parity) jointly; tune `packages/content/data/*.json` until green, in `packages/content/tests/economy-model.test.ts`
-- [ ] T090 [P] Full-loop determinism test: identical SaveGame + content + elapsed ticks ⇒ identical state across skilling, market, NPC, and caravan systems together (quickstart "feature validated" item 3) in `packages/engine/tests/determinism.test.ts`
-- [ ] T091 [P] Phone-portrait usability audit (SC-009): Playwright assertions that primary actions are reachable and visible at 390×844 on every shipped screen in `apps/client/tests/e2e/usability.spec.ts`
-- [ ] T092 [P] Pacing audits as E2E specs: first activity < 3 min (SC-001), daily check-in loop < 2 min (SC-003), order placement ≤ 6 inputs (SC-004) in `apps/client/tests/e2e/pacing.spec.ts`
-- [ ] T093 Quickstart Part I validation run: all commands green locally + CI on one commit, all five story scenarios pass; fix any stale statements in `specs/001-tradewright-core/quickstart.md` (Principle X)
+- [ ] T087 Design artifact for the storage and settings screens (storage capacity view + expansion purchase with escalating cost and facility-tier cap disclosure; per-category notification opt-ins with honest capability notes; primary/deferred split per Principle VIII) in `specs/001-tradewright-core/design/storage-settings.md` (Principle VII — before T088/T090)
+- [ ] T088 ExpandStorage end-to-end: engine coin-sink purchase at escalating disclosed costs capped by storage-facility effective tier (FR-023/037), adapter command, purchase UI on the storage screen per design artifact, unit tests in `packages/engine/src/world/storage.ts`, `packages/engine/src/adapter/local-game-host.ts`, `apps/client/src/screens/storage.tsx`, `packages/engine/tests/storage-expansion.test.ts`
+- [ ] T089 Notification model: engine-side notifiable-moment scheduler over known timers (caravan ETA, offline cap, order fill/expiry), NotificationPrefs state (all categories off by default), SetNotificationPref/GetNotificationPrefs in adapter, unit tests (FR-064, research R15) in `packages/engine/src/world/notifications.ts` and `packages/engine/tests/notifications.test.ts`
+- [ ] T090 V1 device-scheduled notification delivery adapter via service worker + Notification API with honest capability notes (iOS installed-PWA requirement), per-category opt-in settings UI per design artifact in `apps/client/src/notifications/scheduler.ts` and `apps/client/src/screens/settings.tsx`
+- [ ] T091 [P] Playwright flows for the Phase 8 screens: storage expansion (escalating cost disclosed → purchase → capacity grows → facility-tier cap explained at max) in `apps/client/tests/e2e/storage.spec.ts`; notification settings (all categories off by default → opt in per category → preference persists across reload) in `apps/client/tests/e2e/settings.spec.ts`
+- [ ] T092 [P] Economy telemetry surface: per-settlement faucet/sink flow counters per period queryable for tuning (FR-053) in `packages/engine/src/npc/telemetry.ts` with tests in `packages/engine/tests/telemetry.test.ts`
+- [ ] T093 Joint economy model (plan "Known Design Gaps" tuning precondition): simulation script over launch content checking SC-006 (≤60% self-sufficiency) and SC-007 (arbitrage profitability ±50% income parity) jointly; tune `packages/content/data/*.json` until green, in `packages/content/tests/economy-model.test.ts`
+- [ ] T094 [P] Full-loop determinism test: identical SaveGame + content + elapsed ticks ⇒ identical state across skilling, market, NPC, and caravan systems together (quickstart "feature validated" item 3) in `packages/engine/tests/determinism.test.ts`
+- [ ] T095 [P] Phone-portrait usability audit (SC-009): Playwright assertions that primary actions are reachable and visible at 390×844 on every shipped screen in `apps/client/tests/e2e/usability.spec.ts`
+- [ ] T096 [P] Pacing audits as E2E specs: first activity < 3 min (SC-001), daily check-in loop < 2 min (SC-003), order placement ≤ 6 inputs (SC-004) in `apps/client/tests/e2e/pacing.spec.ts`
+- [ ] T097 Quickstart Part I validation run: all commands green locally + CI on one commit, all five story scenarios pass; fix any stale statements in `specs/001-tradewright-core/quickstart.md` (Principle X)
 
 ---
 
@@ -285,8 +289,9 @@ milestone's validation pass.
   US1's activity engine; US4 needs US3's goods worth trading; US5 needs US4's markets in
   two towns. Client screens within different stories are independent once their engine
   modules exist.
-- **Polish (Phase 8)**: T085–T087 need Phase 2 + the screens they touch; T089/T090
-  need all of US1–US5; T091–T093 need all screens shipped.
+- **Polish (Phase 8)**: T087 (design artifact) before the screen tasks T088/T090;
+  T088–T091 need Phase 2 + the screens they touch; T093/T094 need all of US1–US5;
+  T095–T097 need all screens shipped.
 
 ### User Story Dependencies
 
@@ -351,5 +356,5 @@ US5 arbitrage = full M1 solo loop. Commit and push after every task or logical g
 ### Milestone Exit (M1 done)
 
 `npm run check`, `npm test`, `npm run validate:content`, `npm run test:e2e` all green on
-one commit; quickstart Part I scenarios pass; joint economy model (T089) holds; then
+one commit; quickstart Part I scenarios pass; joint economy model (T093) holds; then
 regenerate tasks for M2 (combat core, Stories 6–13) with `/speckit-tasks`.
