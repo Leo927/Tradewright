@@ -1,17 +1,18 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.4.0 → 1.5.0 (MINOR — new principle added)
+Version change: 1.5.0 → 1.6.0 (MINOR — new principle added)
 Modified principles: none renamed or redefined
 Added sections:
-  - Core Principle IX. Latency-Tolerant Client (UI never blocks on server
-    round-trips; optimistic updates with reconciliation; contract designed
-    for asynchrony)
+  - Core Principle X. No Stale Content (all persistent artifacts must describe
+    the project as it currently is; changes update or delete the content they
+    invalidate in the same change; generalizes Principle VI repository-wide)
+  - Quality Gate 7 — Staleness (PR updates/removes content it invalidates)
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — version reference updated to v1.5.0;
-    new Constitution Check gate: interactions classified as local-immediate vs
-    server-confirmed, no blocking UI on round-trips
+  ✅ .specify/templates/plan-template.md — version reference updated to v1.6.0;
+    new Constitution Check gate: plan identifies existing docs/specs/context
+    files the feature invalidates and schedules their update or removal
   ✅ .specify/templates/tasks-template.md — no change needed
   ✅ .specify/templates/spec-template.md — no change needed
   ⚠ README.md / docs/quickstart.md — do not exist yet; document local test commands when created
@@ -211,6 +212,31 @@ is not designed into the contract now, every interaction inherits a round-trip
 when it does. Games where each button click waits on the server demonstrate
 the failure mode: technically correct, miserable to use.
 
+### X. No Stale Content
+
+Every persistent artifact in this repository — documentation, agent context
+files (e.g., CLAUDE.md), specs, plans, design artifacts, comments,
+configuration notes — MUST describe the project as it currently is. Stale
+content is not a cosmetic issue; it is wrong information published under the
+repository's authority.
+
+- A change that invalidates written content MUST update or delete that
+  content in the same change. Merging the code while leaving the now-wrong
+  words behind is a constitution violation.
+- Stale content discovered during any task MUST be corrected or removed on
+  the spot when the fix is small; when it is too large for the current
+  change, it gets a tracking issue in the same working session — never
+  silently left in place.
+- Content MUST NOT present future intent as current fact. Aspirational or
+  speculative material is either explicitly labeled as planned or omitted.
+- When accuracy cannot be cheaply verified, prefer deletion over retention:
+  missing guidance prompts a question; wrong guidance silently misleads.
+
+**Rationale**: Humans and agents act on what is written without re-deriving
+it from code; a repository whose words cannot be trusted forces re-verifying
+everything, everywhere. Principle VI applies this discipline to code
+comments; this principle extends it to every artifact that persists.
+
 ## Quality Gates & Testing Standards
 
 These gates apply to every pull request:
@@ -233,6 +259,9 @@ These gates apply to every pull request:
 - **Gate 6 — Design fidelity**: UI changes match the referenced design
   artifact; any deviation is reflected in an updated design artifact or a
   recorded sign-off before merge.
+- **Gate 7 — Staleness**: The PR updates or removes every piece of written
+  content (docs, agent context files, specs, design artifacts, comments) that
+  its changes invalidate; no content presents future intent as current fact.
 
 Playwright tests MUST be deterministic: no arbitrary sleeps, use web-first
 assertions and test fixtures. Flaky tests are fixed or quarantined with a
@@ -275,4 +304,4 @@ constitution wins.
   principles above. Every PR review verifies the Quality Gates. Deviations
   MUST be justified in the plan's Complexity Tracking table or rejected.
 
-**Version**: 1.5.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11
+**Version**: 1.6.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11

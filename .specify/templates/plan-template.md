@@ -40,7 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` (v1.5.0):
+Gates derived from `.specify/memory/constitution.md` (v1.6.0):
 
 - [ ] **Test-First Quality (I)**: Plan includes unit test tasks for all new/changed
   logic and Playwright E2E tasks for all new/changed user-facing flows. Tests are
@@ -67,6 +67,10 @@ Gates derived from `.specify/memory/constitution.md` (v1.5.0):
   classified as local-immediate, optimistic-with-reconciliation, or
   server-confirmed-with-pending-state; no interaction blocks the UI on a
   round-trip, and the GUI–logic contract stays asynchronous.
+- [ ] **No Stale Content (X)**: The plan identifies existing written content
+  (docs, agent context files, specs, design artifacts) this feature
+  invalidates and schedules its update or removal in the same work — nothing
+  invalidated is left to drift.
 
 Violations MUST be justified in Complexity Tracking below or the plan reworked.
 

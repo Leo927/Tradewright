@@ -7,4 +7,4 @@ at specs/004-artifacts-catacomb/plan.md
 The current feature under specification is `specs/004-artifacts-catacomb/`
 (see `.specify/feature.json`); the plan pointer above advances when its plan
 is generated. Project principles are governed by
-`.specify/memory/constitution.md` (v1.5.0).
+`.specify/memory/constitution.md` (v1.6.0).
