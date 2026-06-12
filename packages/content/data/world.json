@@ -1,0 +1,7 @@
+{
+  "worldTickSeconds": 60,
+  "marketCadenceTicks": 5,
+  "offlineCapHours": 24,
+  "caravanDurationBand": { "minHours": 2, "maxHours": 6 },
+  "starterCoin": 100
+}

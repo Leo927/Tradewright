@@ -1,0 +1,26 @@
+[
+  {
+    "id": "caravan-arrival",
+    "titleKey": "notify.caravan-arrival.title",
+    "bodyKey": "notify.caravan-arrival.body",
+    "onlineVersionOnly": false
+  },
+  {
+    "id": "offline-cap-reached",
+    "titleKey": "notify.offline-cap-reached.title",
+    "bodyKey": "notify.offline-cap-reached.body",
+    "onlineVersionOnly": false
+  },
+  {
+    "id": "committed-start-approaching",
+    "titleKey": "notify.committed-start-approaching.title",
+    "bodyKey": "notify.committed-start-approaching.body",
+    "onlineVersionOnly": true
+  },
+  {
+    "id": "order-filled-expired",
+    "titleKey": "notify.order-filled-expired.title",
+    "bodyKey": "notify.order-filled-expired.body",
+    "onlineVersionOnly": false
+  }
+]

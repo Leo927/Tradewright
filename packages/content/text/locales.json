@@ -1,0 +1,5 @@
+[
+  { "id": "en", "endonym": "English", "status": "shipped" },
+  { "id": "pseudo-expand", "endonym": "Pseudo (expanded)", "status": "validation" },
+  { "id": "pseudo-cjk", "endonym": "Pseudo (CJK)", "status": "validation" }
+]

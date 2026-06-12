@@ -1,0 +1,50 @@
+[
+  {
+    "id": "route.brackwater-emberfall",
+    "endpoints": ["settlement.brackwater", "settlement.emberfall"],
+    "caravanMinutes": 180,
+    "travelMinutes": 25,
+    "riskLevel": "moderate",
+    "riskChance": 0.15,
+    "lossFraction": 0.3,
+    "mitigationCost": 25,
+    "mitigationFactor": 0.5,
+    "dispatchCost": 30
+  },
+  {
+    "id": "route.emberfall-thornholt",
+    "endpoints": ["settlement.emberfall", "settlement.thornholt"],
+    "caravanMinutes": 150,
+    "travelMinutes": 20,
+    "riskLevel": "low",
+    "riskChance": 0.08,
+    "lossFraction": 0.25,
+    "mitigationCost": 15,
+    "mitigationFactor": 0.5,
+    "dispatchCost": 25
+  },
+  {
+    "id": "route.thornholt-greywatch",
+    "endpoints": ["settlement.thornholt", "settlement.greywatch"],
+    "caravanMinutes": 120,
+    "travelMinutes": 15,
+    "riskLevel": "safe",
+    "riskChance": 0.02,
+    "lossFraction": 0.15,
+    "mitigationCost": 10,
+    "mitigationFactor": 0.5,
+    "dispatchCost": 20
+  },
+  {
+    "id": "route.greywatch-brackwater",
+    "endpoints": ["settlement.greywatch", "settlement.brackwater"],
+    "caravanMinutes": 240,
+    "travelMinutes": 35,
+    "riskLevel": "high",
+    "riskChance": 0.25,
+    "lossFraction": 0.4,
+    "mitigationCost": 40,
+    "mitigationFactor": 0.5,
+    "dispatchCost": 35
+  }
+]

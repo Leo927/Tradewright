@@ -1,0 +1,71 @@
+[
+  {
+    "id": "npc.brackwater",
+    "entries": [
+      { "itemId": "item.silverfin", "equilibriumStock": 200, "productionPerHour": 20, "consumptionPerHour": 18, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 20 },
+      { "itemId": "item.coney-hide", "equilibriumStock": 150, "productionPerHour": 15, "consumptionPerHour": 14, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 15 },
+      { "itemId": "item.coney-leather", "equilibriumStock": 80, "productionPerHour": 6, "consumptionPerHour": 7, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.12, "orderDepth": 10 },
+      { "itemId": "item.rough-cloth", "equilibriumStock": 80, "productionPerHour": 6, "consumptionPerHour": 7, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.12, "orderDepth": 10 },
+      { "itemId": "item.smoked-silverfin", "equilibriumStock": 50, "productionPerHour": 3, "consumptionPerHour": 4, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 6 },
+      { "itemId": "item.tin-bar", "equilibriumStock": 60, "productionPerHour": 2, "consumptionPerHour": 5, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 8 }
+    ],
+    "floorBuyList": [
+      { "itemId": "item.silverfin", "floorPrice": 1 },
+      { "itemId": "item.coney-hide", "floorPrice": 1 },
+      { "itemId": "item.duskcrab", "floorPrice": 2 }
+    ],
+    "floorBudgetPerPeriod": 200,
+    "sweep": { "periodTicks": 30, "budgetPerPeriod": 120 }
+  },
+  {
+    "id": "npc.emberfall",
+    "entries": [
+      { "itemId": "item.tin-ore", "equilibriumStock": 200, "productionPerHour": 20, "consumptionPerHour": 18, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 20 },
+      { "itemId": "item.fieldstone", "equilibriumStock": 150, "productionPerHour": 15, "consumptionPerHour": 13, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 15 },
+      { "itemId": "item.tin-bar", "equilibriumStock": 80, "productionPerHour": 7, "consumptionPerHour": 6, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.12, "orderDepth": 10 },
+      { "itemId": "item.stone-block", "equilibriumStock": 60, "productionPerHour": 5, "consumptionPerHour": 5, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.12, "orderDepth": 8 },
+      { "itemId": "item.tin-knife", "equilibriumStock": 40, "productionPerHour": 2, "consumptionPerHour": 3, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 5 },
+      { "itemId": "item.pine-plank", "equilibriumStock": 60, "productionPerHour": 2, "consumptionPerHour": 5, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 8 }
+    ],
+    "floorBuyList": [
+      { "itemId": "item.tin-ore", "floorPrice": 1 },
+      { "itemId": "item.fieldstone", "floorPrice": 1 },
+      { "itemId": "item.copper-ore", "floorPrice": 2 }
+    ],
+    "floorBudgetPerPeriod": 200,
+    "sweep": { "periodTicks": 30, "budgetPerPeriod": 120 }
+  },
+  {
+    "id": "npc.thornholt",
+    "entries": [
+      { "itemId": "item.pinewood", "equilibriumStock": 200, "productionPerHour": 20, "consumptionPerHour": 18, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 20 },
+      { "itemId": "item.bittergreen", "equilibriumStock": 150, "productionPerHour": 15, "consumptionPerHour": 13, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 15 },
+      { "itemId": "item.pine-plank", "equilibriumStock": 80, "productionPerHour": 7, "consumptionPerHour": 6, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.12, "orderDepth": 10 },
+      { "itemId": "item.bitter-tonic", "equilibriumStock": 40, "productionPerHour": 2, "consumptionPerHour": 3, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 5 },
+      { "itemId": "item.silverfin", "equilibriumStock": 60, "productionPerHour": 2, "consumptionPerHour": 5, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 8 }
+    ],
+    "floorBuyList": [
+      { "itemId": "item.pinewood", "floorPrice": 1 },
+      { "itemId": "item.bittergreen", "floorPrice": 1 },
+      { "itemId": "item.oakwood", "floorPrice": 2 }
+    ],
+    "floorBudgetPerPeriod": 200,
+    "sweep": { "periodTicks": 30, "budgetPerPeriod": 120 }
+  },
+  {
+    "id": "npc.greywatch",
+    "entries": [
+      { "itemId": "item.bittergreen", "equilibriumStock": 120, "productionPerHour": 10, "consumptionPerHour": 11, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.1, "orderDepth": 12 },
+      { "itemId": "item.woven-cloth", "equilibriumStock": 40, "productionPerHour": 3, "consumptionPerHour": 3, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 5 },
+      { "itemId": "item.hand-bellows", "equilibriumStock": 30, "productionPerHour": 2, "consumptionPerHour": 3, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 4 },
+      { "itemId": "item.tin-bar", "equilibriumStock": 50, "productionPerHour": 2, "consumptionPerHour": 4, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.15, "orderDepth": 6 },
+      { "itemId": "item.emberbloom", "equilibriumStock": 60, "productionPerHour": 3, "consumptionPerHour": 5, "priceBounds": { "minMultiplier": 0.5, "maxMultiplier": 3 }, "orderBandWidth": 0.12, "orderDepth": 8 }
+    ],
+    "floorBuyList": [
+      { "itemId": "item.emberbloom", "floorPrice": 2 },
+      { "itemId": "item.bittergreen", "floorPrice": 1 }
+    ],
+    "floorBudgetPerPeriod": 150,
+    "sweep": { "periodTicks": 30, "budgetPerPeriod": 100 }
+  }
+]

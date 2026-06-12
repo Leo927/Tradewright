@@ -1,0 +1,63 @@
+[
+  {
+    "id": "settlement.brackwater",
+    "activityTags": ["coastal"],
+    "listingFeeRate": 0.02,
+    "salesTaxRate": 0.05,
+    "baseStorageCapacity": 100,
+    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "facilities": [
+      { "id": "facility.brackwater-storage", "kind": "storage", "baseTier": 3 },
+      { "id": "facility.brackwater-tannery", "kind": "station", "craftFamily": "tanning", "baseTier": 3 },
+      { "id": "facility.brackwater-loom-shed", "kind": "station", "craftFamily": "threadwork", "baseTier": 3 },
+      { "id": "facility.brackwater-outfitter", "kind": "station", "craftFamily": "armorcraft", "baseTier": 3 },
+      { "id": "facility.brackwater-smokehouse", "kind": "station", "craftFamily": "cookery", "baseTier": 3 }
+    ],
+    "npcProfileId": "npc.brackwater"
+  },
+  {
+    "id": "settlement.emberfall",
+    "activityTags": ["highland"],
+    "listingFeeRate": 0.02,
+    "salesTaxRate": 0.05,
+    "baseStorageCapacity": 100,
+    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "facilities": [
+      { "id": "facility.emberfall-storage", "kind": "storage", "baseTier": 3 },
+      { "id": "facility.emberfall-smelter", "kind": "station", "craftFamily": "smelting", "baseTier": 3 },
+      { "id": "facility.emberfall-stoneyard", "kind": "station", "craftFamily": "stonemasonry", "baseTier": 3 },
+      { "id": "facility.emberfall-forge", "kind": "station", "craftFamily": "bladecraft", "baseTier": 3 },
+      { "id": "facility.emberfall-gembench", "kind": "station", "craftFamily": "gemwright", "baseTier": 3 }
+    ],
+    "npcProfileId": "npc.emberfall"
+  },
+  {
+    "id": "settlement.thornholt",
+    "activityTags": ["forest"],
+    "listingFeeRate": 0.02,
+    "salesTaxRate": 0.05,
+    "baseStorageCapacity": 100,
+    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "facilities": [
+      { "id": "facility.thornholt-storage", "kind": "storage", "baseTier": 3 },
+      { "id": "facility.thornholt-sawmill", "kind": "station", "craftFamily": "sawmilling", "baseTier": 3 },
+      { "id": "facility.thornholt-workshop", "kind": "station", "craftFamily": "joinery", "baseTier": 3 },
+      { "id": "facility.thornholt-stillroom", "kind": "station", "craftFamily": "alchemy", "baseTier": 3 }
+    ],
+    "npcProfileId": "npc.thornholt"
+  },
+  {
+    "id": "settlement.greywatch",
+    "activityTags": ["crossroads"],
+    "listingFeeRate": 0.02,
+    "salesTaxRate": 0.05,
+    "baseStorageCapacity": 100,
+    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "facilities": [
+      { "id": "facility.greywatch-storage", "kind": "storage", "baseTier": 3 },
+      { "id": "facility.greywatch-tinker-hall", "kind": "station", "craftFamily": "tinkering", "baseTier": 3 },
+      { "id": "facility.greywatch-loomworks", "kind": "station", "craftFamily": "threadwork", "baseTier": 3 }
+    ],
+    "npcProfileId": "npc.greywatch"
+  }
+]
