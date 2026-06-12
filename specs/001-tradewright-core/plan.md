@@ -90,8 +90,9 @@ suspend idle accrual (FR-205). The mechanic vocabulary has no player-targeting d
 primitive (SC-208). No-ruin in every format (FR-204); staked delve pools are entitlements,
 never owned property (SC-306)
 
-**Scale/Scope**: 23 user stories across four pillars; ~8 skill tracks (≥ 3 gathering, 2
-refining, 2 crafting, plus hauling), ≥ 4 settlements,
+**Scale/Scope**: 23 user stories across four pillars; 18 skill tracks (5 gathering, 5
+refining, 7 crafting — New World's full trade-skill family structure — plus hauling),
+≥ 4 settlements,
 single currency; 2 combat schools at launch; 8 challenge formats with launch minimums
 (1 trial ladder ≥ 3 trials, 1 dungeon + 3 affliction levels, 1 raid, 1 elite zone, 1 event
 type, 1 world boss, invasions for all settlements); 6–10 relics (≥ 1 V1-obtainable), 2–3

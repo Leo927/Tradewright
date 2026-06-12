@@ -2183,9 +2183,14 @@ UI throughout.
 - **Idle pacing**: standard idle conventions apply — actions in the seconds-to-minute range,
   hundreds to low thousands of actions per hour-equivalent at low tiers, exponential XP curves
   per tier, modeled on Ironwood RPG / Melvor Idle pacing.
-- **Skill families at launch**: at least 3 gathering, 2 refining, and 2 crafting skills plus the
-  hauling progression, each with at least 4 tiers — enough to demonstrate full interdependence.
-  Exact counts are content decisions, not code constraints.
+- **Skill families at launch**: a direct copy of New World's trade-skill family structure —
+  5 gathering, 5 refining, and 7 crafting skills (mirroring its documented gathering/refining/
+  crafting split: logging-, mining-, harvesting-, skinning-, and fishing-shaped gathering;
+  the five refining lines each fed by a gathering counterpart; and crafting covering weapons,
+  armor, engineering, jewelry, arcane goods, provisions, and furnishings) plus the original
+  hauling progression, each with at least 5 tiers matching New World's T1–T5 material ladder.
+  Every skill name and all content within is original per FR-024; only the family structure
+  is ported. Counts are enforced as content gates, not code constraints.
 - **Structure porting**: recipe tree shapes, refining input:output ratio patterns, and tier
   progression structure follow New World's publicly documented trade-skill systems; every name,
   item, location, and text string is original. Caravan logistics are original to Tradewright —
