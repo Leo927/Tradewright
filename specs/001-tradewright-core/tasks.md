@@ -200,8 +200,9 @@ matching with partial fills, fees/taxes as sinks, NPC price drift + the FR-054 c
 faucet (FR-031–036, FR-050–054; research R4/R13).
 
 **Independent Test**: One player lists a sell order, another (or the NPC principal) buys
-it in the same settlement; the listing is invisible from any other settlement; buying out
-NPC sell depth raises the quote next market tick (quickstart US4).
+it in the same settlement; the listing is visible from every settlement via the linked
+market but matches and delivers only on its home settlement's book; buying out NPC sell
+depth raises the quote next market tick (quickstart US4).
 
 ### Design artifact
 
@@ -209,7 +210,7 @@ NPC sell depth raises the quote next market tick (quickstart US4).
 
 ### Tests for User Story 4 (write first) ⚠️
 
-- [ ] T067 [P] [US4] Engine unit tests: order placement escrows goods/coin, listing fee disclosed+charged, price-then-time priority matching, partial fills, immediate cross fills at best price, sales tax deducted as sink Transaction, expiry/cancel returns escrow in full, settlement isolation (no cross-settlement visibility or matching) in `packages/engine/tests/market.test.ts`
+- [ ] T067 [P] [US4] Engine unit tests: order placement escrows goods/coin, listing fee disclosed+charged, price-then-time priority matching, partial fills, immediate cross fills at best price, sales tax deducted as sink Transaction, expiry/cancel returns escrow in full, matching isolation (orders match within one settlement's book only; books globally browsable) in `packages/engine/tests/market.test.ts`
 - [ ] T068 [P] [US4] Engine unit tests: NPC stock-pressure drift (player buys deplete stock → quote rises; bounded by priceBounds), NPC order refresh on market tick, floor buy orders within period budget, demand sweeps buying cheapest sells within budget, faucet/sink telemetry counters per settlement per period in `packages/engine/tests/npc-market.test.ts`
 - [ ] T069 [P] [US4] Property test: conservation across randomized trade/cancel/expiry sequences — no item or coin duplicated or lost, every mutation has a Transaction (SC-010, data-model invariant 1) in `packages/engine/tests/conservation.test.ts`
 - [ ] T070 [P] [US4] Playwright flow (quickstart US4): place sell order (escrow visible) → crossing buy fills with tax disclosed → goods/coin land correctly → listing browsable from another settlement via the linked market, lives only on its home book, remote buy delivers to storage at the listing's settlement → NPC drift check in `apps/client/tests/e2e/market.spec.ts`
