@@ -50,7 +50,9 @@ are unusable. E2E: `tests/e2e/crafting.spec.ts`.
 
 **US4 — Trade at the Local Market**: at the trading post, place a sell order (goods escrow),
 then a buy order that crosses it. Expect: fill at best price, tax deducted and disclosed,
-goods/coin land correctly, order book in a *different* settlement never shows the listing.
+goods/coin land correctly, the listing is browsable from a *different* settlement (linked
+market) but lives only on its home book, and a remote buy delivers to the buyer's storage at
+the listing's settlement.
 NPC drift check: buy out NPC sell depth for an item; its quote rises next market tick. E2E:
 `tests/e2e/market.spec.ts`.
 

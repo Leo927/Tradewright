@@ -34,9 +34,11 @@ The game is one integral experience built from four pillars and a chase layer on
 1. **Produce** — trade skills (gathering, refining, crafting) progress through an idle loop
    that runs in real time and while offline. Crafting recipes consume the outputs of other
    skills, making players economically interdependent.
-2. **Trade & Haul** — every settlement runs its own independent market with its own order
-   book; there is deliberately no global market. Prices diverge by town, and moving goods
-   between towns via timed caravans is a profitable playstyle in itself.
+2. **Trade & Haul** — every settlement runs its own order book with its own fees and
+   taxes, linked into one globally browsable market (per New World Update 1.1): anyone can
+   see and order on any town's book from anywhere, but goods stay physical — purchases
+   land in storage at the order's settlement. Prices still diverge by town, and moving
+   goods between towns via timed caravans is a profitable playstyle in itself.
 3. **Fight** — UI-based, autoable combat with the full build depth of the inspiration:
    combat schools with active abilities and magic, mastery progression, two-branch perk
    trees, gear and provisions, and player-authored tactics rules. The translation rule:
@@ -356,6 +358,15 @@ history. All referenced requirement numbers remain valid in this document.
   player chose: caravan arrival, offline cap reached, approaching start of a committed
   raid/invasion, market order filled/expired; never promotional. All other "notified"
   language in this spec means in-app surfaces only. See FR-064.
+- Q: Does per-settlement market isolation stand, and what does FR-035's presence gate mean
+  for remote market data? → A: Isolation is deprecated in favor of New World's Update 1.1
+  (2021-11-18) linked-market model: every settlement's order book is browsable from
+  anywhere with live data (no presence gate), buy orders are placeable at any settlement
+  remotely, sell listings are created only where the goods physically are, and matching,
+  fees/taxes, and goods delivery stay per-settlement — purchases land in the buyer's
+  storage at the order's settlement, so hauling remains the way goods actually move.
+  Supersedes the former "localized markets are a conscious divergence" scope boundary.
+  See FR-031, FR-032, FR-035.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -462,16 +473,19 @@ recipe consumes outputs of two different skills.
 
 ### User Story 4 - Trade at the Local Market (Priority: P4)
 
-A player visits their settlement's trading post and places buy and sell orders on the local order
-book. Orders match against other players' standing orders in that settlement only. Prices for the
-same good differ between settlements because each order book is independent.
+A player opens the trading post and browses the linked market: every settlement's order book
+is visible with live prices. They sell goods on their current settlement's book and place buy
+orders on any settlement's book, including remotely. Orders match within a single settlement's
+book only, and purchased goods land in storage at that settlement. Prices for the same good
+still differ between settlements because goods are physical and must be hauled.
 
 **Why this priority**: The market converts production into profit and makes other players'
 activity visible. It depends on Stories 1–3 producing goods worth trading.
 
-**Independent Test**: Two test players in the same settlement can complete a full trade (one lists
-a sell order, the other buys it); the same listing is invisible and unmatchable from any other
-settlement.
+**Independent Test**: Two test players can complete a full trade (one lists a sell order, the
+other buys it — from the same settlement or remotely); the listing is visible from every
+settlement, lives on exactly one book, and the purchased goods land in the buyer's storage at
+the listing's settlement.
 
 **Acceptance Scenarios**:
 
@@ -486,9 +500,10 @@ settlement.
 3. **Given** a buy order priced at or above an existing sell order, **When** it is placed, **Then**
    it fills immediately at the best available price, partially filling if quantity exceeds
    availability, with the remainder staying on the book.
-4. **Given** an order book in settlement A, **When** a player in settlement B browses B's trading
-   post, **Then** A's orders are not visible and cannot be matched — each settlement's market is
-   fully independent.
+4. **Given** a sell order on settlement A's book, **When** a player in settlement B browses the
+   linked market and buys it, **Then** the trade executes on A's book at A's tax rates and the
+   goods land in the buyer's storage at A — visible from anywhere, matched and delivered only
+   at the order's home settlement.
 5. **Given** an order that expires unfilled, **When** the duration lapses, **Then** escrowed goods
    or coin return to the owner's local storage/wallet and the owner is notified on next viewing.
 6. **Given** any market screen, **When** the player views an item, **Then** they can see current
@@ -1328,20 +1343,22 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 - **FR-030**: The launch world MUST contain multiple settlements (minimum 4) with deliberately
   asymmetric local resource availability, so that no settlement can produce everything and
   inter-settlement trade is necessary.
-- **FR-031**: Each settlement MUST operate its own independent trading post with its own order
-  book; there MUST be no global market, no cross-settlement order visibility, and no
-  cross-settlement matching.
+- **FR-031**: Each settlement MUST operate its own trading post with its own order book,
+  and all order books MUST be linked into one globally browsable market (New World
+  Update 1.1 model): every book is visible from anywhere, but orders live at exactly one
+  settlement and matching never crosses settlements.
 - **FR-032**: Players MUST be able to place limit buy and sell orders (item, quantity, unit
-  price, duration) at their current settlement; sell orders escrow goods, buy orders escrow coin.
+  price, duration); sell orders escrow goods, buy orders escrow coin. Buy orders MAY be
+  placed at any settlement remotely and fill into the buyer's storage at that settlement;
+  sell orders MUST be placed at the settlement where the escrowed goods physically are.
 - **FR-033**: Orders MUST match within a settlement by price priority, then time priority, with
   partial fills supported; matched trades transfer goods/coin atomically.
 - **FR-034**: Each settlement MUST apply its own listing fee and sales tax to market activity,
   with all fees disclosed before order confirmation. (Phase 1: rates are world-defined per
   settlement; Phase 2 will hand rate-setting to owning companies.)
-- **FR-035**: Players MUST be able to see, per item per settlement: current best bid/ask, order
-  book depth, and recent trade history. Players MUST NOT be shown live prices for settlements
-  their character or caravans have no presence in — price discovery elsewhere comes from visiting,
-  hauling, or word of mouth.
+- **FR-035**: Players MUST be able to see, per item per settlement, from anywhere: current
+  best bid/ask, order book depth, and recent trade history — live market data for every
+  settlement is globally visible with no presence requirement (linked market, FR-031).
 - **FR-036**: Expired or cancelled orders MUST return escrowed goods/coin in full (fees per
   FR-034 excepted).
 - **FR-037**: Each settlement MUST have facilities modeled on New World's settlement
@@ -2093,7 +2110,7 @@ Clarifications. The answers are integrated into the requirements; no open questi
 ## Scope Boundaries
 
 **In scope (the core game)**: accounts and characters; idle skilling with offline accrual;
-items, recipes, and per-settlement storage; settlements with independent local markets and
+items, recipes, and per-settlement storage; settlements with linked-but-located markets and
 tiered crafting-station facilities; the five-attribute stat model with per-school scaling;
 caravans and character travel; single currency with faucet/sink telemetry; transaction
 history; auto-resolving PvE expeditions; combat schools (incl. magic) with active abilities,
@@ -2171,20 +2188,24 @@ UI throughout.
   New World never had caravans (goods moved on encumbered characters); the "fused with New
   World's economy systems" framing covers markets, crafting interdependence, and territory,
   not hauling.
-- **Localized markets are a conscious divergence, not a port**: New World launched with
-  per-settlement trading posts and unified them into a single global market on 2021-11-18
-  (Update 1.1) after localization produced fragmented liquidity, dead towns, and unrewarded
-  hauling tedium — New World: Aeternum (2024) has one global market. Tradewright keeps
-  localization deliberately because each documented failure cause is answered structurally:
-  NPC traders floor liquidity in every settlement (research R4, economy), hauling is rewarded
-  progression gameplay (FR-040–045) rather than unpaid travel, and asymmetric resources
-  (FR-030) guarantee price spreads worth playing. SC-007 is the live health check on this bet.
+- **Linked market, located goods (a port of New World Update 1.1)**: New World launched with
+  isolated per-settlement trading posts and linked them into one globally browsable market on
+  2021-11-18 (Update 1.1) after isolation produced fragmented liquidity, dead towns, and
+  unrewarded hauling tedium. Tradewright ports the post-1.1 model (clarified 2026-06-12,
+  superseding the earlier "keep localization" divergence): every settlement's book is
+  browsable and orderable from anywhere, while order books, matching, fees/taxes, and goods
+  delivery stay per-settlement — purchases land in storage at the order's settlement.
+  Hauling stays rewarded because goods are physical: NPC traders floor liquidity in every
+  settlement (research R4, economy), hauling is paid progression gameplay (FR-040–045), and
+  asymmetric resources (FR-030) keep prices divergent. SC-007 is the live health check that
+  spreads survive global visibility.
 - **Caravan durations**: routes run roughly 2–6 hours for caravans; personal travel is materially
   shorter (minutes to tens of minutes). Values are content-tunable per route.
 - **Risk model**: route risk is a disclosed probability of losing a fraction of cargo, resolved
   once per shipment; mitigation spend reduces the loss fraction. No total-loss routes at launch.
-- **Order presence rule**: placing and managing orders requires the character to be at the
-  settlement; standing orders continue to work after the character leaves.
+- **Order presence rule**: buy orders may be placed and managed at any settlement from
+  anywhere; sell orders require the goods (and so their listing) to be at the settlement
+  where they physically sit. Standing orders continue to work after the character leaves.
 - **One character per account** at launch; multi-character support is a future consideration.
 - **Authentication**: V2 uses standard account registration/login appropriate for a persistent
   online game; no specific provider assumed. V1 requires no account or login (FR-003).

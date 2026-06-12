@@ -60,8 +60,8 @@ outcomes are events. Rejections are immediate and explain themselves (e.g.
 | GetSettlementFacilities | stations + storage with base/effective tiers, degradations, repair state | FR-037 |
 | GetNotificationPrefs | categories with opt-in state and honest device-capability notes | FR-064 |
 
-`GetMarket` only answers for the character's current settlement (plus arrival snapshots a
-caravan/visit produced) — price discovery elsewhere is gameplay (FR-035).
+`GetMarket` answers for any settlement's book — the linked market is globally visible
+(FR-035); matching, fees, and goods delivery stay at the order's settlement (FR-031/032).
 
 ### Events (push)
 
