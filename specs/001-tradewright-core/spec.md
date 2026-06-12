@@ -106,6 +106,10 @@ These rules are permanent, hold across every pillar, and bind all future content
 12. **Authoritative time**: all progress and timers derive from authoritative time; client
     clock changes never alter outcomes (FR-017). The full guarantee is a V2 property;
     serverless V1 enforces it best-effort (Product Definition).
+13. **Localized, never hardcoded**: every player-facing string is an externalized,
+    per-locale text resource; authored content separates text from mechanics; locale
+    affects display only — never game state, outcomes, or determinism (FR-070–078,
+    SC-014). The game is built localization-ready from the first screen, not retrofitted.
 
 ## Product Definition: Two Versions, One Game
 
@@ -159,7 +163,8 @@ voided by stepping away — the auto AI holds any character, in any format, at a
 ## Player Journey
 
 The user stories below form one priority ladder (P1–P23), ordered so each story builds on
-proven predecessors. The intended life of a player runs through four overlapping phases:
+proven predecessors, plus one cross-cutting foundation story (P0 — play in your own
+language) that is not a rung but a property every rung must satisfy from the first screen. The intended life of a player runs through four overlapping phases:
 
 1. **Settler → Producer (P1–P3)**: arrive, assign a gathering activity, learn the idle
    rhythm, climb the recipe tree into refining and crafting.
@@ -369,11 +374,73 @@ history. All referenced requirement numbers remain valid in this document.
   Supersedes the former "localized markets are a conscious divergence" scope boundary.
   See FR-031, FR-032, FR-035.
 
+### Session 2026-06-12 (internationalization)
+
+- Direction: Internationalization is a fundamental, cross-cutting property of the core game,
+  folded into this one specification rather than split into a separate feature — every
+  pillar, screen, content type, and system-generated record must be implemented
+  localization-ready from the start, because text externalization and a localizable content
+  schema cannot be cheaply retrofitted. Encoded as Design Invariant 13, User Story 0 (P0),
+  FR-070–078, and SC-011–015. The launch locale set stays a content/business decision
+  (Assumptions); the binding requirement is the capability, exercised continuously in
+  validation from the first implemented story.
+
 ## User Scenarios & Testing *(mandatory)*
 
 The stories below form one priority ladder across the four pillars: P1–P5 economy core,
 P6–P13 combat core, P14–P19 challenge & group, P20–P23 relics & delves. Ordering follows
 dependency and build order — each story is independently testable on top of its predecessors.
+Story 0 stands outside the ladder: it is the cross-cutting localization foundation that every
+ladder story must satisfy continuously, validated alongside each story as it lands.
+
+**— Cross-Cutting Foundation (P0) —**
+
+### User Story 0 - Play in Your Own Language (Priority: P0 — cross-cutting)
+
+A player whose device is set to a supported language opens the game and everything is in
+that language — onboarding, every screen, item and skill names, enemy and mechanic
+descriptions, summaries, combat logs, transaction history, warnings, and notifications —
+with numbers, dates, times, durations, and coin amounts formatted the way that language's
+speakers expect. At any moment they can switch the game to another supported language in
+settings and the entire game follows immediately, including records created before the
+switch. Nothing about gameplay changes: the same character, in the same world, with the
+same outcomes.
+
+**Why this priority**: P0 is not a ladder rung — it is a property every rung must satisfy
+from its first screen. Externalized text, a localizable content schema, and locale-neutral
+game state are architectural foundations that are cheap to build in from the start and
+prohibitively expensive to retrofit across 23 stories of screens, content, and
+system-generated records. Every later story's acceptance implicitly includes this one.
+
+**Independent Test**: With at least one non-base locale installed (a real translation or an
+expanded-text validation locale), run any completed story's flows entirely in that locale
+and verify: zero base-language leakage (player-authored text excepted), zero raw keys or
+blanks, locale-correct formatting of every number/date/duration/coin value, intact
+phone-portrait layouts, and gameplay outcomes identical to the same flows in the base
+locale.
+
+**Acceptance Scenarios**:
+
+1. **Given** a device set to a supported language, **When** the player first launches the
+   game, **Then** the entire experience — onboarding included — renders in that language;
+   on an unsupported device language the game uses the base language and offers the
+   language setting.
+2. **Given** a playing session in one language, **When** the player switches language in
+   settings, **Then** every screen, including previously generated summaries, combat logs,
+   and transaction history, renders in the new language immediately — no restart, no data
+   loss, no gameplay effect.
+3. **Given** any authored content (skills, items, recipes, settlements, enemies, abilities,
+   mechanics, relics), **When** viewed in any supported locale, **Then** its name and
+   descriptive text appear translated while its mechanics, numbers, and identity are
+   identical across locales.
+4. **Given** a string missing its translation in the active locale, **When** it is
+   displayed, **Then** the base-language text appears in its place — never a blank, a
+   placeholder key, or an error — and the gap is detectable by validation.
+5. **Given** any value display (quantity, price, date, time, duration), **When** rendered,
+   **Then** it follows the active locale's formatting conventions while the underlying
+   value is identical in every locale.
+
+---
 
 **— Pillar I: Economy Core (P1–P5) —**
 
@@ -1285,12 +1352,35 @@ records depth with no material rewards attached.
 - Weekly leaderboard ties → tied depths share rank; recognition only, so nothing material
   rides on tiebreaks.
 
+**Internationalization (cross-cutting)**
+
+- A string lacks a translation in the active locale → base-language fallback displays, never
+  a blank, raw key, or error; the gap is logged/detectable (FR-075).
+- Locale switched mid-session while an expedition, caravan, or market order is running →
+  display-only change; all timers, state, and outcomes are unaffected (FR-074).
+- Historical records (summaries, combat logs, transaction history) created before a locale
+  switch → stored as locale-independent data, re-rendered in the new locale on view (FR-076).
+- A translated string is materially longer than its base-language version → layouts
+  accommodate it on phone-portrait; gameplay-critical information is never truncated away
+  (FR-077).
+- Device language is not in the supported set → base language is used; the language setting
+  remains available (FR-072).
+- A push notification fires for a player who switched locale since opting in → composed in
+  the locale active at delivery time (FR-076).
+- A player-authored name in one script appears in another player's UI (V2: group boards,
+  market history, leaderboards) → displayed verbatim, never translated or transliterated
+  (FR-078).
+- Two locales render the same deterministic combat replay → identical outcomes, tick for
+  tick; only presentation differs (FR-074, FR-106).
+
 ## Requirements *(mandatory)*
 
 Numbering is preserved from the pre-merge specs and is now one namespace: FR-0xx economy
 core, FR-1xx combat core, FR-2xx challenge & group, FR-3xx relics & delves. Requirements are
 grouped by system; FR-270 and FR-271 (gear identity) were authored in the former challenge
-spec and are re-homed into the Gear section where they belong — numbering unchanged.
+spec and are re-homed into the Gear section where they belong — numbering unchanged. The
+FR-070–078 block (internationalization, added 2026-06-12) lives in the economy-core
+namespace but is cross-cutting: it binds every pillar, screen, and content type.
 
 ### Functional Requirements — Economy Core
 
@@ -1350,7 +1440,8 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   storage capacity too.
 - **FR-024**: All game content (skills, activities, items, recipes, settlements, routes) MUST be
   original to Tradewright — no names, lore, or text reproduced from other games — and MUST be
-  defined as authored content data, editable without code changes.
+  defined as authored content data, editable without code changes, with player-facing text
+  fields separated for localization per FR-071.
 
 **Settlements & Local Markets**
 
@@ -1457,6 +1548,52 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   notifications MUST NOT exist. Except where a player has opted in, "notified" throughout
   this specification means in-app surfaces only (summaries, boards, badges). The capability
   applies to both versions (device-scheduled in V1, server-pushed in V2).
+
+**Internationalization (cross-cutting — binds every pillar, screen, and content type)**
+
+- **FR-070**: Every player-facing text string — UI labels, screen copy, errors, warnings,
+  confirmations, onboarding guidance, summaries, and notifications — MUST live in
+  externalized, per-locale text resources keyed by stable identifiers; no player-facing
+  string is ever hardcoded in implementation. Rendering composes localized templates with
+  locale-formatted values (FR-073). Adding a locale or correcting a translation MUST
+  require no code change (the authoring–implementation separation discipline of FR-024,
+  extended to language).
+- **FR-071**: All authored content data (FR-024, FR-150) MUST separate player-facing text
+  fields (names, descriptions, lore, mechanic and telegraph text, modifier descriptions)
+  from mechanical definitions, so every content text field is translatable per locale
+  without touching mechanics. Game logic MUST reference content by identifier, never by
+  display text. Content validation MUST verify per-locale text coverage and report gaps —
+  including against the originality denylist (FR-024), which applies in every locale.
+- **FR-072**: The player MUST be able to select their display language from the supported
+  set at any time. First launch defaults to the device language when supported, otherwise
+  the base language. A switch applies to the entire game immediately — no restart, no data
+  loss — including previously generated records (FR-076).
+- **FR-073**: Numbers, dates, times, durations, and coin amounts MUST display per the
+  active locale's formatting conventions; the underlying values, all gameplay math, and
+  all persisted state remain locale-independent.
+- **FR-074**: Locale MUST have zero effect on game state or outcomes: identical inputs and
+  seeds produce identical results in every locale (FR-106 binding). Persisted state and
+  all data crossing the GUI–logic boundary carry locale-independent identifiers and raw
+  values; localization happens at presentation only. Switching locale mid-anything is
+  always safe and gameplay-neutral.
+- **FR-075**: A string lacking a translation in the active locale MUST fall back to its
+  base-language version — never a blank, placeholder key, or error — and every fallback
+  gap MUST be detectable through validation tooling so coverage holes are found before
+  players do.
+- **FR-076**: System-generated player-visible records — offline/event summaries, combat
+  logs, transaction history, board postings, and notifications (including FR-064 push) —
+  MUST be stored as structured, locale-independent data and rendered in the viewer's
+  active locale at display time; push notifications are composed in the recipient's locale
+  at delivery. In V2, players sharing one event (party runs, trades, leaderboards) each
+  see it in their own locale.
+- **FR-077**: Every screen MUST remain phone-portrait usable (FR-061, SC-009) across the
+  supported locales' text lengths and scripts, validated including an expanded-text stress
+  pass; truncation MUST never hide gameplay-critical information (prices, stakes,
+  warnings, timers).
+- **FR-078**: Player-authored text (character names; in V2 visible to other players on
+  boards, trades, and leaderboards) MUST be accepted in any supported script within stated
+  validation rules and MUST be displayed verbatim to all players — never translated,
+  transliterated, or substituted by fallback.
 
 ### Functional Requirements — Combat Core
 
@@ -2018,6 +2155,15 @@ tuning until green remains M1 content-tuning work.
 - **Depth Record / Weekly Seed Leaderboard**: Per-site personal bests and the
   recognition-only weekly fixed-seed ranking.
 
+**Cross-cutting (internationalization)**
+
+- **Locale**: A supported display language with its formatting conventions (numbers, dates,
+  times, durations, coin). The player's active locale is a per-player display setting with
+  zero effect on game state (FR-074).
+- **Text Resource**: An externalized, identifier-keyed player-facing string — UI copy or a
+  content text field — with one version per locale and base-language fallback; per-locale
+  coverage is tracked and validated (FR-070/071/075).
+
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes — Economy Core
@@ -2044,6 +2190,21 @@ tuning until green remains M1 content-tuning work.
   text legible on a 6-inch display, verified for 100% of shipped screens.
 - **SC-010**: Zero tolerance for economic integrity defects: duplication or loss of items/coin
   from concurrent trading, timer manipulation, or interrupted sessions occurs in 0 audited cases.
+
+### Measurable Outcomes — Internationalization (cross-cutting)
+
+- **SC-011**: A full audited playthrough of every shipped screen and flow in a non-base
+  locale shows 0 base-language strings (player-authored text excepted) and 0 raw keys,
+  blanks, or placeholders — text externalization is 100%.
+- **SC-012**: Switching language mid-session applies across the entire game within 2
+  seconds, without restart, and with 0 data loss or gameplay effect in audit.
+- **SC-013**: The phone-portrait usability bar (SC-009) passes for 100% of shipped screens
+  in every supported locale, including the expanded-text stress validation.
+- **SC-014**: Locale neutrality holds absolutely: identical inputs and seeds replayed under
+  different locales produce identical gameplay outcomes in 100% of audited cases.
+- **SC-015**: Every shipped locale has 100% translation coverage of UI strings and content
+  text fields at release, verified by automated validation — fallback (FR-075) is a safety
+  net, never a shipping state.
 
 ### Measurable Outcomes — Combat Core
 
@@ -2148,7 +2309,9 @@ tier (signature modifiers, equip limits, tradable acquisition, duplicate compens
 compendium, awakening tracks); delve sites and procedural descents (1–3 players,
 floors/landings, withdraw-or-descend stakes, two-stream rewards, depth scaling, weekly
 fixed-seed expeditions); V1 solo and V2 online as defined in Product Definition; phone-first
-UI throughout.
+UI throughout; full internationalization as a cross-cutting foundation — externalized text
+resources, a localizable content text schema, player language selection, locale-aware
+formatting, locale-neutral state and determinism (FR-070–078).
 
 **Out of scope**:
 
@@ -2188,6 +2351,10 @@ UI throughout.
   (future quality-of-life).
 - Procedural generation of *content* (rooms, encounters, and modifiers are authored; only
   their assembly per seed is systemic — FR-024 authoring separation).
+- Right-to-left script layouts — no RTL locale in the launch set; the text-resource and
+  layout architecture must not preclude adding one later (FR-070/077 discipline).
+- Community/crowd translation tooling and in-game translation contribution workflows
+  (translations are authored content like everything else, FR-071).
 
 ## Assumptions
 
@@ -2336,3 +2503,27 @@ UI throughout.
   rotation week. All counts, curves, multipliers, and limits are content-tunable.
 - **Equip limit default**: one relic weapon/focus + one relic armor/trinket, mirroring the
   inspiration's two-slot structure; content-tunable per FR-302.
+
+### Internationalization
+
+- **Base language**: English is the authoring and fallback language; all UI strings and
+  content text fields are authored in English first and translated from it.
+- **Launch locale set**: which languages ship at launch is a content/business decision, not
+  fixed by this spec. The binding requirement is the capability: from the first implemented
+  story, at least one non-base validation locale (a real translation or an expanded-text
+  pseudo-translation) is exercised continuously in automated validation, so externalization
+  and layout resilience are proven long before any real second language ships.
+- **Script coverage at launch**: layouts and text rendering are designed and validated for
+  Latin and CJK scripts; right-to-left layouts are deferred (Scope Boundaries) but the
+  architecture must not preclude them.
+- **Text expansion budget**: layouts accommodate translations materially longer than the
+  English source (the standard expansion range for European languages) and the denser,
+  taller glyphs of CJK — enforced by the FR-077 stress validation, not by per-screen
+  exceptions.
+- **What is localized**: all system-rendered and content-authored text. Player-authored
+  text (character names) is never translated (FR-078). Content proper nouns (settlement,
+  item, school, relic names) are ordinary translatable content fields — whether a
+  translation keeps or adapts a name is a per-locale content decision the schema supports
+  either way.
+- **Locale is per-player display state**: in V2, players sharing one world, party, or event
+  each see it in their own language; nothing shared is stored as rendered text (FR-076).

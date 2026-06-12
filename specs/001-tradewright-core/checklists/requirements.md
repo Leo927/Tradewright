@@ -167,3 +167,46 @@ Merged 2026-06-11 from the former specs 001/002/003/004 requirement checklists (
 - The delve stake model is a mandated redesign, not an open question: FR-204 (no-ruin)
   required replacing the inspiration's extraction-style loot loss before this mode could be
   specified.
+
+## Internationalization (cross-cutting addition, 2026-06-12)
+
+### Content Quality
+
+- [x] No implementation details (languages, frameworks, APIs)
+- [x] Focused on user value and business needs
+- [x] Written for non-technical stakeholders
+- [x] All mandatory sections completed
+
+### Requirement Completeness
+
+- [x] No [NEEDS CLARIFICATION] markers remain
+- [x] Requirements are testable and unambiguous
+- [x] Success criteria are measurable
+- [x] Success criteria are technology-agnostic (no implementation details)
+- [x] All acceptance scenarios are defined
+- [x] Edge cases are identified
+- [x] Scope is clearly bounded
+- [x] Dependencies and assumptions identified
+
+### Feature Readiness
+
+- [x] All functional requirements have clear acceptance criteria
+- [x] User scenarios cover primary flows
+- [x] Feature meets measurable outcomes defined in Success Criteria
+- [x] No implementation details leak into specification
+
+### Notes
+
+- Added per user direction 2026-06-12: i18n is a fundamental, cross-cutting reshape of this
+  same feature, not a new feature. Encoded as Design Invariant 13, User Story 0 (P0,
+  cross-cutting — not a ladder rung), FR-070–078, SC-011–015, an i18n edge-case group, two
+  cross-cutting key entities (Locale, Text Resource), and an Assumptions subsection.
+- Zero [NEEDS CLARIFICATION] markers: launch locale set, base language (English), script
+  coverage (Latin + CJK, RTL deferred), and the expansion budget were resolved with
+  documented defaults in Assumptions. Revisit via `/speckit-clarify` if any default is wrong.
+- Locale neutrality (FR-074, SC-014) deliberately binds the determinism invariant (FR-106)
+  so localization can never become a gameplay variable; logs/summaries stored as data
+  (FR-076) aligns with the GUI–logic boundary principle (localization at presentation).
+- plan.md, data-model.md, contracts/, quickstart.md, and tasks.md predate this addition and
+  must be reconciled via `/speckit-plan` and `/speckit-tasks` before implementation
+  (constitution Principle X).
