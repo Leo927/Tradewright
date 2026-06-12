@@ -183,7 +183,7 @@ fighter→market loop exists; repair and respec sinks are live in the transactio
 
 ```bash
 npm run validate:content   # Part II integrity tests 1–8 in contracts/content-schema.md
-npx dependency-cruiser --validate   # no GUI→engine or content-in-code edges
+npx dependency-cruiser --validate   # no GUI→engine edges (transport adapter excepted) or content-in-code edges
 ```
 
 #### 8. E2E sweep (phone viewport)
@@ -313,7 +313,7 @@ V1 runs this via the scripted co-player test harness; V2 runs it live.
 
 ```bash
 npm run validate:content   # integrity tests 1–8 in contracts/content-schema.md
-npx dependency-cruiser --validate   # no GUI→engine or content-in-code edges
+npx dependency-cruiser --validate   # no GUI→engine edges (transport adapter excepted) or content-in-code edges
 ```
 
 **Expected**: all green; specifically the PvE audit (no player-targeting mechanic — SC-208)
@@ -453,7 +453,7 @@ is valid and inactive.
 
 ```bash
 npm run validate:content   # integrity tests 1–9 in contracts/content-schema.md
-npx dependency-cruiser --validate   # no GUI→engine or content-in-code edges
+npx dependency-cruiser --validate   # no GUI→engine edges (transport adapter excepted) or content-in-code edges
 ```
 
 **Expected**: all green — notably signature exclusivity (test 1), the V1-obtainable relic
