@@ -1,6 +1,6 @@
 # Quickstart: Tradewright — Core Game
 
-**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II) | **Spec**: [spec.md](./spec.md)
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Parts II and V) | **Spec**: [spec.md](./spec.md)
 
 Merged 2026-06-11 from the former specs 001/003/004 quickstarts (spec collapse); the
 combat validation guide (Part II) was added 2026-06-12 with the combat design pass.
@@ -486,3 +486,69 @@ depth records and weekly leaderboard screens; all on 390×844 portrait.
 - [ ] Scenario 6: delve materials demanded by recipes, craft-mods, awakening tracks
 - [ ] Scenario 7: content integrity + dependency boundaries green in CI
 - [ ] Scenario 8: E2E sweep green on phone viewport
+
+## Part V — Internationalization (cross-cutting, added 2026-06-12)
+
+Validation guide for User Story 0 (P0). Unlike Parts I–IV this is not validated once and
+done: every story in Parts I–IV must pass these checks continuously, from the first
+implemented story onward (Design Invariant 13). Design details:
+[research.md](./research.md) Part V, [data-model.md](./data-model.md) Part V,
+[contracts/](./contracts/) Part V.
+
+### Prerequisites
+
+- At least one implemented story flow (Part I US1 is the first)
+- Validation locales generated: `npm run gen:pseudo` (run automatically by the test
+  scripts; deterministic, never committed)
+
+### Commands (same pipeline — CI parity)
+
+| Action | Command | Notes |
+|---|---|---|
+| Text validation | `npm run validate:content` | coverage, placeholder parity, orphans, per-locale denylist (content-schema Part V tests) |
+| Pseudo-locale E2E | `npm run test:e2e -- --project=pseudo` | the story flow specs re-run in `pseudo-expand`, 390×844 viewport |
+| Generate pseudo-locales | `npm run gen:pseudo` | from `en`; `pseudo-expand` + `pseudo-cjk` |
+
+### Validation scenarios
+
+**US0-a — Zero leakage (SC-011, FR-070/071)**: run any completed story flow in
+`pseudo-expand`. Expect: every system string shows the pseudo markers (bracketed,
+accented, expanded); a plain-English string on screen is an externalization bug; raw
+keys and blanks fail assertions outright.
+
+**US0-b — Live switch (FR-072, SC-012)**: mid-session — activity running, summary and
+transaction history populated — switch language in settings. Expect: every screen,
+including previously generated summaries, combat logs, and history, renders in the new
+locale within 2 s; no restart; engine state identical before/after the switch.
+
+**US0-c — Locale-neutral outcomes (FR-074, SC-014)**: engine replay test — identical
+(save, content, seed, elapsed ticks) with hosts driven under `en` and pseudo locales.
+Expect: identical final state. This is a unit-level property (the engine never sees a
+locale — research R1 (i18n)); the test proves it holds end-to-end through the host.
+
+**US0-d — Formatting (FR-073)**: view quantities, prices, dates, times, and durations in
+two locales with different conventions. Expect: display follows the active locale's
+conventions; underlying values identical; coin renders locale-grouped with the game's
+coin mark.
+
+**US0-e — Fallback (FR-075)**: remove one key from a validation locale and render its
+screen. Expect: the base-language string appears — never a blank, key, or error — and
+`npm run validate:content` reports the gap.
+
+**US0-f — Layout stress (FR-077, SC-013)**: the `pseudo-expand` E2E project runs every
+implemented story flow at 390×844. Expect: no clipped or overlapping gameplay-critical
+information (prices, stakes, warnings, timers); screens stay one-handed usable;
+`pseudo-cjk` spot-checks glyph rendering.
+
+**US0-g — Player-authored text verbatim (FR-078)**: create a character with a
+CJK/accented name and switch locales. Expect: the name renders exactly as entered,
+everywhere, in every locale — never translated or fallback-substituted.
+
+### Acceptance checklist
+
+- [ ] `validate:content` text gates green (coverage, parity, orphans, per-locale denylist)
+- [ ] `pseudo-expand` E2E project green for every implemented story flow
+- [ ] Live-switch scenario green (SC-012)
+- [ ] Locale-neutrality replay green (SC-014)
+- [ ] Binding rule on Parts I–IV: each part's "feature validated" definition additionally
+      requires its story flows passing in `pseudo-expand` (Design Invariant 13)

@@ -1,7 +1,8 @@
 # Contract: Authored Content Schema (Authors ↔ Engine)
 
-**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II + faucet/notification files) |
-**Plan**: [../plan.md](../plan.md) | **Package**: `@tradewright/content`
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Parts II and V +
+faucet/notification files) | **Plan**: [../plan.md](../plan.md) |
+**Package**: `@tradewright/content`
 
 Merged 2026-06-11 from the former game/challenge/relic-delve content-schema contracts
 (spec collapse); the combat content contract (Part II) was added 2026-06-12.
@@ -56,7 +57,18 @@ packages/content/data/
     ├── score-brackets/      # ScoreBracketSet
     ├── reward-tables/       # RewardTable (incl. gearDrop entries)
     └── contribution-weights/# ContributionWeightSet
+
+packages/content/text/       # ALL display text, every locale (Part V) — data/ carries none
+├── locales.json             # LocaleDef[] — supported set; base = en
+├── en/                      # base locale, authored first
+│   ├── ui.json              # UI string catalog (FR-070)
+│   └── content/<domain>.json# content text keyed <defId>.<field> (FR-071), mirroring data/
+└── <locale>/                # one tree per locale, same shape
 ```
+
+The `data/` tree is mechanics-only: ids, refs, numbers, enums. Every `name`/`description`/
+lore/telegraph-text field named in the data-model tables lives in `text/` (data-model
+Part V text-field rule).
 
 ## Part I — Base Rules & Economy Content (former 001)
 
@@ -295,3 +307,55 @@ numbers (Part IV tests).
 Schema changes follow the Part I content-contract policy: additive optional fields are MINOR;
 anything that invalidates existing content files is MAJOR and ships with a content
 migration in the same change.
+
+## Part V — Localized Text Content (contracted 2026-06-12)
+
+The i18n half of the Principle IV seam (FR-070/071; research Part V (i18n)). All display
+text — UI strings and content text, every locale including the base — lives under
+`packages/content/text/` (see the combined tree above). The client imports catalogs from
+this package; the engine MUST NOT (a `packages/engine` → `content/text` import edge fails
+the dependency-cruiser boundary check — research R1 (i18n)).
+
+### File layout
+
+`text/locales.json` (LocaleDef[]), `text/<locale>/ui.json` (UI catalog),
+`text/<locale>/content/<domain>.json` (content text) — field shapes in
+[../data-model.md](../data-model.md) Part V.
+
+Generated validation locales (`pseudo-expand`, `pseudo-cjk`) are produced from `en` by
+`npm run gen:pseudo` at build/test time (research R4 (i18n)); they are never hand-edited,
+committed, or shipped.
+
+### Authoring rules
+
+- `en` is the authoring language; every key originates there and other locales translate
+  it (spec Assumptions, i18n). A key absent from `en` is an orphan — validation error.
+- Keys are immutable like ids: UI keys are stable slugs namespaced by screen/flow;
+  content text keys derive mechanically from `<defId>.<field>`. Renaming a thing changes
+  its text, never its key.
+- Messages use ICU MessageFormat for placeholders and plural/select rules; every locale
+  preserves its base message's placeholder set (integrity test 3).
+- Proper nouns (settlements, items, schools, relics) are ordinary translatable entries;
+  keep-or-adapt is a per-locale content decision.
+- Player-authored text never enters the catalogs (FR-078).
+- The originality denylist (Part I world-integrity gate 8) applies to every locale's
+  text (FR-071).
+
+### Integrity tests (CI gate, `packages/content/tests/` — "Part V tests")
+
+| # | Test | Source |
+|---|---|---|
+| 1 | Schema validity: `locales.json` parses; every catalog is a flat string→string map; every message is ICU-parseable | FR-070/071 |
+| 2 | Coverage: every `en` key exists in every `status: shipped` locale | FR-075, SC-015 |
+| 3 | Placeholder parity: each locale message's ICU placeholder set equals its base message's | FR-073 |
+| 4 | Orphans: no locale key without a base entry; every `<defId>.<field>` resolves to an existing def declaring that text field | FR-071 |
+| 5 | No display text in `data/`: mechanics schemas define no name/description/lore/telegraph text fields (unknown fields are already errors) | FR-070/071 |
+| 6 | Denylist per locale: the FR-024 lint runs over every locale's catalogs | FR-024/071 |
+| 7 | Pseudo-locale determinism: same `en` input ⇒ identical generated pseudo files | research R4 (i18n) |
+
+### Versioning
+
+Text catalogs version with `contentVersion` like all content. Adding a locale or
+correcting a translation is a content change — never a code change (FR-070). Removing a
+shipped locale requires a migration note: players whose `displayLocale` referenced it
+fall back to the base locale with an honest notice.

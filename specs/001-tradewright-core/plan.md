@@ -47,26 +47,37 @@ Layered technical approach, one engine throughout:
   encounter instances; assembly, depth curves, and the weekly seed are pure functions over
   authored pools; the venture pool is per-member entitlement ledgers — staked value is never
   owned property, so the forfeit is a wager by construction.
+- **Internationalization (cross-cutting, FR-070–078)**: locale is GUI-side presentation
+  state — the engine and contract are text-free (ids, codes, raw values only), so locale
+  neutrality (SC-014) is structural; all display text, base locale included, is authored
+  content in per-locale catalogs under `packages/content/text/`; generated pseudo-locales
+  validate externalization, layout, and neutrality in CI from the first implemented story
+  (research Part V).
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5.x (strict) everywhere — client, engine, content tooling,
 server
 
-**Primary Dependencies**: React 18 + Vite (client GUI); Zod (content/state schema
-validation); Vitest (unit tests); Playwright (E2E); Node.js 22 LTS; PWA service worker
-(install + opt-in device-scheduled notifications in V1; Web Push delivery in V2 — FR-064,
-research R15); V2 adds Fastify + ws (WebSocket) + PostgreSQL
+**Primary Dependencies**: React 18 + Vite (client GUI); react-intl (FormatJS — ICU
+MessageFormat over platform `Intl`, GUI-only; FR-070–073, research R2 (i18n)); Zod
+(content/state schema validation); Vitest (unit tests); Playwright (E2E); Node.js 22 LTS;
+PWA service worker (install + opt-in device-scheduled notifications in V1; Web Push
+delivery in V2 — FR-064, research R15); V2 adds Fastify + ws (WebSocket) + PostgreSQL
 
 **Storage**: V1 — IndexedDB on device (versioned save format; expedition/instance/descent
 state, relic grants, depth records all join it). V2 — PostgreSQL on server (plus parties,
 signups, leaderboards, contribution records, threat meters, grants, ledgers). Authored
-content — JSON files in repo, schema-validated at build time
+content — JSON files in repo, schema-validated at build time: mechanics under
+`packages/content/data/`, per-locale text catalogs under `packages/content/text/`
+(FR-070/071)
 
-**Testing**: Vitest for unit (engine, content validation, adapters, encounter resolution,
-scoring, loot rolls, floor assembly, ledger accounting); Playwright for E2E flows (phone
-viewport; group flows run against a scripted co-player harness in V1 CI); both wired into
-GitHub Actions and runnable locally with the same commands (`npm test`, `npm run test:e2e`)
+**Testing**: Vitest for unit (engine, content validation incl. text-coverage gates,
+adapters, encounter resolution, scoring, loot rolls, floor assembly, ledger accounting,
+locale-neutrality replay); Playwright for E2E flows (phone viewport; story flows re-run in
+the generated `pseudo-expand` locale — P0, Design Invariant 13; group flows run against a
+scripted co-player harness in V1 CI); both wired into GitHub Actions and runnable locally
+with the same commands (`npm test`, `npm run test:e2e`)
 
 **Target Platform**: Phone-first web app (PWA), portrait 390×844 baseline; desktop browsers
 work but are not the design target. V2 server targets Linux
@@ -88,9 +99,13 @@ results) — required for offline catch-up correctness (SC-005), offline/online 
 Engine has zero DOM/framework imports. All time comes from an injected clock. Live instances
 suspend idle accrual (FR-205). The mechanic vocabulary has no player-targeting damage
 primitive (SC-208). No-ruin in every format (FR-204); staked delve pools are entitlements,
-never owned property (SC-306)
+never owned property (SC-306). Locale-neutral engine: no rendered text in engine code,
+contract payloads, or persisted state — localization happens at presentation only
+(FR-074/076, SC-014)
 
-**Scale/Scope**: 23 user stories across four pillars; 18 skill tracks (5 gathering, 5
+**Scale/Scope**: 23 user stories across four pillars plus the P0 i18n foundation (base
+locale English; launch locale set is a content/business decision — the binding capability
+is exercised by generated validation locales from M0); 18 skill tracks (5 gathering, 5
 refining, 7 crafting — New World's full trade-skill family structure — plus hauling),
 ≥ 4 settlements,
 single currency; 2 combat schools at launch; 8 challenge formats with launch minimums
@@ -122,12 +137,17 @@ Gates derived from `.specify/memory/constitution.md` (v1.6.0):
   tables, encounters, afflictions, modifier pools, score brackets, contribution weights,
   relics, awakening tracks, delve sites/rooms/curves, and every "content-tunable" lever —
   is JSON in `packages/content/data/`, validated by Zod schemas at build time
-  ([contracts/content-schema.md](./contracts/content-schema.md)). Engine code never embeds
+  ([contracts/content-schema.md](./contracts/content-schema.md)). All display text — UI
+  strings and content text, every locale — is authored content in
+  `packages/content/text/` (content-schema Part V): adding a locale or correcting a
+  translation is a content change, never a code change (FR-070). Engine code never embeds
   content values.
 - [x] **GUI–Logic Boundary (V)**: Client depends only on `@tradewright/contract`
   (serializable command/query/event protocol,
   [contracts/game-protocol.md](./contracts/game-protocol.md)). Engine has no DOM/React
-  imports. V1 binds in-process, V2 hosts the same engine modules in server rooms — the
+  imports, and no rendered text crosses the contract — payloads carry ids, codes, and raw
+  values; the GUI localizes at display time (protocol Part V, FR-074/076). V1 binds
+  in-process, V2 hosts the same engine modules in server rooms — the
   multiplayer formats are precisely the architecture test, shipped as a product requirement
   ("keep both versions alive").
 - [x] **UI Design Fidelity (VII)**: Each UI story gets a design artifact in
@@ -147,11 +167,15 @@ Gates derived from `.specify/memory/constitution.md` (v1.6.0):
   forward: any change that invalidates a part of the merged spec/plan/contracts updates that
   part in the same change — no superseded-but-retained design text.
 
-**Post-design re-check (2026-06-12)**: re-evaluated after the combat design pass and the
-platform additions (FR-037/054/063/064) — all gates still pass. The combat layer lands on
-the existing seams (content-defined schools/abilities/curves per IV, resolver behind the
-contract per V, classification extended per IX) and this update removed every artifact
-statement the clarifications invalidated (X). Complexity Tracking stays empty.
+**Post-design re-check (2026-06-12)**: re-evaluated after the combat design pass, the
+platform additions (FR-037/054/063/064), and the i18n fold (Design Invariant 13,
+FR-070–078) — all gates still pass. The combat layer lands on the existing seams
+(content-defined schools/abilities/curves per IV, resolver behind the contract per V,
+classification extended per IX); the i18n layer strengthens two of them — all display
+text is authored content (IV) and the contract stays text-free (V) — and adds its own
+test surface (text gates, pseudo-locale E2E, locale-neutrality replay per I). This update
+removed every artifact statement the clarifications invalidated (X). Complexity Tracking
+stays empty.
 
 **V1 time-integrity note**: FR-017 scopes its full guarantee to V2, where the server owns
 time (spec-aligned 2026-06-12; formerly recorded here as a spec deviation). V1 applies the
@@ -194,12 +218,12 @@ declared launch-shaped.
 specs/001-tradewright-core/
 ├── spec.md              # The unified core-game specification (23 stories, FR-0xx–FR-3xx)
 ├── plan.md              # This file
-├── research.md          # Merged research (Parts: economy / challenge / relic & delve / combat)
-├── data-model.md        # Merged data model (Part II = combat, designed 2026-06-12)
-├── quickstart.md        # Merged quickstart scenarios (Part II = combat validation)
+├── research.md          # Merged research (Parts: economy / challenge / relic & delve / combat / i18n)
+├── data-model.md        # Merged data model (Part II = combat; Part V = i18n, 2026-06-12)
+├── quickstart.md        # Merged quickstart scenarios (Part II = combat; Part V = i18n/P0)
 ├── contracts/
-│   ├── game-protocol.md # Unified command/query/event contract (Part II = combat)
-│   └── content-schema.md# Unified authored-content contract (Part II = combat)
+│   ├── game-protocol.md # Unified command/query/event contract (Parts II/V = combat, i18n)
+│   └── content-schema.md# Unified authored-content contract (Parts II/V = combat, text catalogs)
 ├── checklists/
 │   └── requirements.md  # Merged spec-quality checklists (historical, all four layers)
 ├── design/              # UI design artifacts, one per screen group (created during impl)
@@ -236,14 +260,19 @@ packages/
 │   └── tests/           #   unit tests (Vitest)
 ├── content/             # @tradewright/content — authored game data + schemas
 │   ├── schemas/         #   Zod schemas (the content contract, executable form)
-│   ├── data/            #   JSON — combined tree in contracts/content-schema.md
-│   └── tests/           #   schema validation + content-integrity tests (all Parts' gates)
+│   ├── data/            #   JSON mechanics — combined tree in contracts/content-schema.md;
+│   │                    #     no display text (data-model Part V text-field rule)
+│   ├── text/            #   per-locale catalogs: locales.json, <locale>/ui.json,
+│   │                    #     <locale>/content/<domain>.json (FR-070/071); engine never imports
+│   └── tests/           #   schema validation + content-integrity tests (all Parts' gates,
+│                        #     incl. text coverage/parity/denylist)
 apps/
 ├── client/              # React PWA. GUI ONLY — no game rules anywhere in here.
 │   ├── src/
 │   │   ├── transport/   #   LocalTransport (in-process) / RemoteTransport (V2 WebSocket)
 │   │   ├── persistence/ #   IndexedDB save/load — V1 device-local saves (FR-003)
 │   │   ├── notifications/ # V1 device-scheduled notification delivery (FR-064)
+│   │   ├── i18n/        #   react-intl setup, locale switch, value-format helpers (FR-072/073)
 │   │   ├── screens/     #   settlement, skills, market, transactions, caravans, map,
 │   │   │                #   summary, storage, settings, combat, encounter HUD,
 │   │   │                #   group board, challenges, relics, delve
@@ -289,8 +318,10 @@ One ladder, replacing the former per-spec milestone tracks. Stories refer to the
 P1–P23 ladder in spec.md.
 
 1. **M0 — Foundations**: monorepo scaffold, CI pipeline (all gates), contract v0, content
-   schemas + starter content, deterministic tick/clock core. *Constitution gates live from
-   this milestone.*
+   schemas + starter content, deterministic tick/clock core, i18n foundation (text
+   catalogs + react-intl wiring + pseudo-locale generation + coverage gates — research
+   Part V). *Constitution gates live from this milestone; so does P0 — every later story's
+   flows pass in the pseudo-locale as they land (Design Invariant 13).*
 2. **M1 — V1 Economy (Stories 1–5)**: skilling loop → offline catch-up → recipe chains →
    NPC markets with drift → caravans/travel/arbitrage. Each story independently playable
    and Playwright-tested as it lands. Ends with the full solo loop: gather → refine →
@@ -325,9 +356,14 @@ P1–P23 ladder in spec.md.
    meters, stations, degradation + contribution repair); party delves + shared weekly
    leaderboards. Requires M5.
 
+Story 0 (P0) is not a milestone rung: its infrastructure lands in M0 and its validation
+runs in every milestone — each story's acceptance includes the pseudo-locale pass.
+
 Tasks are regenerated per milestone with `/speckit-tasks` scoped to that milestone's
 stories — the former whole-feature tasks.md for relics/delves was dropped as stale in the
-merge; it predated the combat design pass it depends on.
+merge; it predated the combat design pass it depends on. The current M0+M1 tasks.md
+predates the i18n fold and needs regeneration before implementation resumes (its scope
+note says so).
 
 ## Complexity Tracking
 

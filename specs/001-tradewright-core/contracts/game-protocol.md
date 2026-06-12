@@ -1,7 +1,8 @@
 # Contract: Game Protocol (GUI ↔ Engine)
 
-**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II + Part I offline/notification
-additions) | **Plan**: [../plan.md](../plan.md) | **Package**: `@tradewright/contract`
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Parts II and V + Part I
+offline/notification additions) | **Plan**: [../plan.md](../plan.md) |
+**Package**: `@tradewright/contract`
 
 Merged 2026-06-11 from the former game/challenge/relic-delve protocol contracts (spec
 collapse); the combat core (Part II) was contracted 2026-06-12.
@@ -51,7 +52,7 @@ outcomes are events. Rejections are immediate and explain themselves (e.g.
 | GetCharacter | character sheet: skills/levels/xp, wallet, location, assignment, caravan slots | FR-002 |
 | GetStorage | settlementId → slots, capacity | FR-022/023 |
 | GetActivities | activities at current settlement, with lock state + reasons | FR-015 |
-| GetMarket | per item at current settlement: best bid/ask, depth, recent trades — **presence-gated** | FR-031/035 |
+| GetMarket | per item at a chosen settlement's book: best bid/ask, depth, recent trades — any settlement, from anywhere (linked market) | FR-031/035 |
 | GetMyOrders | own orders across settlements with status | FR-032 |
 | GetRoutes | routes from current settlement: durations, risk, costs | FR-045 |
 | GetShipments | own caravans with progress + ETA | FR-042 |
@@ -353,3 +354,44 @@ descent reducer runs in `LocalGameHost`. Multiplayer descents and multiplayer-so
 relics return/render `ONLINE_VERSION_ONLY` honest labels (FR-262 pattern) — visible,
 never silently absent. The contract is identical in both versions; only the host differs
 (research R3, challenge).
+
+## Part V — Internationalization (cross-cutting, contracted 2026-06-12)
+
+The binding rule (research R1 (i18n); FR-074/076): **no rendered text crosses this
+contract**. Commands, queries, events, and persisted payloads carry stable ids, codes,
+and raw values; the GUI composes language from the text catalogs at display time, in the
+active locale. Two consequences for Parts I–IV as written:
+
+- `CommandAck.message` is developer diagnostics (logs, test output) — player-facing
+  rejection text is rendered by the GUI from `code` plus the ack's structured fields, in
+  every locale; `message` is never shown to the player.
+- Event payloads already carry ids and values (`CaravanArrived` risk detail,
+  `SummaryReady` summary payload, combat-log entries); they stay that way. Any payload
+  field that would have been display text is an id or code instead.
+
+### Commands (mutations)
+
+| Command | Payload | Key validations | Spec |
+|---|---|---|---|
+| SetDisplayLocale | localeId | locale exists in `text/locales.json` | FR-072 |
+
+V1 persists it to the save's settings envelope; V2 to the account profile, where the
+server reads it solely to compose push notifications in the recipient's locale at
+delivery (FR-064/076). The GUI applies the switch locally and immediately (SC-012) — it
+never waits on this command's ack, and the locale never reaches the engine's simulation.
+
+There is no `GetSupportedLocales` query and no text query: the locale list and all
+catalogs ship with the client as authored content ([content-schema.md](./content-schema.md)
+Part V); the engine never serves text.
+
+### Interaction classification (Principle IX — binding for all screens)
+
+| Class | Interactions | V1 behavior | V2 behavior |
+|---|---|---|---|
+| local-immediate | language-switch rendering (FR-072/SC-012), all locale formatting (FR-073) | entire GUI re-renders from catalogs, < 2 s | same — rendering never touches the server |
+| optimistic-with-reconciliation | SetDisplayLocale persistence | applied instantly | applied instantly; queues offline like other own-state mutations (Part I FR-063 table) |
+
+### V1 / V2 behavior
+
+Identical except the persistence target (save settings vs account profile) and the V2
+push-composition use. Rendering is client-local in both versions.

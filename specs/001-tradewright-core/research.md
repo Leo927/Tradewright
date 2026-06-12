@@ -1,6 +1,6 @@
 # Research: Tradewright — Core Game
 
-**Date**: 2026-06-11 (Parts I–III) / 2026-06-12 (Part IV + Part I addenda R13–R15) |
+**Date**: 2026-06-11 (Parts I–III) / 2026-06-12 (Parts IV–V + Part I addenda R13–R15) |
 **Spec**: [spec.md](./spec.md)
 
 Merged 2026-06-11 from the former specs 001/003/004 research documents (spec collapse;
@@ -1050,3 +1050,118 @@ weapon/focus avoids a redundant selection state that could contradict the loadou
 rejected by FR-113); free starter kit per school (a coin-free gear faucet — one kit ever,
 the rest through the economy); an explicit school-selection state separate from the
 equipped weapon (two sources of truth for one fact).
+
+## Part V — Internationalization (cross-cutting, designed 2026-06-12)
+
+Added when the spec folded i18n in as a cross-cutting foundation (Design Invariant 13,
+User Story 0/P0, FR-070–078, SC-011–015). These decisions bind every other part: the
+economy, combat, challenge, and relic/delve designs all render through this layer.
+
+### R1 — Locale is presentation state; the engine is text-free
+
+**Decision**: The active locale lives entirely on the GUI side of the Principle V
+boundary. The engine and every contract payload carry only stable identifiers,
+error/event codes, and raw values (quantities, timestamps, durations, coin integers); no
+rendered text crosses the boundary in either direction, and no persisted state (save,
+database, summaries, logs, history) stores rendered text. In V2 the account additionally
+records the player's display locale so the server can compose push notifications in the
+recipient's locale at delivery (FR-064/076) — that preference is the one locale-related
+field behind the contract, and it affects notification composition only, never engine
+outcomes.
+
+**Rationale**: FR-074 demands locale-zero game state and FR-076 demands
+render-at-display for system records; putting locale on the GUI side makes both
+properties structural rather than disciplinary. It also makes SC-014 (locale-neutrality
+replay) cheap to prove: the engine cannot vary by locale because it never sees one.
+
+**Alternatives considered**: localizing in the engine (bakes every summary/log into one
+language — violates FR-076's per-viewer rendering and V2's shared events, where party
+members each see the run in their own language); passing locale per query for server-side
+rendering (couples the engine to text resources and makes every V2 response
+locale-variant for no benefit).
+
+### R2 — GUI i18n runtime: FormatJS (react-intl) over platform Intl
+
+**Decision**: `react-intl` (FormatJS) in `apps/client` as the message runtime — ICU
+MessageFormat syntax for all strings (placeholders, plural/select rules) — with the
+platform `Intl` APIs (`NumberFormat`, `DateTimeFormat`, `RelativeTimeFormat`,
+`ListFormat`) for value formatting (FR-073). Durations format through one shared helper
+(`Intl.DurationFormat` where available, composed `NumberFormat` units otherwise) so
+timers read identically on every screen. Coin amounts are locale-grouped integers with
+the game's own coin mark — never `Intl` currency codes (the game currency is not ISO
+money). The engine has no dependency on any of this.
+
+**Rationale**: ICU MessageFormat is the only widely-supported message syntax that gets
+plural and select rules right across locales (hardcoded `count === 1` checks are an
+English-only bug factory). FormatJS is ICU-native, React-first, and leans on built-in
+`Intl` locale data instead of shipping its own tables — small enough for the PWA budget.
+
+**Alternatives considered**: i18next (popular, but ICU is a plugin and its ecosystem
+pulls toward runtime-loaded namespaces this app doesn't need); Fluent (excellent syntax,
+smaller ecosystem and tooling); hand-rolled interpolation (rejected — plural rules,
+script coverage, and formatting correctness are exactly what mature libraries exist for).
+
+### R3 — Two catalog families, one authored-text tree
+
+**Decision**: All translatable text lives in `packages/content/text/<locale>/`
+(contracted in content-schema.md Part V): a **UI catalog** (`ui.json` — labels, screen
+copy, errors, warnings, onboarding, notification templates, keyed by stable string ids;
+FR-070) and **content text resources** (`content/<domain>.json` — one file per content
+domain, keyed `<defId>.<field>`; FR-071). The base locale (`en`) is externalized exactly
+like every other locale: mechanics files under `packages/content/data/` carry no display
+text at all — the `name`/`description`/telegraph-text fields the data-model Parts I–IV
+tables list are text-catalog entries, not inline strings (data-model Part V text-field
+rule). `text/locales.json` declares the supported set. The client imports catalogs from
+the content package; the engine never does.
+
+**Rationale**: One tree gives one translation workflow, one coverage gate (SC-015), and
+one denylist pass over all text in all locales (FR-071 extends FR-024's denylist to every
+locale). Externalizing the base language too keeps coverage symmetric (`en` is just
+another locale to validate) and makes "no player-facing string hardcoded" (FR-070)
+mechanically lintable rather than a review judgment.
+
+**Alternatives considered**: base text inline in mechanics files with per-locale overlays
+(asymmetric coverage, copy edits churn mechanics files, FR-071's separation only half
+holds); UI strings inside `apps/client` source (splits the translation workflow and puts
+authored material in code, against Principle IV); a translation-management service from
+day one (premature — file-based catalogs can feed one later without rework).
+
+### R4 — Validation locales: generated pseudo-translations in CI from M0
+
+**Decision**: A deterministic content tool (`npm run gen:pseudo`) generates two
+validation locales from `en` at build/test time (never hand-edited, never shipped):
+**`pseudo-expand`** — accented Latin, every string bracketed and padded ~40% — stresses
+layout (FR-077, SC-013) and makes any unexternalized string visually obvious (SC-011);
+**`pseudo-cjk`** — the same strings with CJK-range glyph substitution — covers the launch
+script-coverage assumption (Latin + CJK). Playwright re-runs the story flows in
+`pseudo-expand` continuously from the first implemented story (Design Invariant 13), and
+the locale-neutrality replay test (SC-014) runs identical seeded inputs under base and
+pseudo locales asserting identical engine state.
+
+**Rationale**: Real translations arrive on a business schedule (spec Assumptions);
+validation cannot wait for them. Pseudo-locales prove externalization, fallback
+detection, layout resilience, and locale neutrality from the first screen — exactly the
+properties the spec calls prohibitively expensive to retrofit.
+
+**Alternatives considered**: validating with a real second language from M0 (couples
+engineering to translation procurement; a half-translated locale tests fallback, not
+coverage); string-length lint without rendering (misses real layout breakage, which only
+Playwright at the phone viewport catches).
+
+### R5 — Coverage, fallback, and denylist as content gates
+
+**Decision**: Text validation joins the content validation pipeline
+(`npm run validate:content`): (a) **coverage** — every key present in `en` exists in
+every shipped-status locale (SC-015 — fallback is a safety net, never a shipping state);
+(b) **placeholder parity** — every message's ICU placeholder set matches its base
+message's; (c) **orphans** — no key in any locale lacks a base entry, no `defId.field`
+key references a missing def or undeclared text field; (d) **denylist** — the FR-024
+originality denylist runs against every locale's text (FR-071); (e) **fallback
+behavior** — a key missing from the active locale renders the base string at runtime
+(FR-075), and the validator reports every such gap so players never find one first.
+
+**Rationale**: This is Principle I applied to text, living where the world-integrity
+gates already live — text is content, so it validates like content.
+
+**Alternatives considered**: runtime-only fallback logging (finds gaps after players do);
+review-time human checks (don't scale past one locale; SC-011/015 demand automation).

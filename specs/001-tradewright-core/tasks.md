@@ -11,6 +11,12 @@ contracts/content-schema.md (Part I), quickstart.md (Part I)
 M2+ (combat, challenge, relics/delves, V2, group formats) get their own `/speckit-tasks`
 runs when their milestones open; regenerating this file then replaces this scope note.
 
+**⚠ Stale (2026-06-12)**: this file predates the i18n fold (spec User Story 0/P0,
+FR-070–078; plan/research/data-model/contracts/quickstart Part V). M0 now includes the
+i18n foundation (text catalogs, react-intl wiring, pseudo-locale generation, coverage
+gates) and every story phase gains the pseudo-locale validation pass — regenerate with
+`/speckit-tasks` before implementation resumes.
+
 **Tests**: MANDATORY per constitution Principle I — every story phase contains unit test
 tasks (written first, failing before implementation) and a Playwright E2E flow at the
 390×844 phone viewport. CI parity (Principle II): everything runs via `npm run check`,

@@ -1,7 +1,7 @@
 # Data Model: Tradewright — Core Game
 
-**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II + Part I facility, faucet,
-storage-expansion, and notification additions) | **Spec**: [spec.md](./spec.md) |
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Parts II and V + Part I facility,
+faucet, storage-expansion, and notification additions) | **Spec**: [spec.md](./spec.md) |
 **Plan**: [plan.md](./plan.md)
 
 Merged 2026-06-11 from the former specs 001/003/004 data models (spec collapse); the
@@ -856,3 +856,75 @@ leaderboard rows (titles/flair, no material payout); best-of unlimited attempts 
    ≥ 4 s and PvE-only audits inherited (Part III validation tests 1/4).
 7. Duplicate compensation present on every relic (FR-303).
 8. Reward-cap lever configs are disclosed-shape valid and inactive at launch (FR-314).
+
+## Part V — Internationalization (cross-cutting, designed 2026-06-12)
+
+The i18n layer adds no engine entities — by design (research R1 (i18n)). It adds authored
+text resources, one display setting, and one binding storage rule for the other parts.
+
+**The text-field rule (binds Parts I–IV)**: every player-facing text column in the
+Authored Content tables of Parts I–IV — `name`, `description`, lore, telegraph and
+mechanic text, modifier descriptions — denotes a text-catalog entry keyed
+`<defId>.<field>`, not an inline string in the mechanics JSON. Mechanics files under
+`packages/content/data/` carry only ids, refs, numbers, and enums; all display text for
+every locale, the base included, lives in `packages/content/text/<locale>/` (research R3
+(i18n); FR-070/071). The tables keep naming these fields because they exist as authored
+content per definition — this rule fixes where they are stored.
+
+### Authored Content (definitions)
+
+#### LocaleDef (`text/locales.json`)
+| Field | Type | Notes |
+|---|---|---|
+| id | BCP 47 tag | e.g. `en`, `de`, `zh-Hans`; `en` is the base/authoring locale (spec Assumptions) |
+| endonym | string | the language's name in itself, shown in the language setting (FR-072) |
+| status | `shipped \| validation` | `shipped` requires 100% coverage (SC-015); `pseudo-*` validation locales are generated, never shipped (research R4 (i18n)) |
+
+#### UiTextCatalog (`text/<locale>/ui.json`)
+Flat map `stringId → ICU message`. Keys are stable slugs namespaced by screen/flow
+(`market.order.confirm-fee`, `combat.retreat.cause-provisions`). Every player-facing UI
+string — labels, screen copy, errors, warnings, onboarding, notification templates
+(FR-064) — is a key here (FR-070).
+
+#### ContentTextResource (`text/<locale>/content/<domain>.json`)
+Flat map `<defId>.<field> → string` (plain, or ICU where content text carries values).
+One file per content domain, mirroring `data/`. Proper nouns are ordinary entries —
+whether a locale keeps or adapts a name is a per-locale content decision (spec
+Assumptions, i18n).
+
+### Runtime State (mutable)
+
+#### DisplayLocale
+`displayLocale: localeId` — V1: a client settings field in the save envelope (sibling of
+`notificationPrefs`, not world state); V2: an account-profile column, read server-side
+only to compose push notifications in the recipient's locale at delivery (FR-076;
+research R1 (i18n)). Defaults to the device language when supported, else the base locale
+(FR-072).
+
+### Cross-cutting invariants (i18n)
+
+1. **Locale neutrality**: no engine entity, save field, contract payload, or persisted
+   record stores rendered text or varies by locale; identical (SaveGame, content, elapsed
+   ticks, seed) ⇒ identical state under every locale (FR-074, SC-014 — extends Part I
+   invariant 4).
+2. **Render at display**: system-generated records — summaries, combat logs,
+   transactions, board postings, notifications — persist as structured data (ids, codes,
+   raw values) and are composed into language only at display/delivery time, in the
+   viewer's active locale (FR-076).
+3. **Player-authored text is verbatim**: character names (and V2 player-visible player
+   strings) are stored and displayed exactly as entered, in any supported script, never
+   translated, transliterated, or fallback-substituted (FR-078); they live outside the
+   catalogs.
+4. **Fallback, never blanks**: a missing translation renders the base-locale string; raw
+   keys, blanks, and errors are validation failures (FR-075, SC-011).
+
+### Validation rules (content tests)
+
+1. Coverage: every `en` key exists in every `status: shipped` locale (SC-015).
+2. Placeholder parity: each message's ICU placeholder set equals its base message's.
+3. Orphans: no locale key without a base entry; every `<defId>.<field>` resolves to an
+   existing def that declares that text field.
+4. Denylist: the FR-024 originality denylist passes against every locale's text (FR-071)
+   — extends content-schema world-integrity gate 8.
+5. No inline text: mechanics schemas under `data/` define no display-text fields; any
+   string field there is an id, ref, or enum (FR-070/071).
