@@ -1,0 +1,32 @@
+{
+  "name": "tradewright",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w apps/client",
+    "build": "npm run build -w apps/client",
+    "test": "vitest run --passWithNoTests",
+    "test:e2e": "npm run gen:pseudo && playwright test -c apps/client/playwright.config.ts",
+    "check": "npm run typecheck && npm run lint && npm run depcruise",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "depcruise": "depcruise packages apps --config .dependency-cruiser.cjs",
+    "validate:content": "npm run validate -w @tradewright/content",
+    "gen:pseudo": "npm run gen:pseudo -w @tradewright/content"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "@types/node": "^22.9.0",
+    "dependency-cruiser": "^16.5.0",
+    "eslint": "^9.14.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.14.0",
+    "vitest": "^2.1.0"
+  }
+}
