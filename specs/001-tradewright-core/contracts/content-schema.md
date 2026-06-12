@@ -20,6 +20,9 @@ packages/content/data/
 ├── routes.json          # RouteDef[]
 ├── npc-profiles.json    # NpcMarketProfile[] — incl. faucet floor lists + sweep budgets (FR-054)
 ├── notification-categories.json # NotificationCategoryDef[] — the FR-064 launch set
+├── world.json           # WorldTuningDef (singleton) — engine pacing & world tunables: world
+│                        #   tick, market cadence, offline cap, caravan duration band,
+│                        #   starter coin (FR-013/040/050)
 ├── combat/
 │   ├── attributes.json  # AttributeDef[] (exactly 5) + CombatCurves (FR-107)
 │   ├── schools/         # SchoolDef — one per school (roster, branches, default tactics, starter kit)
@@ -88,7 +91,8 @@ from the former economy-core contract; other documents cite these numbers):
 4. The route graph is connected — no unreachable settlement.
 5. Asymmetry budget (SC-006): no single settlement's local activities can produce > 60% of
    launch recipes.
-6. Tier coverage: every skill has content at every tier it declares.
+6. Tier coverage: every skill declares ≥ 5 tiers (spec skill-family assumption) and has
+   content at every tier it declares.
 7. NPC sanity: priceBounds min× < 1 < max×; production and consumption rates nonzero for traded
    staples (markets can't flatline).
 8. Originality lint: name/description strings are checked against a denylist of inspiration-game
@@ -96,6 +100,12 @@ from the former economy-core contract; other documents cite these numbers):
    e.g. "Soul Trial", "Mutator", "Outpost Rush", "Azoth", "Aeternum") to enforce FR-024
    mechanically. (Denylist scope extended 2026-06-11 after the spec audit found a feature-name
    collision in the former spec 003's draft.)
+9. Route durations: every route's caravan duration falls within the authored
+   `caravanDurationBand` (WorldTuningDef), and personal travel is shorter than the caravan's
+   on the same route (FR-040/044).
+10. Skill families: 5 gathering, 5 refining, and 7 crafting skills plus the hauling
+    progression are present (spec skill-family assumption; counts are content gates, not
+    code constraints).
 
 ### Authoring rules
 

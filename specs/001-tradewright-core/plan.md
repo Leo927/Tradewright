@@ -153,11 +153,11 @@ the existing seams (content-defined schools/abilities/curves per IV, resolver be
 contract per V, classification extended per IX) and this update removed every artifact
 statement the clarifications invalidated (X). Complexity Tracking stays empty.
 
-**Spec deviation note (not a constitution violation)**: FR-017 (authoritative time) cannot
-be fully guaranteed in V1, which has no server. V1 applies best-effort integrity (monotonic
-clamp, persisted last-seen timestamp, optional network time check); full enforcement arrives
-with V2, where the server owns time. In V1 clock cheating affects only the cheater's solo
-world. Recorded in research.md (R8, economy).
+**V1 time-integrity note**: FR-017 scopes its full guarantee to V2, where the server owns
+time (spec-aligned 2026-06-12; formerly recorded here as a spec deviation). V1 applies the
+best-effort integrity FR-017 mandates: monotonic clamp, persisted last-seen timestamp,
+optional network time check; clock cheating affects only the cheater's solo world.
+Mechanism in research.md (R8, economy).
 
 ## Known Design Gaps (resolve before the affected milestone)
 

@@ -48,11 +48,12 @@ then craft a finished good needing outputs of two skills. Expect: inputs consume
 ratios; missing-input assignment is rejected with exact shortfall; cross-settlement materials
 are unusable. E2E: `tests/e2e/crafting.spec.ts`.
 
-**US4 — Trade at the Local Market**: at the trading post, place a sell order (goods escrow),
-then a buy order that crosses it. Expect: fill at best price, tax deducted and disclosed,
-goods/coin land correctly, the listing is browsable from a *different* settlement (linked
-market) but lives only on its home book, and a remote buy delivers to the buyer's storage at
-the listing's settlement.
+**US4 — Trade at the Local Market**: at the trading post, place a sell order (goods escrow);
+a same-owner crossing buy never matches it (FR-033) — the NPC principal fills it on the next
+market tick. Expect: fill at best price, tax deducted and disclosed, goods/coin land
+correctly, the listing is browsable from a *different* settlement (linked market) but lives
+only on its home book, and a remote buy against an NPC sell listing delivers to the buyer's
+storage at the listing's settlement.
 NPC drift check: buy out NPC sell depth for an item; its quote rises next market tick. E2E:
 `tests/e2e/market.spec.ts`.
 

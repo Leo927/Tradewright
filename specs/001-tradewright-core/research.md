@@ -118,7 +118,7 @@ corruption early. The serialized world state doubles as the V2 DB row shape, eas
 **Alternatives considered**: localStorage (5 MB ceiling, synchronous jank); OPFS/SQLite-wasm
 (power without need at V1 data sizes).
 
-### R8 — V1 time integrity: best-effort, honest about limits (FR-017 deviation)
+### R8 — V1 time integrity: best-effort, honest about limits (FR-017 V1 scope)
 
 **Decision**: V1 stores `lastSeenWallClock` and `lastMonotonicMark` in the save. On load: negative
 elapsed time clamps to zero (clock set backwards grants nothing); forward jumps are accepted up
@@ -128,8 +128,9 @@ enforcement is V2's server clock.
 
 **Rationale**: A device-only game cannot cryptographically trust device time; the offline cap
 already bounds the exploit to "what honest absence would earn anyway." In solo mode the only
-victim of cheating is the cheater. V2's authoritative server closes it completely. This is the
-plan's single spec deviation and is recorded in plan.md's Constitution Check.
+victim of cheating is the cheater. V2's authoritative server closes it completely. FR-017
+itself scopes V1 to this best-effort model (2026-06-12 alignment; formerly recorded as the
+plan's single spec deviation).
 
 **Alternatives considered**: mandatory online time check (breaks offline play — unacceptable for
 an idle game); trusting device clock blindly (negative-elapsed corruption, trivial cheating).
@@ -219,7 +220,8 @@ authored floor prices for a curated, regionally-varied raw-goods list (refreshed
 market tick up to the period budget); (b) **demand sweeps** — on an authored cadence, the
 NPC principal market-buys the cheapest listed sell orders across all goods until the sweep
 budget is spent. Both paths settle as ordinary Trades (audit log, price history); coin
-entering via either is the game's only faucet, and aggregate faucet/sink flow counters per
+entering via either is the game's only recurring faucet (the one-time starter grant, FR-050,
+excepted), and aggregate faucet/sink flow counters per
 settlement per period are emitted as economy telemetry (FR-053). In V1 the R4 simulation
 additionally places NPC sell orders; in V2 NPC sell-side liquidity is a config level while
 the faucet mechanisms stay on.

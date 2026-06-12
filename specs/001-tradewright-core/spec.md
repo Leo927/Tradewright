@@ -104,7 +104,8 @@ These rules are permanent, hold across every pillar, and bind all future content
 11. **Phone-first**: every screen and flow fully usable one-handed on a portrait phone
     display; sessions fit mobile attention spans (FR-061, FR-151, FR-263, FR-317).
 12. **Authoritative time**: all progress and timers derive from authoritative time; client
-    clock changes never alter outcomes (FR-017).
+    clock changes never alter outcomes (FR-017). The full guarantee is a V2 property;
+    serverless V1 enforces it best-effort (Product Definition).
 
 ## Product Definition: Two Versions, One Game
 
@@ -436,7 +437,10 @@ offline limit.
    player returns, **Then** the summary shows when and why production halted, and accrued progress
    up to that point is preserved.
 4. **Given** a player who manipulates their device clock, **When** they reopen the game, **Then**
-   accrued progress reflects true elapsed time only — clock changes grant no extra progress.
+   in V2 accrued progress reflects authoritative server time only — clock changes grant no
+   extra progress. In V1 (best-effort integrity, FR-017) setting the clock backwards never
+   grants, loses, or duplicates progress, and forward jumps are bounded by the offline cap,
+   affecting only the cheater's own solo world.
 
 ---
 
@@ -485,9 +489,9 @@ activity visible. It depends on Stories 1–3 producing goods worth trading.
 **Independent Test**: Two test players can complete a full trade (one lists a sell order, the
 other buys it — from the same settlement or remotely); the listing is visible from every
 settlement, lives on exactly one book, and the purchased goods land in the buyer's storage at
-the listing's settlement. In V1 (single-player worlds) the counterparty is proxied by
-self-crossing orders plus NPC trader purchases (FR-054); distinct-wallet two-party trade is
-fully exercised in V2.
+the listing's settlement. In V1 (single-player worlds) the counterparty is the NPC principal
+(standing floor buy orders, demand sweeps, and NPC sell listings — FR-054); self-matching is
+blocked (FR-033), and distinct-wallet two-party trade is fully exercised in V2.
 
 **Acceptance Scenarios**:
 
@@ -1168,12 +1172,16 @@ records depth with no material rewards attached.
 - Settlement storage fills during production → activity halts; halt reason is reported; no output
   is silently discarded.
 - Refining inputs exhausted mid-run (online or offline) → activity halts with reason.
-- Device clock manipulation (forward or backward) → no effect on accrued progress, timers, or
-  caravan arrivals; all timing derives from authoritative time.
+- Device clock manipulation (forward or backward) → in V2, no effect on accrued progress,
+  timers, or caravan arrivals — all timing derives from authoritative server time. In V1
+  (best-effort, FR-017), backward changes are clamped and grant nothing; forward jumps are
+  bounded by the offline cap and affect only the cheater's own solo world.
 - Two buyers attempt to fill the same order simultaneously → exactly one succeeds per unit of
   quantity; no goods or coin are duplicated or lost.
 - Market with no liquidity (empty order book) → player can still place the first order; UI shows
   an empty-book state, not an error.
+- A player's own buy and sell orders would cross → they never match each other (FR-033); both
+  stay on the book for other participants (in V1, the NPC principal) to fill.
 - Order expires while owner is offline → escrow returns; notification on next session.
 - Caravan risk event destroys part of a cargo that was the player's entire stock → loss is bounded
   by the shipment; nothing outside the cargo is affected.
@@ -1320,7 +1328,11 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 - **FR-016**: Activities MUST halt safely (no lost or duplicated resources) when inputs run out or
   output storage is full, recording the halt time and reason.
 - **FR-017**: All progress and timer calculations MUST use authoritative time; client clock
-  changes MUST NOT alter outcomes.
+  changes MUST NOT alter outcomes. The full guarantee is a V2 property (the server owns
+  time). V1, which has no server, MUST enforce best-effort integrity: backward clock changes
+  are clamped (never granting, losing, or duplicating progress) and forward jumps are
+  accepted only up to the offline cap, so clock cheating affects only the cheater's own
+  solo world.
 
 **Items, Recipes & Storage**
 
@@ -1354,7 +1366,9 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   placed at any settlement remotely and fill into the buyer's storage at that settlement;
   sell orders MUST be placed at the settlement where the escrowed goods physically are.
 - **FR-033**: Orders MUST match within a settlement by price priority, then time priority, with
-  partial fills supported; matched trades transfer goods/coin atomically.
+  partial fills supported; matched trades transfer goods/coin atomically. A player's own
+  orders MUST never match each other: matching skips same-owner order pairs, which coexist
+  on the book unfilled.
 - **FR-034**: Each settlement MUST apply its own listing fee and sales tax to market activity,
   with all fees disclosed before order confirmation. (Phase 1: rates are world-defined per
   settlement; Phase 2 will hand rate-setting to owning companies.)
@@ -1394,14 +1408,16 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 **Economy & Currency**
 
 - **FR-050**: The game MUST have a single coin currency, earned primarily by selling goods;
-  characters start with a small fixed amount.
+  characters start with a small fixed amount — a content-defined value granted once at
+  character creation, the one-time exception to FR-053's recurring-faucet rule.
 - **FR-051**: All taxes and fees MUST be sinks (coin leaves the player economy) in Phase 1.
 - **FR-052**: Every economic mutation (trade, fee, tax, caravan loss, production) MUST be recorded
   so a player's coin and item history is auditable in their transaction log.
 - **FR-053**: The economy MUST include authored coin faucets — points where coin enters the
   player economy — alongside the sinks of FR-051; player-to-player trade alone is zero-sum
-  and is not a faucet. NPC trader purchases on settlement order books are the sole coin
-  faucet: enemies never drop coin (drop tables pay materials and gear only, FR-111), so
+  and is not a faucet. NPC trader purchases on settlement order books are the sole recurring
+  coin faucet (the one-time character-creation starter grant, FR-050, is the only other coin
+  entry): enemies never drop coin (drop tables pay materials and gear only, FR-111), so
   combat is coin-positive only by selling drops. Faucet and sink
   rates MUST be content-tunable, and aggregate faucet/sink flows MUST be observable via
   economy telemetry so monetary imbalance (inflation or deflation) is detectable and
@@ -1888,8 +1904,8 @@ Parity is measured at equivalent investment and verified against a healthy world
 terms are operationally defined by the joint economy model's behavior model (research R16,
 economy).
 
-**Coin faucets**: NPC trader purchases on settlement order books — the sole faucet (FR-053),
-operating as standing floor-price buy orders on curated raw goods plus periodic demand
+**Coin faucets**: NPC trader purchases on settlement order books — the sole recurring faucet
+(FR-053; the one-time character-creation starter grant, FR-050, excepted), operating as standing floor-price buy orders on curated raw goods plus periodic demand
 sweeps across all goods, each on content-tunable per-settlement budgets (FR-054).
 Enemies never drop coin; fighting is coin-positive only via selling drops. Player-to-player
 trade is zero-sum and is not a faucet.

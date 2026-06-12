@@ -96,9 +96,22 @@ model.
 **NpcItemEntry**: `itemId`, `equilibriumStock`, `productionPerHour`, `consumptionPerHour`,
 `priceBounds {min×, max×}` (clamp on pressure curve), `orderBandWidth` (spread around quote),
 `orderDepth` (qty per refresh). Semantics per research R4 (economy). The floor/sweep
-mechanisms are the game's sole coin faucet (FR-053); both settle as ordinary Trades and
+mechanisms are the game's sole recurring coin faucet (FR-053; the one-time starter grant,
+FR-050, is the only other coin entry); both settle as ordinary Trades and
 emit per-settlement faucet telemetry. V1 additionally places NPC sell orders (R4
 simulation); V2 keeps the faucet on with sell-side liquidity configurable.
+
+#### WorldTuningDef (singleton — `world.json`)
+| Field | Type | Notes |
+|---|---|---|
+| worldTickSeconds | number | 60 at launch — the engine's only tick-length source (research R5 (economy)) |
+| marketCadenceTicks | int | NPC order refresh / drift cadence in world ticks (research R4 (economy)) |
+| offlineCapHours | number | 24 at launch (FR-013; offline-cap assumption) |
+| caravanDurationBand | {minHours, maxHours} | 2–6 h at launch; every RouteDef's caravanMinutes must fall inside it (world-integrity gate 9) |
+| starterCoin | integer coins | the one-time character-creation grant (FR-050), recorded as a `starter-grant` Transaction |
+
+One authored record, not an array — the single source for engine pacing and world tunables;
+the engine never hardcodes these values (Principle IV).
 
 ### Runtime State (mutable)
 
@@ -146,7 +159,8 @@ confirmation). Travel forces `halted(travel)`.
 
 **Matching invariant**: within a settlement, price priority then time priority; a unit of
 quantity matches exactly once (SC-010); buyer pays, seller receives price − salesTax; goods land
-in buyer's local storage.
+in buyer's local storage. Same-owner orders never match each other (FR-033) — they coexist on
+the book unfilled.
 
 #### Trade
 Immutable record: `{id, settlementId, itemId, qty, unitPrice, buyerId, sellerId, taxPaid,
