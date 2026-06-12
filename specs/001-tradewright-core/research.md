@@ -305,8 +305,8 @@ worth gain (coin plus inventory valued at current local sell prices) per simulat
 the measurement window. Green/red is deterministic: across the recorded seed list, (a) every
 24-hour window of the measurement window offers ≥ 1 route with positive post-tax, post-risk
 expected profit, and (b) median hauler income is within ±50% of median producer income
-(SC-007); SC-006's ≤ 60% self-sufficiency is checked statically against the same content
-snapshot. All parameters — actor counts, warm-up length, measurement-window length, seed
+(SC-007); SC-006's cap — no single settlement's local resources produce > 60% of launch
+recipes — is checked statically against the same content snapshot. All parameters — actor counts, warm-up length, measurement-window length, seed
 list, decision-tick cadence, starting coin — live as named constants in
 `packages/content/tests/economy-model.test.ts`; changing one is a reviewed content-tuning
 decision, not test noise.

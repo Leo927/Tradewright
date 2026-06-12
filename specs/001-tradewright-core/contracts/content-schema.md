@@ -87,7 +87,7 @@ from the former economy-core contract; other documents cite these numbers):
 3. Every settlement offers ≥ 1 tier-1 gathering activity (a new player can always start).
 4. The route graph is connected — no unreachable settlement.
 5. Asymmetry budget (SC-006): no single settlement's local activities can produce > 60% of
-   recipes' input needs.
+   launch recipes.
 6. Tier coverage: every skill has content at every tier it declares.
 7. NPC sanity: priceBounds min× < 1 < max×; production and consumption rates nonzero for traded
    staples (markets can't flatline).

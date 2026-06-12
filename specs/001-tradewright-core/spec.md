@@ -1872,8 +1872,8 @@ single aggregate view of those demands; the individual requirements remain autho
 | Delve-exclusive materials | Venture bonus pools (FR-313) | Recipes, craft-mods, and selected relic awakening tracks (FR-316) |
 | Awakening materials | Market-tradable (≥ 1 per track, SC-303) | Relic awakening steps (FR-304) |
 
-**Recipe-demand mandates (aggregate)**: no single settlement produces > 60% of recipe input
-needs (SC-006); ≥ 20% of crafting recipes require a combat-exclusive material (SC-105);
+**Recipe-demand mandates (aggregate)**: no single settlement's local resources
+produce > 60% of launch recipes (SC-006); ≥ 20% of crafting recipes require a combat-exclusive material (SC-105);
 group-content materials account for ≥ 10% of launch recipe inputs overall (SC-205); every
 hunting region's and every challenge format's materials are demanded by ≥ 1 recipe (SC-105,
 SC-205); every relic awakening track demands ≥ 1 market-tradable material (SC-303). These
