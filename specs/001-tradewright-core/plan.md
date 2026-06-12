@@ -1,12 +1,13 @@
 # Implementation Plan: Tradewright — Core Game
 
-**Branch**: `master` | **Date**: 2026-06-11 | **Spec**: [spec.md](./spec.md)
+**Branch**: `master` | **Date**: 2026-06-11 (updated 2026-06-12) | **Spec**: [spec.md](./spec.md)
 
 **Input**: Feature specification from `/specs/001-tradewright-core/spec.md`
 
 **Provenance**: Merged 2026-06-11 from the former plans of specs 001 and 003–004 (spec
-collapse). The former spec 002 (combat core) never had a plan; that gap is now a named
-milestone precondition (M2) instead of a cross-spec deviation note.
+collapse). The former spec 002 (combat core) never had a plan; that gap was closed by the
+2026-06-12 combat design pass (research Part IV, data-model/protocol/content-schema
+Part II), unblocked by the clarification rounds that resolved Q1–Q6.
 
 ## Summary
 
@@ -32,7 +33,9 @@ Layered technical approach, one engine throughout:
 - **Economy core**: deterministic world tick (60 s), offline fast-forward, per-settlement
   order books, NPC market simulation, caravan/travel timers.
 - **Combat core**: auto-resolving expeditions executing builds (schools, abilities, trees,
-  tactics) — *design pending, see M2 precondition*.
+  tactics) on a shared deterministic 1 s combat resolver nested in the world tick; the
+  five-attribute stat pipeline and threat-table targeting (FR-107/108) are authored
+  curves the resolver evaluates; the tactics engine doubles as the auto AI everywhere.
 - **Challenge layer**: encounters run as live instances on a fast encounter tick (1 s)
   nested inside the 60 s world tick, with idle accrual suspended inside; an authored
   mechanic vocabulary (phases, telegraphs ≥ 4 s windows, cooperative answers, enrage)
@@ -51,8 +54,9 @@ Layered technical approach, one engine throughout:
 server
 
 **Primary Dependencies**: React 18 + Vite (client GUI); Zod (content/state schema
-validation); Vitest (unit tests); Playwright (E2E); Node.js 22 LTS; V2 adds Fastify + ws
-(WebSocket) + PostgreSQL
+validation); Vitest (unit tests); Playwright (E2E); Node.js 22 LTS; PWA service worker
+(install + opt-in device-scheduled notifications in V1; Web Push delivery in V2 — FR-064,
+research R15); V2 adds Fastify + ws (WebSocket) + PostgreSQL
 
 **Storage**: V1 — IndexedDB on device (versioned save format; expedition/instance/descent
 state, relic grants, depth records all join it). V2 — PostgreSQL on server (plus parties,
@@ -141,6 +145,12 @@ Gates derived from `.specify/memory/constitution.md` (v1.6.0):
   forward: any change that invalidates a part of the merged spec/plan/contracts updates that
   part in the same change — no superseded-but-retained design text.
 
+**Post-design re-check (2026-06-12)**: re-evaluated after the combat design pass and the
+platform additions (FR-037/054/063/064) — all gates still pass. The combat layer lands on
+the existing seams (content-defined schools/abilities/curves per IV, resolver behind the
+contract per V, classification extended per IX) and this update removed every artifact
+statement the clarifications invalidated (X). Complexity Tracking stays empty.
+
 **Spec deviation note (not a constitution violation)**: FR-017 (authoritative time) cannot
 be fully guaranteed in V1, which has no server. V1 applies best-effort integrity (monotonic
 clamp, persisted last-seen timestamp, optional network time check); full enforcement arrives
@@ -149,19 +159,27 @@ world. Recorded in research.md (R8, economy).
 
 ## Known Design Gaps (resolve before the affected milestone)
 
-1. **Combat core is unplanned** (gates M2): the combat layer has a complete spec
-   (FR-101–184) but no data model, no protocol section, and no content schemas — see the
-   explicit Part II gap sections in [data-model.md](./data-model.md),
-   [contracts/game-protocol.md](./contracts/game-protocol.md), and
-   [contracts/content-schema.md](./contracts/content-schema.md). The challenge and
-   relic/delve designs bind only to spec-fixed combat shapes; research R11 (relic/delve)
-   names the three touchpoints to re-verify when the combat design lands (equip path,
-   item-instance representation, inert-modifier flagging).
-2. **Open Questions Q1–Q6** (spec, Open Questions section): character tier (Q1) and the
-   stat vocabulary (Q2) gate M2's design pass; group-combat semantics (Q3) gate M6;
-   coin-faucet accounting and the joint economy model (Q4) gate M1 content tuning;
-   settlement facilities (Q5) gate M6's invasion work; combat onboarding (Q6) gates M2's
-   UX design.
+The two gaps recorded at merge time are closed:
+
+1. **Combat core — designed 2026-06-12**: the combat design pass produced research Part IV
+   (combat), data-model Part II, protocol Part II, and content-schema Part II. The
+   challenge and relic/delve touchpoints flagged for re-verification (combat tick rate,
+   item-instance representation, auto-AI interface, equip path, inert-modifier flagging)
+   are all verified — see the R11 resolution notes in [research.md](./research.md).
+2. **Open Questions Q1–Q6 — resolved in the spec**: the 2026-06-11 core-game clarification
+   round resolved Q1–Q5 (character tier → FR-211 definition; stat vocabulary → FR-107;
+   group-combat semantics → FR-108; coin faucets → FR-053/054; settlement facilities →
+   FR-037) and the 2026-06-12 session resolved Q6 (combat onboarding → FR-113) plus the
+   platform ambiguities (V1 device-local saves → FR-003, no V1→V2 migration → FR-004,
+   V2 offline behavior → FR-063, push notifications → FR-064). All are integrated into
+   the design artifacts (data-model Part I/II additions, protocol Part I/II additions,
+   research R13–R15).
+
+One named work item remains (not a design gap — a tuning precondition): the **joint
+economy model** (spec, Economy Budget "open modeling debt") — the recipe-demand and
+income-parity mandates (SC-006/007/105/106/205, SC-303) are asserted pairwise but no
+model yet shows them holding jointly at launch content scale. Build it during M1 content
+tuning, before the recipe set is declared launch-shaped.
 
 ## Project Structure
 
@@ -171,12 +189,12 @@ world. Recorded in research.md (R8, economy).
 specs/001-tradewright-core/
 ├── spec.md              # The unified core-game specification (23 stories, FR-0xx–FR-3xx)
 ├── plan.md              # This file
-├── research.md          # Merged research (Parts: economy / challenge / relic & delve)
-├── data-model.md        # Merged data model (Part II = combat gap, pending)
-├── quickstart.md        # Merged quickstart scenarios
+├── research.md          # Merged research (Parts: economy / challenge / relic & delve / combat)
+├── data-model.md        # Merged data model (Part II = combat, designed 2026-06-12)
+├── quickstart.md        # Merged quickstart scenarios (Part II = combat validation)
 ├── contracts/
-│   ├── game-protocol.md # Unified command/query/event contract (Part II = combat, pending)
-│   └── content-schema.md# Unified authored-content contract (Part II = combat, pending)
+│   ├── game-protocol.md # Unified command/query/event contract (Part II = combat)
+│   └── content-schema.md# Unified authored-content contract (Part II = combat)
 ├── checklists/
 │   └── requirements.md  # Merged spec-quality checklists (historical, all four layers)
 ├── design/              # UI design artifacts, one per screen group (created during impl)
@@ -190,7 +208,7 @@ packages/
 ├── contract/            # @tradewright/contract — protocol types ONLY (commands, queries,
 │   └── src/             #   events, DTOs, error codes). Zero runtime logic. Everything
 │       ├── ...          #   JSON-serializable. Economy types from M0.
-│       ├── combat/      #   M2 (design pending)
+│       ├── combat/      #   M2: expedition, loadout, tactics, school/tree DTOs
 │       ├── challenge/   #   M3/M6: encounter, party, signup, event DTOs
 │       ├── relics/      #   M4: compendium/awakening DTOs, equip/trade error codes
 │       └── delve/       #   M4: site/descent/landing/ledger DTOs
@@ -201,7 +219,7 @@ packages/
 │   │   ├── market/      #   order book, matching, escrow, fees/taxes
 │   │   ├── npc/         #   NPC market simulation (supply/demand drift) [V1-critical]
 │   │   ├── caravan/     #   shipments, routes, risk resolution, travel
-│   │   ├── combat/      #   M2 (design pending): schools, abilities, tactics, expeditions
+│   │   ├── combat/      #   M2: combat resolver (1 s tick), schools, tactics, expeditions
 │   │   ├── encounter/   #   M3: 1 s encounter tick, mechanic resolution, scoring, loot
 │   │   ├── group/       #   M6: parties, group board, backfill, leadership, signups
 │   │   ├── worldevents/ #   M6: elite zones, events, world bosses, invasions, threat
@@ -268,12 +286,14 @@ P1–P23 ladder in spec.md.
 2. **M1 — V1 Economy (Stories 1–5)**: skilling loop → offline catch-up → recipe chains →
    NPC markets with drift → caravans/travel/arbitrage. Each story independently playable
    and Playwright-tested as it lands. Ends with the full solo loop: gather → refine →
-   craft → arbitrage between towns. *Resolve Q4 (faucet accounting + joint economy model)
-   during content tuning.*
-3. **M2 — Combat core (Stories 6–13)**: **precondition: the combat design pass** — resolve
-   Q1/Q2/Q6, then produce data-model Part II, protocol Part II, and content-schema Part II
-   before implementation tasks. Then: expedition runtime, schools/abilities/tactics/trees,
-   gear + provisions, retreat/recovery, drop tables, combat economy integration. V1-shippable.
+   craft → arbitrage between towns. Includes the FR-054 faucet (floor orders + demand
+   sweeps) and the FR-037 facility/station gates. *Build the joint economy model (Known
+   Design Gaps) during content tuning.*
+3. **M2 — Combat core (Stories 6–13)**: *(precondition satisfied 2026-06-12 — the combat
+   design pass produced data-model Part II, protocol Part II, content-schema Part II, and
+   research Part IV.)* Expedition runtime on the shared 1 s combat resolver,
+   schools/abilities/tactics/trees, gear + provisions, retreat/recovery, drop tables,
+   onboarding (FR-113), combat economy integration. V1-shippable.
 4. **M3 — Challenge foundation + Mettle trials (Story 14)**: encounter tick + mechanic
    vocabulary, active control + auto-AI takeover, score brackets, trial ladder content, and
    the gear-score/grade/modifier foundation (FR-270–272 — needed for trial rewards).
@@ -288,8 +308,9 @@ P1–P23 ladder in spec.md.
    RemoteTransport, optimistic reconciliation, NPC liquidity tuning, load validation toward
    SC-008. V1 remains shipping and tested throughout. *Can begin in parallel after M1; the
    economy contract is the first surface to stabilize.*
-7. **M6 — Group formats (Stories 15–19; party delves)**: **precondition: resolve Q3
-   (group-combat semantics) and Q5 (facilities)**. Group board + party lifecycle +
+7. **M6 — Group formats (Stories 15–19; party delves)**: *(former preconditions Q3/Q5
+   resolved in the spec — threat model FR-108, facilities FR-037.)* Group board + party
+   lifecycle +
    backfill/leadership; dungeons with cooperative mechanics + personal loot; affliction
    rotation + ward/resist counters + leaderboards; raids with scheduling; elite zones,
    eruption events (caravan-risk tie-in), world bosses at ~50 scale; invasions (threat

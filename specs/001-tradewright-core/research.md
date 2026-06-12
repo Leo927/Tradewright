@@ -1,11 +1,14 @@
 # Research: Tradewright — Core Game
 
-**Date**: 2026-06-11 | **Spec**: [spec.md](./spec.md)
+**Date**: 2026-06-11 (Parts I–III) / 2026-06-12 (Part IV + Part I addenda R13–R15) |
+**Spec**: [spec.md](./spec.md)
 
-Merged 2026-06-11 from the former specs 001/003/004 research documents (spec collapse; numbering per part preserved).
-
-> **Note**: The combat core (former spec 002) never had a research phase; combat-engine
-> research is an open work item for the combat milestone.
+Merged 2026-06-11 from the former specs 001/003/004 research documents (spec collapse;
+numbering per part preserved). Part IV (combat core) was authored 2026-06-12 once the
+clarification rounds resolved the stat vocabulary (FR-107), multi-combatant semantics
+(FR-108), and combat onboarding (FR-113) — parts are ordered by authoring date, so combat
+sits last here while it is Part II in data-model.md and the contracts; cross-references use
+the `(economy) / (challenge) / (relic/delve) / (combat)` qualifiers, which are stable.
 
 Resolves every open technical question from the plan's Technical Context. No NEEDS
 CLARIFICATION markers remain.
@@ -161,17 +164,17 @@ enforcement.
 **Alternatives considered**: separate workflows per package (more YAML, no benefit at this size);
 merge-queue/nightly-only E2E (violates Principle II's every-PR gate).
 
-### R11 — V2 server shape (architecture-level; detail deferred to M2)
+### R11 — V2 server shape (architecture-level; detail deferred to M5, the V2 milestone)
 
 **Decision**: Node 22 + Fastify, WebSocket (`ws`) carrying the same contract messages,
 PostgreSQL for world + account state, the same `@tradewright/engine` running authoritatively
 (world tick on the server, per-settlement market processing). Client's `RemoteTransport`
 implements optimistic apply + server reconciliation per Principle IX. Accounts: email/password +
-session tokens at M2 (standard, replaceable).
+session tokens at M5 (standard, replaceable).
 
 **Rationale**: Same language end-to-end keeps the single-engine guarantee (the entire point of
 the architecture). Fastify/ws/Postgres are boring, proven choices. Only the architecture is
-fixed now — capacity design (sharding by settlement, interest management) is researched in M2
+fixed now — capacity design (sharding by settlement, interest management) is researched in M5
 when SC-008 load validation happens; nothing in V1 constrains it because the contract is
 transport-agnostic.
 
@@ -206,6 +209,83 @@ in the content-schema contract extends beyond item/place names to the inspiratio
 feature/system names (e.g., "Soul Trial", "Mutator", "Outpost Rush", "Azoth", "Aeternum")
 after the audit found the former spec 003's original draft reusing "soul trials" as a format
 name.
+
+### R13 — Coin faucet: NPC purchases as floor orders + demand sweeps (extends R4)
+
+**Decision**: The FR-054 faucet runs through two engine mechanisms on each settlement's
+real order book, both drawing from authored per-settlement coin budgets per market tick
+period: (a) **standing floor buy orders** — the NPC principal maintains buy orders at
+authored floor prices for a curated, regionally-varied raw-goods list (refreshed each
+market tick up to the period budget); (b) **demand sweeps** — on an authored cadence, the
+NPC principal market-buys the cheapest listed sell orders across all goods until the sweep
+budget is spent. Both paths settle as ordinary Trades (audit log, price history); coin
+entering via either is the game's only faucet, and aggregate faucet/sink flow counters per
+settlement per period are emitted as economy telemetry (FR-053). In V1 the R4 simulation
+additionally places NPC sell orders; in V2 NPC sell-side liquidity is a config level while
+the faucet mechanisms stay on.
+
+**Rationale**: Reusing the order book means the faucet needs no new economic machinery —
+floors are visible orders players can read (guaranteed baseline liquidity, the answer to
+the inspiration's dead-localized-markets failure), and sweeps reward whoever prices lowest
+across all goods. Budgets-as-content make monetary policy tunable without code, and
+telemetry makes the 2021-deflation failure case detectable (FR-053).
+
+**Alternatives considered**: vendor-style instant "sell to NPC" button outside the order
+book (bypasses the market, hides the faucet from price discovery — rejected against
+FR-054's on-book requirement); enemies dropping coin (rejected in clarification —
+NW-faithful, FR-053); unlimited floor budgets (unbounded coin printing; budget exhaustion
+is the disclosed, tunable limit).
+
+### R14 — V2 offline client: classification-derived queue-or-block (FR-063)
+
+**Decision**: The V2 client's offline behavior derives mechanically from the contract's
+Principle IX interaction classification (R3): reads serve the last-known snapshot
+read-only with an offline indicator and "as of" timestamp; commands classified
+optimistic-with-reconciliation whose subject is the player's own state (activity
+assignment, tactics edits, loadout changes) are applied locally, persisted to a FIFO
+mutation queue, and replayed on reconnect — each taking effect at server receipt per
+authoritative time (FR-017), with rejections rolled back visibly via the existing
+`StateInvalidated` path; commands touching shared multiplayer state (orders/trades, party
+and board actions, entering live instances) are rejected offline with `OFFLINE_BLOCKED`
+and an honest explanation. The queue survives app restarts (persisted beside the snapshot
+cache) and is bounded; overflow degrades to blocking with explanation, never silent drop.
+
+**Rationale**: The contract already classifies every interaction; deriving offline policy
+from the same classification means no second list to maintain and no per-feature offline
+design. Replay-at-receipt keeps the server's time authority intact, and visible rollback
+is the Principle IX rule already shipped for online optimism. V1 binds in-process and is
+untouched (FR-003).
+
+**Alternatives considered**: full offline blocking (fails FR-063 and Principle IX's
+responsiveness bar for own-state actions); CRDT/merge reconciliation (massive machinery
+for a game where the server is simply authoritative — rejected); queueing market orders
+too (stale-price execution surprises the player with real coin; spec explicitly blocks
+shared-state mutations offline).
+
+### R15 — Push notifications: opt-in category scheduler, two delivery backends (FR-064)
+
+**Decision**: One engine-side notification model — authored category definitions (launch
+set: caravan arrival, offline cap reached, committed raid/invasion approaching, order
+filled/expired) with per-player, per-category opt-in state, off by default. The engine
+computes upcoming notifiable moments from known timers (deterministic — caravan ETAs,
+cap time, scheduled starts); delivery is a host adapter: V1 schedules device-local
+notifications via the PWA service worker + Notification API (honest capability note:
+requires installed-PWA + permission on iOS ≥ 16.4; the in-app surfaces remain the
+baseline), V2 sends Web Push from the server scheduler. Content is timer-factual only;
+no promotional channel exists anywhere in the model, so none can be turned on later
+without a schema change (the FR-064 prohibition made structural). All other "notified"
+language in the spec remains in-app surfaces.
+
+**Rationale**: Computing moments engine-side from authoritative timers keeps both
+versions consistent and testable (the schedule is a pure function of state); the
+adapter split is the established two-host pattern (R3/R11). Categories-as-content keeps
+the launch set tunable (FR-064).
+
+**Alternatives considered**: server-only push with V1 excluded (FR-064 covers both
+versions; V1 device scheduling is feasible and honest); third-party push SaaS (vendor
+lock for four timer categories; Web Push is sufficient); engagement/retention
+notifications (prohibited outright by FR-064 — excluded from the model, not just the
+launch set).
 
 ## Part II — Challenge & Group Layer (former 003)
 
@@ -417,7 +497,7 @@ random punishment. Reusing Contribution Records for repair keeps one credit syst
 **Alternatives considered**: random invasion timers (rejected in spec clarification);
 threat as hidden server state (violates the visibility decision and Explorable UX).
 
-### R11 — Dependency on the combat core (unplanned): consume spec-fixed shapes only
+### R11 — Dependency on the combat core (unplanned at authoring; resolved 2026-06-12): consume spec-fixed shapes only
 
 **Decision**: The challenge layer's design binds only to structures the combat core's spec
 fixes normatively: control modes and auto-AI takeover (FR-180–184), ability/tactics shape
@@ -438,6 +518,13 @@ full re-read.
 **Alternatives considered**: blocking challenge-layer planning on the combat core's plan
 (serializes work the specs already de-risked); planning the combat core inside this plan
 (scope violation — separate feature, separate lifecycle).
+
+**Resolution (2026-06-12)**: the combat design pass (Part IV) landed; all three
+touchpoints verified — (a) tick rate: expeditions resolve on the same 1 s combat tick via
+one shared resolver (R1, combat), no rate mismatch exists; (b) item instances:
+`GearItemInstance` is owned by the combat core with exactly the shape R9 assumed
+(R6, combat); (c) auto-AI interface: the tactics engine is the AI, answering telegraphs
+with each mechanic's authored generic answer (R4, combat).
 
 ## Part III — Relics & Delves (former 004)
 
@@ -692,7 +779,7 @@ keeps the limit content-tunable without code.
 a separate relic-loadout subsystem (relics are gear — FR-303's whole stance; new subsystem
 contradicts it).
 
-### R11 — Dependency on the combat core (still unplanned): consume spec-fixed shapes only
+### R11 — Dependency on the combat core (unplanned at authoring; resolved 2026-06-12): consume spec-fixed shapes only, addendum
 
 **Decision**: Carry R11 (Part II, challenge) forward unchanged, with the relic & delve
 layer's additional touchpoints. This plan binds only to shapes fixed normatively by the
@@ -709,3 +796,217 @@ re-verification later.
 
 **Alternatives considered**: blocking on the combat core's plan (serializes work the specs
 already fixed); duplicating combat-core decisions here (scope violation).
+
+**Resolution (2026-06-12)**: the combat design pass (Part IV below) landed; all named
+touchpoints verified — see the resolution note on R11 (challenge) above. (a) gear-equip
+command path: `EquipGear` (protocol Part II) is the single choke point R10 extends;
+(b) item-instance representation: `GearItemInstance` is owned by the combat core exactly
+as R1/R2 assumed (R6, combat); (c) inert-modifier flagging: the combat core's tactics/
+loadout inert-rule pattern (FR-173) is a loadout-state flag R10 reuses unchanged.
+
+## Part IV — Combat Core (designed 2026-06-12)
+
+Authored after the 2026-06-11/12 clarification rounds resolved the stat vocabulary
+(FR-107), the threat model (FR-108), and combat onboarding (FR-113). Inherits the economy
+core's research (Part I: tick model, seeded RNG, injected clock, save format, contract
+shape) and supplies the shapes Parts II–III consumed as spec-fixed (their R11 touchpoints
+are now verified, see the resolution notes above).
+
+### R1 — One combat resolver: shared 1 s combat tick, expeditions nested in the world tick
+
+**Decision**: A single deterministic combat resolver — a pure reducer
+`(combatState, defs, tick | input) → combatState + events` — resolves all combat on a
+fixed 1 s combat tick: expeditions (auto mode, FR-101) and challenge-layer encounter
+instances (which layer phases/mechanics on top, R1/R3 (challenge)) run the same core.
+Online, an active expedition advances 60 combat ticks per 60 s world tick; offline,
+catch-up replays expedition combat ticks in a tight loop inside the R5 (economy)
+fast-forward, bounded by the 24 h cap, provision exhaustion, or retreat. Budget check:
+24 h = 86 400 ticks of small-integer arithmetic — well inside the 3 s catch-up budget
+(SC-002); a CI benchmark guards it, with closed-form fight-cycle detection (identical
+deterministic fights repeat) held in reserve if content scale ever threatens the budget.
+
+**Rationale**: One resolver is what makes offline ≡ online combat (FR-105/SC-103) and
+expedition-vs-encounter consistency structural rather than tested-for. 1 s matches the
+encounter tick the challenge layer already fixed — resolving its touchpoint (a) — and is
+fine-grained enough for cooldowns measured in seconds while remaining cheap to replay.
+
+**Alternatives considered**: closed-form expedition outcomes (cannot interleave provision
+thresholds, durability breaks, tactics triggers, and threat retargeting in order —
+exactly the event-ordering trap R5 (economy) rejected); a 60 s combat tick (cannot
+express cooldowns or tactics thresholds; encounter tick already settled on 1 s); separate
+expedition and encounter resolvers (parity between standard and challenge combat becomes
+a test burden instead of an identity).
+
+### R2 — Stat pipeline: five attributes, authored derivation curves (FR-107)
+
+**Decision**: Content defines five `AttributeDef`s (original-named analogs of
+STR/DEX/INT/FOC/CON). A character's attribute totals come from gear grants (FR-120) plus
+authored base values. Derived combat stats are authored curve expressions (the CurveExpr
+discipline, R8 (relic/delve)): health = f(CON-analog); ability/basic-attack magnitude =
+abilityBase × attributeScaling(designated attributes) × masteryScaling(school mastery);
+mitigation = armorCurve(physical | elemental armor rating). Each school designates one or
+two scaling attributes in its def. The resolver evaluates curves; it hard-codes none.
+
+**Rationale**: FR-107 fixes the structure and demands names, assignments, and curves be
+authored content — this is Principle IV applied to combat math, and it makes SC-107's
+"builds matter" audit a content-tuning loop, not an engine change.
+
+**Alternatives considered**: hard-coded formulas (violates FR-107's authored-content
+clause); free-form per-ability script formulas (authors writing code — rejected per the
+R2 (challenge) discipline); more/fewer attributes (spec fixed five, NW-analog).
+
+### R3 — Targeting: per-enemy threat tables, deterministic (FR-108)
+
+**Decision**: Each enemy in a fight keeps a per-combatant threat accumulator:
+`threat += damageDealt + sustainFactor × healingDone + tauntAmplifiers` (factors and
+amplifier magnitudes authored — gear perks and abilities reference them as EffectExprs).
+At each combat tick the enemy targets the highest-threat combatant; ties break by stable
+join order, so resolution is deterministic (FR-106). Solo combat is the single-entry
+table. Ally-targeted ability effects (heals, shields, buffs) and ally-health/party-state
+tactics triggers complete the role loop: sustain builds generate threat-relevant healing,
+tank builds carry taunt amplifiers, and the dungeon role interdependence (FR-221, SC-202)
+emerges from builds rather than a class system.
+
+**Rationale**: FR-108 names this model; an accumulator per (enemy, combatant) is trivially
+serializable, replayable, and auditable in unit tests. Stable tie-break is the cheapest
+guarantee that two identical runs never diverge.
+
+**Alternatives considered**: random target selection (violates FR-106 determinism and
+makes tanking impossible); fixed first-target focus (no role emergence — rejected against
+FR-108); positional aggro (there is no position — UI-only invariant).
+
+### R4 — Tactics: closed condition vocabulary, strict-priority evaluation; tactics ARE the auto AI
+
+**Decision**: A tactics program is an ordered rule list `{abilityId, trigger}` plus
+provision thresholds and the retreat threshold. Triggers come from a closed, engine-defined
+condition vocabulary mirroring FR-166: `always`, `self-health-below(pct)`,
+`enemy-health-above/below(pct)`, `ally-health-below(pct)`, `party-state(buff/debuff
+present/missing on self|ally|enemy)`, `at-expedition-start`. Each combat tick the resolver
+casts the highest-priority rule whose trigger holds and whose ability is off cooldown —
+strict priority order makes ties impossible (FR-168). Tactics are runtime player state
+(not content), editable mid-expedition effective next tick (FR-169); each school ships an
+authored default rotation (FR-167). SC-108 (manual play never strictly required on
+standard content) is verified by a property suite: for every launch enemy, the best
+manual-tap trace found by search is reproduced by some tactics program — the vocabulary
+must stay expressive enough to encode any tap sequence's *strategy* (condition-reachable
+states), which is why the vocabulary is closed and versioned: extending it is an engine +
+schema change with the parity suite re-run. The tactics engine is also the auto AI
+everywhere (FR-182/203): in challenge content it additionally answers telegraphs with the
+mechanic's authored generic answer — resolving the challenge layer's touchpoint (c).
+
+**Rationale**: A closed vocabulary keeps execution deterministic, serializable, and
+parity-testable; "the AI is just your tactics" is both the honest mental model the spec
+sells (write tactics, not reflexes) and one less system to build.
+
+**Alternatives considered**: free-form expression language (unbounded, breaks the parity
+guarantee and invites authoring code); behavior trees (more power than FR-166's curated
+condition set asks for, harder to surface in a phone UI); separate AI for disconnect
+takeover (two execution paths to keep in parity — rejected).
+
+### R5 — Expedition runtime: state machine with unified return summary
+
+**Decision**: An `ExpeditionInstance` occupies the character's single activity slot
+(FR-104) and owns: enemy selection, a build snapshot (school, slotted abilities, tree
+effects, equipped gear instances, provision manifest — frozen at start except tactics,
+FR-169), live combat state (per the resolver), the accruing haul, and a state machine
+`fighting → ended(retreat | supplies | recalled | offline-cap) → recovering(until)`.
+Defeat is automatic retreat at the configured threshold (or overwhelm with no provisions):
+the haul banks in full, an extra durability hit applies, and a content-tunable
+minutes-scale recovery timer gates only further expeditions (FR-130–132). Expedition
+results merge into the established `EventSummary` (FR-014) so a returning player sees one
+unified summary (combat edge case in spec). Travel, respec, and build edits require
+ending the expedition; tactics edits do not.
+
+**Rationale**: The frozen build snapshot is what makes offline replay well-defined (no
+mid-run state the player could not have applied) and respec-mid-run impossible by
+construction. Reusing EventSummary honors the one-summary rule without a parallel
+reporting channel.
+
+**Alternatives considered**: expeditions as a parallel slot beside idle activities
+(violates FR-010/104's one-activity invariant); death/penalty states (excluded by
+no-ruin, FR-130); mutable builds mid-run (breaks determinism and the spec's explicit
+edge-case rule).
+
+### R6 — Item instances: gear is instanced, provisions stay fungible
+
+**Decision**: The combat core owns the `GearItemInstance` representation:
+`{instanceId, itemDefId, gearScore, modifiers[], durability}` — non-fungible, stored/
+escrowed/shipped as instances through the economy core's locality rules; `qualityGrade`
+stays derived (R9, challenge). Provisions and materials remain fungible stacks under the
+economy core's quantity model. Durability decrements on authored wear events (per fight,
+extra on retreat); at zero the instance grants no stats, perks, or modifiers until
+repaired for coin and/or materials (FR-122, sink). This resolves the challenge and
+relic/delve layers' shared assumption (their touchpoint b): the instance representation
+they extend is exactly this one.
+
+**Rationale**: Gear needs per-item state (durability, rolled modifiers, awakening) that
+fungible stacks cannot carry; everything else staying fungible keeps the market and
+storage models the economy core shipped. One instance shape across combat, challenge
+rewards, and relics is what lets relics be "ordinary gear instances" (R1, relic/delve).
+
+**Alternatives considered**: all items instanced (order books over instances destroy
+price-time matching for commodities); durability as a separate ledger keyed by item id
+(indirection with no consumer — the instance already serializes).
+
+### R7 — Loot: shared RewardTable shape, per-kill seeded sub-streams, no coin drops
+
+**Decision**: Enemy drop tables use the same `RewardTable` shape the challenge layer
+defined (entries: item or gearDrop with chance/qty — gearDrop rolls gear score within the
+content band and modifiers from pools per FR-271), homed in `shared/reward-tables/`. Each
+kill draws from a per-expedition RNG sub-stream (R6/R7 discipline) so loot is replayable
+offline. **No drop table may pay coin** — enemies drop materials and gear only (FR-053
+clarification); the content schema makes a coin entry unrepresentable and an integrity
+test enforces the combat-economy mandates (every hunting region yields ≥ 1
+combat-exclusive material; regions differ; ≥ 20% of crafting recipes demand combat
+materials — FR-140/141, SC-105).
+
+**Rationale**: One reward-table shape across hunting drops, challenge rewards, and venture
+tables keeps the loot path single; unrepresentable-coin is the strongest possible
+enforcement of the sole-faucet rule (R13, economy).
+
+**Alternatives considered**: separate drop-table schema (drift risk between two loot
+shapes for zero benefit); small coin drops "for feel" (rejected in clarification —
+breaks the single-faucet accounting FR-053 builds telemetry on).
+
+### R8 — Schools, abilities, trees: one EffectExpr vocabulary across the game
+
+**Decision**: `SchoolDef` (mastery curve, designated scaling attributes, weapon/focus
+item tag, basic attack, default tactics, two `TreeBranchDef`s), `AbilityDef` (cooldown,
+effects, magnitude scaling, unlock source), and `TreeNodeDef` (prereqs, point cost,
+passive EffectExpr or ability unlock) are authored content. Ability, perk, gear-modifier,
+and encounter-mechanic effects all share **one** closed `EffectExpr` vocabulary (damage,
+heal, HoT/DoT, buff, debuff, shield, stat/ability modification, threat amplification,
+ally-targeted variants per FR-108) — the same vocabulary the challenge layer's
+MechanicDef outcomes and the relic layer's signature modifiers already reference. Tree
+points come from mastery level-ups with total points scarce relative to node cost
+(content test, FR-171); respec refunds all points for coin, with invalid slotted
+abilities unslotted and dependent tactics rules flagged inert (FR-173) — the inert-rule
+pattern the relic layer reuses (touchpoint c of R11, relic/delve).
+
+**Rationale**: One effect vocabulary is the single biggest simplification available: the
+PvE-only audit (SC-208), the modifier counter system (FR-272), signature modifiers
+(FR-301), and combat math all interpret the same expressions, so each new effect kind is
+specified, audited, and tested once.
+
+**Alternatives considered**: per-system effect vocabularies (three dialects of the same
+ideas, three audit surfaces); abilities as code plugins (violates Principle IV outright).
+
+### R9 — Combat onboarding: open from creation, one-time starter kit (FR-113)
+
+**Decision**: Hunting grounds render on the settlement screen from character creation,
+never gated on trade-skill progress. First open triggers the school-adoption flow: the
+player picks any launch school (free) and the engine grants a one-time tier-1
+weapon/focus for it — an ordinary craftable/tradable item whose only special property is
+the single grant, recorded per character (`starter-grant` transaction kind, which Part I's
+audit log already reserves). Later schools need no adoption step: equipping another
+school's weapon/focus switches the active school (US7-AS5), masteries persist per school.
+Guided onboarding keeps steering new settlers toward gathering first but locks nothing.
+
+**Rationale**: Grant-once via the transaction log reuses existing audit machinery (the
+record doubles as the idempotency check); deriving "active school" from the equipped
+weapon/focus avoids a redundant selection state that could contradict the loadout.
+
+**Alternatives considered**: locking combat behind a trade-skill level (explicitly
+rejected by FR-113); free starter kit per school (a coin-free gear faucet — one kit ever,
+the rest through the economy); an explicit school-selection state separate from the
+equipped weapon (two sources of truth for one fact).

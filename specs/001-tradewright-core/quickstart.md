@@ -1,8 +1,9 @@
 # Quickstart: Tradewright — Core Game
 
-**Date**: 2026-06-11 | **Spec**: [spec.md](./spec.md)
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II) | **Spec**: [spec.md](./spec.md)
 
-Merged 2026-06-11 from the former specs 001/003/004 quickstarts (spec collapse).
+Merged 2026-06-11 from the former specs 001/003/004 quickstarts (spec collapse); the
+combat validation guide (Part II) was added 2026-06-12 with the combat design pass.
 
 ## Part I — Economy Core (former 001)
 
@@ -25,8 +26,8 @@ How to run, test, and validate the feature end-to-end. Commands here are the sam
 | Boundary check | `npm run check` | typecheck + lint + dependency-cruiser (Gate 3) |
 | Content validation | `npm run validate:content` | schema + world-integrity gates |
 | Production build | `npm run build` | client PWA bundle |
-| Run V2 server (M2) | `npm run dev:server` | Fastify + WebSocket; client mode picker shows Online |
-| V2 E2E (M2) | `npm run test:e2e:online` | same flow specs, RemoteTransport against local server |
+| Run V2 server (M5) | `npm run dev:server` | Fastify + WebSocket; client mode picker shows Online |
+| V2 E2E (M5) | `npm run test:e2e:online` | same flow specs, RemoteTransport against local server |
 
 Test-time control: E2E and unit tests drive the engine's injected clock (research R6/R9) —
 "wait 2 hours" is a clock call, never a sleep.
@@ -69,13 +70,144 @@ SC-010.
    and in CI on the same commit.
 2. All five story scenarios above pass as Playwright specs at phone viewport.
 3. Offline ≡ online determinism test passes (same inputs, tick-replay vs live, identical state).
-4. (M2) The same five flow specs pass against the server via `npm run test:e2e:online`,
+4. (M5) The same five flow specs pass against the server via `npm run test:e2e:online`,
    proving the V1/V2 contract swap (constitution Principle V architecture test).
 
-> The combat core (former 002) has no quickstart — combat validation scenarios arrive with
-> the combat milestone.
+## Part II — Combat Core (added 2026-06-12)
 
-## Part II — Challenge & Group Layer (former 003)
+Validation guide proving the combat pillar works end-to-end. Implementation details live
+in [data-model.md](./data-model.md) Part II, [contracts/](./contracts/) Part II, and
+tasks.md (regenerated per milestone).
+
+### Prerequisites
+
+- Node.js 22 LTS, npm ≥ 10; repo bootstrapped (`npm install`)
+- The economy core (M1) implemented — expeditions occupy the Part I activity slot, loot
+  lands in Part I storage/markets
+- Playwright browsers: `npx playwright install chromium`
+
+### Commands (same as Part I — CI parity)
+
+```bash
+npm test              # Vitest: engine (combat resolver, tactics, expeditions), content
+npm run test:e2e      # Playwright: phone-viewport flows
+npm run dev           # client at localhost with in-process engine (V1)
+npm run validate:content  # schema + Part II integrity tests
+```
+
+### Validation scenarios
+
+#### 1. Onboarding & auto-battle (US6, FR-113, SC-101/102)
+
+1. `npm run dev` with a fresh character: the hunting grounds are visible on the
+   settlement screen from creation.
+2. Open them: the school-adoption choice appears (all launch schools, free); pick one.
+3. **Expected**: a tier-1 starter weapon/focus is granted exactly once
+   (`npm test -- combat/starter-grant` asserts the grant is idempotent forever) and the
+   grounds show the roster with tiers, relative difficulty, and drop summaries.
+4. Start an expedition against a tier-1 enemy with the default tactics; provide no
+   further input. Navigate away and back.
+5. **Expected**: ready loadout → running expedition within 4 inputs / 30 s (SC-101);
+   fights run themselves indefinitely — kills, XP, mastery, and loot accrue exactly per
+   the enemy and ability definitions (`npm test -- combat/auto-battle` verifies rates
+   deterministically for every launch enemy, SC-102); a compact status indicator stays
+   visible while elsewhere in the app.
+
+#### 2. Schools, abilities, tactics (US7/US8, SC-108)
+
+1. Level the school's mastery to its first ability unlock; slot the ability.
+2. **Expected**: it casts per its cooldown/effect/log definition when its tactics rule
+   fires; an empty-slot build fights with basic attacks only (FR-165).
+3. Configure two different tactics programs over the same build and enemy
+   (`npm test -- combat/tactics-rules`).
+4. **Expected**: both logs are 100% rule-explainable (highest-priority satisfied rule
+   casts, FR-168) and materially different; with nothing configured, the school default
+   applies (FR-167).
+5. Tactics parity (SC-108): `npm test -- combat/tactics-parity` — for every launch
+   enemy, the best manual tap-cast trace is reproducible by tactics rules alone; manual
+   play is never strictly required on standard content.
+6. Tap-to-cast: while spectating, tap a ready ability — it casts immediately; abilities
+   on cooldown show remaining time and cannot be forced (FR-164).
+
+#### 3. Trees, respec, builds matter (US9, SC-107)
+
+1. Spend mastery points down one branch; verify each passive's exact stated effect
+   appears in combat math next tick, and a tree-unlocked active becomes slottable.
+2. Respec for the coin cost.
+3. **Expected**: all points refund, all effects cleanly remove, the fee hits the
+   transaction log (sink), invalidated slotted abilities unslot and dependent tactics
+   rules are flagged inert with notice — never a mid-combat error (FR-173).
+4. `npm test -- combat/build-yield`: a well-chosen school/tree/tactics build improves
+   expedition yield ≥ 25% over the default at equal gear, and ≥ 2 materially different
+   builds per school land within 10% of each other (SC-107). Point scarcity: one school
+   cannot fill both branches (content test, FR-171).
+
+#### 4. Gear, provisions, durability (US10)
+
+1. Equip two gear sets against the same enemy (`npm test -- combat/gear-delta`).
+2. **Expected**: the stronger set measurably improves outcomes; stat totals and the
+   fitness hint update on equip; a gear perk modifier's stated interaction shows in the
+   combat log.
+3. Provisions auto-consume at the configured thresholds and restore per definition,
+   logged (FR-121).
+4. Durability decreases per the wear rate; at zero the item grants no stats or perks
+   until repaired for the stated coin/materials, and the mid-fight break is logged with
+   its consequences (FR-122, edge case).
+
+#### 5. Offline expeditions & risk without ruin (US11/US12, SC-103/104)
+
+1. Start a provisioned expedition, advance the test clock past provision exhaustion,
+   reload.
+2. **Expected**: the unified return summary reports defeats, XP/mastery/points, loot,
+   consumption, durability, and the early end time — matching the deterministic
+   expectation exactly; offline ≡ online for identical builds/tactics
+   (`npm test -- combat/offline-parity`, SC-103). Offline catch-up of a 24 h absence
+   stays inside the 3 s budget (benchmark in CI, research R1 (combat)).
+3. Send an under-built character against a too-strong enemy.
+4. **Expected**: automatic retreat at the configured threshold — haul banked in full,
+   extra durability wear, minutes-scale recovery gating expeditions only; stored items,
+   coin, gear (beyond durability), progression, and tree points are never reduced by any
+   combat outcome (`npm test -- combat/no-ruin` property suite, SC-104).
+
+#### 6. Combat feeds the economy (US13, SC-105/106)
+
+`npm run validate:content` plus `npm test -- content/combat-economy`: every hunting
+region yields ≥ 1 combat-exclusive material and regions differ; ≥ 20% of crafting recipes
+demand combat materials; drop tables pay no coin (sole-faucet rule, FR-053); combat
+materials trade, escrow, and ship like any good; at least one profitable tier-1
+fighter→market loop exists; repair and respec sinks are live in the transaction log.
+
+#### 7. Content integrity & boundaries (CI gates)
+
+```bash
+npm run validate:content   # Part II integrity tests 1–8 in contracts/content-schema.md
+npx dependency-cruiser --validate   # no GUI→engine or content-in-code edges
+```
+
+#### 8. E2E sweep (phone viewport)
+
+```bash
+npm run test:e2e -- --grep "@combat"
+```
+
+Covers: onboarding (grounds visible at creation, school adoption, starter kit); start/
+monitor/recall an expedition; loadout + tactics editors; tree spend + respec; repair
+flow; the unified offline summary; all on 390×844 portrait (SC-109).
+
+### Acceptance checklist
+
+- [ ] Scenario 1: grounds open from creation; starter kit once ever; auto-battle runs
+      with zero input at predicted rates
+- [ ] Scenario 2: abilities fire per tactics; logs rule-explainable; tactics parity holds
+- [ ] Scenario 3: tree effects apply/remove cleanly; builds beat defaults ≥ 25%; no
+      single solved build
+- [ ] Scenario 4: gear deltas measurable; provisions auto-consume; broken gear honest
+- [ ] Scenario 5: offline ≡ online; retreat banks haul; no-ruin invariant 0 violations
+- [ ] Scenario 6: combat-economy mandates green; no coin drops
+- [ ] Scenario 7: content integrity + dependency boundaries green in CI
+- [ ] Scenario 8: E2E sweep green on phone viewport
+
+## Part III — Challenge & Group Layer (former 003)
 
 Validation guide proving the feature works end-to-end. Implementation details live in
 [data-model.md](./data-model.md), [contracts/](./contracts/), and tasks.md.
@@ -206,7 +338,7 @@ board disclosure; raid signup commit/decline/waitlist; warboard threat + signup;
 - [ ] Scenario 7: content integrity + dependency boundaries green in CI
 - [ ] Scenario 8: E2E sweep green on phone viewport
 
-## Part III — Relics & Delves (former 004)
+## Part IV — Relics & Delves (former 004)
 
 Validation guide proving the feature works end-to-end. Implementation details live in
 [data-model.md](./data-model.md), [contracts/](./contracts/), and tasks.md.

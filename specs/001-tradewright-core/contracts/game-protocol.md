@@ -1,8 +1,10 @@
 # Contract: Game Protocol (GUI ↔ Engine)
 
-**Date**: 2026-06-11 | **Plan**: [../plan.md](../plan.md) | **Package**: `@tradewright/contract`
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II + Part I offline/notification
+additions) | **Plan**: [../plan.md](../plan.md) | **Package**: `@tradewright/contract`
 
-Merged 2026-06-11 from the former game/challenge/relic-delve protocol contracts (spec collapse).
+Merged 2026-06-11 from the former game/challenge/relic-delve protocol contracts (spec
+collapse); the combat core (Part II) was contracted 2026-06-12.
 
 ## Part I — Economy Core (former 001)
 
@@ -39,7 +41,8 @@ outcomes are events. Rejections are immediate and explain themselves (e.g.
 | CancelOrder | orderId | owner; order open | FR-036 |
 | DispatchCaravan | routeId, manifest[], mitigation? | weight ≤ capacity; slot free; costs payable | FR-040/041/043 |
 | TravelTo | routeId | not already traveling; halts assignment (confirm flag) | FR-044 |
-| ExpandStorage | settlementId | progression cost payable | FR-023 |
+| ExpandStorage | settlementId | coin cost payable; next level ≤ storage facility effective tier cap | FR-023/037 |
+| SetNotificationPref | categoryId, optIn | category exists; off by default | FR-064 |
 
 ### Queries (read-only snapshots)
 
@@ -54,6 +57,8 @@ outcomes are events. Rejections are immediate and explain themselves (e.g.
 | GetShipments | own caravans with progress + ETA | FR-042 |
 | GetTransactions | paged audit log | FR-052 |
 | GetSummary | pending offline/event summary | FR-014 |
+| GetSettlementFacilities | stations + storage with base/effective tiers, degradations, repair state | FR-037 |
+| GetNotificationPrefs | categories with opt-in state and honest device-capability notes | FR-064 |
 
 `GetMarket` only answers for the character's current settlement (plus arrival snapshots a
 caravan/visit produced) — price discovery elsewhere is gameplay (FR-035).
@@ -70,6 +75,7 @@ caravan/visit produced) — price discovery elsewhere is gameplay (FR-035).
 | TravelArrived | personal travel completes | FR-044 |
 | SummaryReady | offline catch-up finished; summary payload | FR-014 |
 | StateInvalidated | V2 reconciliation: optimistic change rejected; carries correction + reason | Principle IX |
+| ConnectionStateChanged | V2: online ↔ offline; offline payload carries the "as of" snapshot timestamp | FR-063 |
 | WalletChanged / StorageChanged | coarse-grained refresh hints for GUI subscriptions | — |
 
 ### Interaction classification (Principle IX — binding for all screens)
@@ -82,19 +88,99 @@ caravan/visit produced) — price discovery elsewhere is gameplay (FR-035).
 
 No interaction may block the UI on a round-trip. There is no "blocks the UI" class.
 
+### Offline behavior (V2 only, FR-063)
+
+Offline policy derives mechanically from the classification above (research R14,
+economy) — no command carries a separate offline flag:
+
+| While disconnected | Behavior |
+|---|---|
+| Queries | served from the last-known snapshot, read-only, with the offline indicator and "as of" timestamp (`ConnectionStateChanged` payload) |
+| Optimistic commands scoped to own state (AssignActivity, StopActivity, tactics edits, loadout changes, SetNotificationPref, …) | applied locally, persisted to a FIFO queue, replayed on reconnect; each takes effect at server receipt per authoritative time (FR-017); rejections roll back visibly via `StateInvalidated` |
+| Commands touching shared multiplayer state (PlaceOrder, CancelOrder, DispatchCaravan fills/marketing paths, party/board/instance commands of Parts III–IV) | rejected immediately with `OFFLINE_BLOCKED` and an honest explanation |
+
+The queue persists across app restarts and is bounded; overflow blocks with explanation,
+never drops silently. V1 binds in-process and has no offline mode to design (FR-003).
+Error code added: `OFFLINE_BLOCKED`.
+
 ### Versioning
 
 The contract package is semver'd. Additive changes (new optional fields, new events) are MINOR;
 anything breaking is MAJOR and requires LocalTransport, RemoteTransport, and client updates in
 the same change. V2 handshake includes contract version; mismatch prompts a client refresh.
 
-## Part II — Combat Core (former 002) — PROTOCOL PENDING
+## Part II — Combat Core (contracted 2026-06-12)
 
-The combat core's commands, queries, and events (expeditions, loadouts, tactics editing,
-tap-to-cast) were never contracted in the former spec set. Drafting this section is the first
-work item of the combat milestone. Until then, references from Parts III/IV into combat-core
-requirements (e.g. FR-181/182 control-mode behavior, equip gates) bind against the combat
-spec directly.
+Extends Part I — same `GameTransport`, same async command/ack/event discipline, same
+serializability rules. Additive to the contract package (MINOR per the Part I versioning
+policy). Data shapes: [../data-model.md](../data-model.md) Part II; decisions: research.md
+Part IV (combat). Parts III/IV references into combat-core behavior (control modes, equip
+gates, inert flagging) now bind against this section.
+
+### Commands (mutations)
+
+| Command | Payload | Key validations | Spec |
+|---|---|---|---|
+| ChooseStartingSchool | schoolId | first-time only (`starter-grant` transaction is the idempotency record); any launch school | FR-113 |
+| StartExpedition | groundId, enemyId | activity slot free (confirm replaces); not recovering; enemy tier ≤ character tier | FR-104/110/112 |
+| RecallExpedition | — | active expedition; ends normally, banks haul | FR-104 |
+| TapCastAbility | abilityId | live spectating; ability slotted + off cooldown; never required, no advantage beyond tactics parity | FR-164 |
+| EditTactics | TacticsProgram | rules reference slotted abilities + closed condition set; mid-expedition OK (next tick) | FR-166/168/169 |
+| SetProvisionPlan | {itemId, thresholdPct}[] | provision items; thresholds valid | FR-121 |
+| SetRetreatThreshold | pct ≥ 0 | part of loadout; 0% allowed (still no death) | FR-131 |
+| EquipGear / UnequipGear | slot, instanceId | not mid-expedition; slot compatibility; relic equip-limit check lives here (Part IV) | FR-120/169/302 |
+| SlotAbility / UnslotAbility | abilityId | unlocked; ≤ slot count; not mid-expedition | FR-162/169 |
+| SpendTreePoint | nodeId | point available; prereqs met | FR-171/172 |
+| Respec | — | outside expeditions; coin cost payable; refunds all points, flags invalidated rules/slots inert | FR-173 |
+| RepairGear | instanceId | repair cost payable; restores durability | FR-122 |
+
+Error codes added: `RECOVERING`, `EXPEDITION_ACTIVE` (build edits blocked mid-run),
+`ABILITY_NOT_READY`, `ABILITY_SLOTS_FULL`, `NODE_PREREQS_MISSING`, `NO_POINTS_AVAILABLE`,
+`STARTER_KIT_ALREADY_GRANTED`, `GEAR_BROKEN` (equip attempt surfaces 0-durability
+honestly). Part I codes (`TIER_LOCKED`, `INSUFFICIENT_FUNDS`, …) reused.
+
+### Queries (read-only snapshots)
+
+| Query | Returns | Spec |
+|---|---|---|
+| GetHuntingGrounds | regional rosters: tier, lock state + requirements, difficulty vs current build, drop-table summaries | FR-110–113 |
+| GetSchools | all schools: mastery level/xp, ability rosters with unlock state, both tree branches with spent/affordable nodes, points | FR-160/163/170/171 |
+| GetLoadout | equipped instances + stat totals, slotted abilities with cooldown/effect/synergy, tactics, provision plan, retreat threshold, fitness hint vs selected enemy tier, inert flags | FR-120/162/166/173 |
+| GetExpedition | live state: both sides' health, cooldowns, buffs/debuffs, current tactics, haul so far, provisions remaining | FR-102, US6 |
+| GetCombatLog | paged: every cast, hit, heal, buff, trigger, provision consume — every entry explainable by the rules | FR-102/166 |
+| GetRecovery | recovery remaining (expeditions blocked, everything else open) | FR-132 |
+
+### Events (push)
+
+| Event | When | Spec |
+|---|---|---|
+| StarterKitGranted | school adopted, kit minted once ever | FR-113 |
+| ExpeditionStarted / ExpeditionEnded | lifecycle; end carries reason (retreat/supplies/recalled/offline-cap), full haul, durability deltas, recovery until | FR-104/130–132 |
+| EnemyDefeated | per kill: XP, mastery XP, loot rolls joining the haul; next enemy engages | US6-AS3 |
+| CombatLogAppended | batched log lines (single lines live, batches under catch-up) | FR-102 |
+| MasteryLeveled | school mastery level + points awarded | FR-163/171 |
+| GearBroke | an equipped instance hit 0 durability mid-fight; stats/perks dropped | FR-122, edge case |
+| RecoveryEnded | expeditions unblocked | FR-132 |
+
+Expedition results reached offline arrive inside the unified `SummaryReady` payload
+(Part I, FR-014) — one return summary, never two.
+
+### Interaction classification (Principle IX — binding for all screens)
+
+| Class | Interactions | V1 behavior | V2 behavior |
+|---|---|---|---|
+| local-immediate | grounds/school/tree/loadout/log browsing, recovery display | instant | instant (cached snapshot + refresh) |
+| optimistic-with-reconciliation | StartExpedition, RecallExpedition, EditTactics, SetProvisionPlan, SetRetreatThreshold, Equip/Unequip, Slot/Unslot, SpendTreePoint, ChooseStartingSchool | applied instantly | applied instantly; `StateInvalidated` rolls back visibly |
+| optimistic-with-reconciliation (windowed) | TapCastAbility while spectating | resolves same combat tick | applied at tap; server accepts within the tick + grace — same rule as Part III active-mode inputs |
+| server-confirmed-with-pending | Respec, RepairGear (consume coin/materials); loot rolls and expedition end states | resolved by local engine same tick (feels instant) | per-operation pending badge; result events |
+
+### V1 / V2 behavior
+
+All combat-core content is solo content: every command works identically in both versions
+(V2 server-validated). Offline expeditions follow the Part I offline-catch-up path — the
+same resolver replays combat ticks, results arrive in `SummaryReady` (FR-105, SC-103).
+When the V2 client is disconnected, combat commands follow the Part I offline rules: own-
+state edits (tactics, loadout) queue; starting a live expedition requires the server.
 
 ## Part III — Challenge & Group Layer (former 003)
 

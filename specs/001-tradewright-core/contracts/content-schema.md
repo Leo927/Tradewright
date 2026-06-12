@@ -1,13 +1,15 @@
 # Contract: Authored Content Schema (Authors ↔ Engine)
 
-**Date**: 2026-06-11 | **Plan**: [../plan.md](../plan.md) | **Package**: `@tradewright/content`
+**Date**: 2026-06-11 (Parts I/III/IV) / 2026-06-12 (Part II + faucet/notification files) |
+**Plan**: [../plan.md](../plan.md) | **Package**: `@tradewright/content`
 
-Merged 2026-06-11 from the former game/challenge/relic-delve content-schema contracts (spec collapse).
+Merged 2026-06-11 from the former game/challenge/relic-delve content-schema contracts
+(spec collapse); the combat content contract (Part II) was added 2026-06-12.
 
 ## File layout (combined)
 
-One tree unions the economy core's flat files, the challenge layer's directories, and the
-relic & delve layer's directories. Combat content has no schema contract yet (see Part II).
+One tree unions the economy core's flat files and the combat, challenge, and relic & delve
+directories.
 
 ```text
 packages/content/data/
@@ -16,8 +18,16 @@ packages/content/data/
 ├── activities.json      # ActivityDef[] (gathering, refining, crafting — recipes included)
 ├── settlements.json     # SettlementDef[]
 ├── routes.json          # RouteDef[]
-├── npc-profiles.json    # NpcMarketProfile[]
-├── combat/              # schools, abilities, trees, enemies, drop tables — schema pending (Part II)
+├── npc-profiles.json    # NpcMarketProfile[] — incl. faucet floor lists + sweep budgets (FR-054)
+├── notification-categories.json # NotificationCategoryDef[] — the FR-064 launch set
+├── combat/
+│   ├── attributes.json  # AttributeDef[] (exactly 5) + CombatCurves (FR-107)
+│   ├── schools/         # SchoolDef — one per school (roster, branches, default tactics, starter kit)
+│   ├── abilities/       # AbilityDef files
+│   ├── enemies/         # EnemyDef files (drop tables are shared/reward-tables refs)
+│   ├── hunting-grounds/ # HuntingGroundDef per region
+│   ├── gear/            # GearDef files (slots, attribute grants, armor, durability)
+│   └── provisions/      # ProvisionDef files
 ├── encounters/          # EncounterDef files (phases, mechanics, answers) — one per encounter;
 │                        #   delve floor encounters are ordinary EncounterDefs here
 ├── trials/              # MettleTrialDef ladder
@@ -96,13 +106,61 @@ from the former economy-core contract; other documents cite these numbers):
 - Removing content that live saves may reference requires a content migration note and a
   deprecation path (engine treats unknown-but-referenced ids as inert legacy items).
 
-## Part II — Combat Content (former 002) — SCHEMA PENDING
+## Part II — Combat Content (contracted 2026-06-12)
 
-Schools, abilities, ability trees, enemies, drop tables, gear, and provisions are required by
-the combat spec (FR-150) but have no schema contract yet — the former spec set never
-contracted them. The `combat/` placeholder in the combined tree reserves their location;
-writing this section (and its Zod schemas and integrity tests) is the first content work item
-of the combat milestone.
+Extends Part I: same rules — authored content is JSON under `packages/content/data/`,
+every file validated by a Zod schema at build time, ids are stable slugs, all text
+original. Field-level shapes are specified in [../data-model.md](../data-model.md)
+Part II; this section fixes file layout, authoring rules, and the integrity tests that
+gate CI.
+
+### File layout
+
+File layout: see the combined tree above (`combat/`; enemy drop tables live in
+`shared/reward-tables/` — one reward-table shape game-wide, research R7 (combat)).
+
+### Authoring rules
+
+1. **One effect vocabulary**: every ability, perk node, enemy action, gear modifier,
+   mechanic outcome, and signature modifier uses the closed `EffectExpr` vocabulary
+   (data-model Part II). New effect kinds are engine + schema changes, never author
+   improvisation — and no expressible target is "another player as victim" (SC-208).
+2. **No coin in drop tables**: reward-table entries reference items or gearDrops only;
+   a coin entry is unrepresentable by schema (FR-053, research R7 (combat)).
+3. **Every school is complete**: two branches, a basic attack, a default tactics
+   program, and a tier-1 starter weapon/focus — a school missing any of these fails the
+   build (FR-165/167/170, FR-113).
+4. **Scarcity is authored deliberately**: total tree points earnable at the launch
+   mastery cap must stay below the combined cost of both branches per school (FR-171) —
+   tuning that breaks this fails CI, not review.
+5. **Stats are curves, not constants**: health, scaling, mitigation, threat factors,
+   recovery costs all live in `CombatCurves` (FR-107); engine code evaluating a literal
+   combat constant is a review reject.
+6. **Original expression**: school, ability, enemy, and ground names/text pass the
+   Part I originality denylist (FR-150); structure may follow New World's weapon-mastery
+   conventions, expression may not.
+7. **Tunables are content**: ability slot count (3 at launch), recovery minutes, retreat
+   durability penalty, wear rates, repair costs, starter-kit identity — all in these
+   files, never in code.
+
+### Integrity tests (CI gate, `packages/content/tests/` — "Part II tests")
+
+| # | Test | Source |
+|---|---|---|
+| 1 | Every school: 2 branches, basic attack, valid default tactics over its own roster, resolving tier-1 starter kit | FR-165/167/170/113 |
+| 2 | Tree-point scarcity: earnable points < combined branch cost, per school | FR-171 |
+| 3 | Abilities/nodes use only closed EffectExpr kinds; exact effect text present; unlock sources resolve | FR-161/172 |
+| 4 | Drop tables pay no coin; every region yields ≥ 1 combat-exclusive material; regional rosters/materials differ; ≥ 20% of crafting recipes demand combat materials; every region's materials demanded by ≥ 1 recipe | FR-053/140/141, SC-105 |
+| 5 | Every settlement region has a hunting ground with ≥ 1 tier-1 enemy | FR-110/113 |
+| 6 | Gear coverage: craftable weapon/focus per school per tier; craftable coverage per armor slot per tier; durability/wear/repair present | FR-120/122 |
+| 7 | Exactly 5 AttributeDefs; school scaling refs resolve (1–2 each); CombatCurves present and total | FR-107 |
+| 8 | Originality denylist over all combat names/text | FR-150 |
+
+### Versioning
+
+Schema changes follow the Part I content-contract policy: additive optional fields are
+MINOR; anything that invalidates existing content files is MAJOR and ships with a content
+migration in the same change.
 
 ## Part III — Challenge Content (former 003)
 
