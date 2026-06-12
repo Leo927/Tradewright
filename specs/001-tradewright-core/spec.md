@@ -125,6 +125,9 @@ Two honest caveats this table makes explicit rather than burying:
   the development/test harness; V2 is the product the economic design argues for.
 - **Honest labeling is a hard rule**: multiplayer content in V1 is visible and labeled,
   never hidden (FR-262, FR-307, FR-318) — the solo player always sees the whole game.
+- **The versions never connect**: no character, item, coin, or progression state migrates
+  between V1 and V2 in either direction; a V2 character starts fresh (FR-004). The
+  server-authoritative world never ingests client-held save state.
 
 ## The Player's Time
 
@@ -164,8 +167,9 @@ proven predecessors. The intended life of a player runs through four overlapping
    across every format and push delve depth records.
 
 A player can stop at any phase and have a complete game; each later phase is an opt-in
-deepening, not a treadmill. [NEEDS CLARIFICATION: when and how combat is introduced to a new
-settler — see Open Questions, Q6.]
+deepening, not a treadmill. The phases order guidance, not access: hunting grounds are
+visible from character creation, and a settler may adopt a school and fight from day one
+(FR-113) — onboarding steers toward gathering first but locks nothing.
 
 ## Clarifications
 
@@ -304,6 +308,34 @@ history. All referenced requirement numbers remain valid in this document.
   craft family) plus storage as facilities; station tier caps the recipe tier craftable at
   that settlement; invasion failure downgrades station tiers, repair restores them, and
   Phase 2 territory upgrades reuse the same model. See FR-037.
+
+### Session 2026-06-12
+
+- Q: When and how does a new player first meet combat (Q6 — hunting-ground visibility,
+  school choice timing, default kit)? → A: Open from the start — hunting grounds are visible
+  on the settlement screen from character creation; on first opening them the player adopts
+  a school (free choice among launch schools) and receives a one-time free tier-1 starter
+  weapon/focus for it; guided onboarding steers a new settler toward gathering first but
+  nothing locks fighting. See FR-113.
+- Q: Can a V1 (solo) character or its progress migrate into V2 (online)? → A: No migration,
+  ever — V1 and V2 worlds are permanently separate in both directions; a V2 character starts
+  fresh. Client-held V1 saves cannot be trusted by the server-authoritative world, and
+  importing them would undermine the economy integrity guarantees (SC-010). See FR-004.
+- Q: How do NPC trader purchases (the sole coin faucet, FR-053) mechanically work on a
+  settlement's order book? → A: Hybrid — standing NPC buy orders at disclosed floor prices
+  for a curated, regionally-varied list of raw goods (visible price floor and guaranteed
+  liquidity in every settlement) PLUS periodic demand sweeps buying the cheapest listed
+  sell orders across all goods, both on content-tunable per-settlement coin budgets.
+  See FR-054.
+- Q: How does a player's per-settlement storage capacity expand (FR-023)? → A: Coin-purchased
+  expansion levels per settlement at escalating, disclosed costs (an economy sink), with the
+  maximum purchasable level capped by that settlement's storage facility tier (FR-037) — a
+  per-town strategic investment that gives invasion outcomes a stake players feel.
+- Q: Can an under-sized party (fewer than 5 for dungeons, fewer than 10 for raids) start an
+  instanced run? → A: Allowed, unscaled — any party from 1 up to the format's cap may start,
+  with the honest "designed for N players" warning; difficulty stays tuned for the design
+  size. Delves remain the only party-scaled format (FR-311). Resolves the tension between
+  FR-221's former "fixed party size" wording and the no-artificial-lockout edge case.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -1153,8 +1185,10 @@ records depth with no material rewards attached.
   reclaims it on reconnect; backfill and run-calling stay available throughout.
 - Two settlements' events/invasions overlap for one player → character is one place at a time
   (FR-002); commitments conflict visibly at signup.
-- Solo player enters group-tuned content alone → allowed where entry rules permit, with
-  honest "designed for N players" warning; no artificial lockout below recommended size.
+- Solo or under-sized party enters group-tuned content → allowed in every format (dungeons
+  and raids included, FR-221/230), with the honest "designed for N players" warning;
+  difficulty stays tuned for the design size — delves are the only party-scaled format. No
+  artificial lockout below design size.
 - Low population region/server → group board surfaces cross-settlement listings (travel
   required, per the travel rules FR-044); world events scale wave size down to participants
   present, within stated bounds.
@@ -1221,6 +1255,10 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   moment; the character's location determines which activities, storage, and market they can use.
 - **FR-003**: Game state MUST be account-bound and consistent across devices; the same account on
   a second device sees the same authoritative state.
+- **FR-004**: V1 (solo) and V2 (online) worlds MUST be permanently separate: no character,
+  item, coin, or progression state ever migrates between them in either direction — a V2
+  character starts fresh. Rationale: client-held V1 saves cannot be trusted by the
+  server-authoritative world (SC-010 integrity).
 
 **Idle Skilling Loop**
 
@@ -1251,8 +1289,11 @@ spec and are re-homed into the Gear section where they belong — numbering unch
 - **FR-022**: Each settlement MUST provide per-player local storage; items physically reside in
   exactly one settlement's storage (or in a caravan in transit) and are usable only where they
   reside.
-- **FR-023**: Storage MUST have a capacity limit visible to the player, with expansion as a
-  progression mechanic.
+- **FR-023**: Storage MUST have a capacity limit visible to the player. Capacity expands by
+  purchasing successive expansion levels per settlement with coin at escalating, disclosed
+  costs (an economy sink, FR-051); the maximum purchasable level is capped by that
+  settlement's storage facility tier (FR-037), so invasion degradation and repair bear on
+  storage capacity too.
 - **FR-024**: All game content (skills, activities, items, recipes, settlements, routes) MUST be
   original to Tradewright — no names, lore, or text reproduced from other games — and MUST be
   defined as authored content data, editable without code changes.
@@ -1322,6 +1363,14 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   economy telemetry so monetary imbalance (inflation or deflation) is detectable and
   correctable without code changes. (New World's November 2021 deflation/barter crisis —
   endgame sinks outpacing faucets — is the motivating failure case.)
+- **FR-054**: NPC trader purchases MUST operate through two disclosed mechanisms on each
+  settlement's order book: (a) standing NPC buy orders at disclosed floor prices for a
+  curated, regionally-varied list of raw goods — a visible price floor and guaranteed
+  baseline liquidity in every settlement; and (b) periodic demand sweeps that buy the
+  cheapest listed sell orders across all goods within a per-settlement budget. Both draw
+  from content-tunable per-settlement coin budgets per period, observable via the FR-053
+  economy telemetry. In V1, NPC traders additionally place sell orders to simulate full
+  supply/demand markets; in V2, NPC liquidity levels are configurable (Product Definition).
 
 **Presentation & Platform**
 
@@ -1376,6 +1425,12 @@ spec and are re-homed into the Gear section where they belong — numbering unch
   engaging.
 - **FR-112**: Enemy tiers MUST gate engagement by combat skill tier; locked enemies show their
   unlock requirements.
+- **FR-113**: Hunting grounds MUST be visible from character creation — combat is never
+  locked behind trade-skill progress. On first opening the hunting grounds, the player MUST
+  be offered the school adoption choice (any launch school, free) and granted a one-time
+  starter kit: a tier-1 weapon/focus for the chosen school. The starter item is an ordinary
+  economy item (craftable and tradable per FR-120/123); only its one-time grant is special.
+  Guided onboarding steers a new settler toward gathering first but MUST NOT gate fighting.
 
 **Combat Schools, Active Abilities & Magic**
 
@@ -1544,9 +1599,12 @@ numbering preserved)*
 
 - **FR-220**: The game MUST provide party formation (create/join listings on a group board;
   invite by name; role-need labeling) without requiring third-party coordination tools.
-- **FR-221**: Dungeons MUST be instanced for a fixed party size (launch: 5), composed of
+- **FR-221**: Dungeons MUST be instanced with a design party size of 5 (launch), composed of
   encounter sequences with at least one cooperative mechanic per boss, and tuned so balanced
-  role coverage outperforms uniform compositions measurably.
+  role coverage outperforms uniform compositions measurably. Under-sized parties (down to
+  solo) MAY start a run with the honest "designed for N players" warning; difficulty MUST
+  NOT scale to party size — the design-size tuning stands (delves are the only party-scaled
+  format, FR-311).
 - **FR-222**: Loot in all group content MUST be personal (per-member rolls); format-exclusive
   materials MUST feed the economy (recipes demand them) per FR-140 discipline. Loot
   tables MAY yield finished gear alongside materials: dropped gear rolls per FR-271 with
@@ -1581,7 +1639,8 @@ numbering preserved)*
 
 - **FR-230**: Raid encounters MUST support 10 players (up to 20 for the largest tier), with
   sub-group mechanics requiring distributed simultaneous answers and composition-sensitive
-  tuning.
+  tuning. Under-sized rosters MAY start under the FR-221 entry rule: honest warning, no
+  difficulty scaling.
 - **FR-231**: Raid scheduling tools MUST exist in-game: posted signups with time, role needs,
   commitments, and waitlists.
 
@@ -1766,13 +1825,15 @@ and the content integrity tests enforce them in CI.
 production-focused play (SC-007); combat-focused play earns within ±50% of both (SC-106).
 Parity is measured at equivalent investment and verified against a healthy world.
 
-**Coin faucets**: NPC trader purchases on settlement order books — the sole faucet (FR-053).
+**Coin faucets**: NPC trader purchases on settlement order books — the sole faucet (FR-053),
+operating as standing floor-price buy orders on curated raw goods plus periodic demand
+sweeps across all goods, each on content-tunable per-settlement budgets (FR-054).
 Enemies never drop coin; fighting is coin-positive only via selling drops. Player-to-player
 trade is zero-sum and is not a faucet.
 
 **Coin sinks**: listing fees and sales taxes (FR-034, FR-051), caravan dispatch costs and
-risk mitigation (FR-040, FR-043), gear repair (FR-122), respec fees (FR-173), modifier
-re-lock costs (FR-305). All sinks and faucets are content-tunable, and aggregate flows MUST
+risk mitigation (FR-040, FR-043), storage expansion purchases (FR-023), gear repair
+(FR-122), respec fees (FR-173), modifier re-lock costs (FR-305). All sinks and faucets are content-tunable, and aggregate flows MUST
 be observable via economy telemetry (FR-053) — the inspiration's 2021 deflation crisis is
 the standing warning.
 
@@ -1981,15 +2042,10 @@ design work for the planning phase.
 
 ## Open Questions
 
-Of the six gaps the 2026-06-11 holistic audit surfaced, five (Q1–Q5: character tier, stat
-vocabulary, group-combat semantics, combat coin faucets, settlement facilities) were resolved
-in the core-game clarification round — see Clarifications — and are integrated into the
-requirements. One remains:
-
-- **Q6 — Combat onboarding** [NEEDS CLARIFICATION]: no story specifies when or how a new
-  player first meets combat — whether hunting grounds are visible from the start, when a
-  school is chosen, and what the default kit is. The Player Journey section needs this
-  decided before the combat milestone's UX design.
+All six gaps the 2026-06-11 holistic audit surfaced are resolved: Q1–Q5 (character tier,
+stat vocabulary, group-combat semantics, combat coin faucets, settlement facilities) in the
+core-game clarification round, and Q6 (combat onboarding) in the 2026-06-12 session — see
+Clarifications. The answers are integrated into the requirements; no open questions remain.
 
 ## Scope Boundaries
 
