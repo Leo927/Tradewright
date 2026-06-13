@@ -546,9 +546,12 @@ everywhere, in every locale — never translated or fallback-substituted.
 
 ### Acceptance checklist
 
-- [ ] `validate:content` text gates green (coverage, parity, orphans, per-locale denylist)
-- [ ] `pseudo-expand` E2E project green for every implemented story flow
-- [ ] Live-switch scenario green (SC-012)
-- [ ] Locale-neutrality replay green (SC-014)
-- [ ] Binding rule on Parts I–IV: each part's "feature validated" definition additionally
+Checked for the M1 scope (Stories 0–5) on 2026-06-13 — the implemented flows; M2+
+story flows re-run this list as they land (Design Invariant 13).
+
+- [x] `validate:content` text gates green (coverage, parity, orphans, per-locale denylist)
+- [x] `pseudo-expand` E2E project green for every implemented story flow
+- [x] Live-switch scenario green (SC-012)
+- [x] Locale-neutrality replay green (SC-014)
+- [x] Binding rule on Parts I–IV: each part's "feature validated" definition additionally
       requires its story flows passing in `pseudo-expand` (Design Invariant 13)

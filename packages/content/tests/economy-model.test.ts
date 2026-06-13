@@ -20,7 +20,10 @@ import type { ActivityDef, ItemDef } from '../src/index.js';
 
 // ── Named model parameters ────────────────────────────────────────────────
 const SECONDS_PER_DAY = 86_400;
-const STARTING_COIN = 500; // equivalent investment (unused by closed form; recorded)
+// Equivalent investment (R16): both archetypes are compared on steady-state
+// income *rate* with equal starting coin and no starting stock or gear, so the
+// closed form needs no starting-coin term — the rate comparison is investment-
+// neutral by construction.
 const PARITY_BAND = 0.5; // SC-007(b): hauler median within ±50% of producer median
 
 const TAX = content.settlements[0]!.salesTaxRate;
@@ -142,10 +145,11 @@ function bestRouteArbitrage(): RouteProfit | null {
   for (const route of content.routes) {
     const [a, b] = route.endpoints;
     const caravansPerDayMax = SECONDS_PER_DAY / (route.caravanMinutes * 60);
-    for (const [from, to] of [
+    const directions: [string, string][] = [
       [a, b],
       [b, a],
-    ]) {
+    ];
+    for (const [from, to] of directions) {
       for (const item of content.items) {
         const ask = npcAsk(from, item.id);
         const floor = profileOf(to)?.floorBuyList.find((f) => f.itemId === item.id);
