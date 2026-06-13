@@ -19,7 +19,15 @@ export type ErrorCode =
   | 'WEIGHT_EXCEEDED'
   | 'EXPANSION_CAPPED'
   | 'INVALID_ORDER'
-  | 'UNSUPPORTED_LOCALE';
+  | 'UNSUPPORTED_LOCALE'
+  | 'RECOVERING'
+  | 'EXPEDITION_ACTIVE'
+  | 'ABILITY_NOT_READY'
+  | 'ABILITY_SLOTS_FULL'
+  | 'NODE_PREREQS_MISSING'
+  | 'NO_POINTS_AVAILABLE'
+  | 'STARTER_KIT_ALREADY_GRANTED'
+  | 'GEAR_BROKEN';
 
 /** Structured rejection facts the GUI renders in the active locale (protocol
  *  Part V): ids, codes, and raw values only. */
@@ -38,6 +46,17 @@ export interface AckDetails {
   slotsTotal?: number;
   slotsBusy?: number;
   nextSlotFreeAtTick?: number;
+  /** Combat (protocol Part II): enemy-tier gate, ability/slot, tree prereqs,
+   *  recovery, and broken-gear facts the GUI renders without reading mechanics. */
+  requiredEnemyTier?: number;
+  characterTier?: number;
+  abilityId?: string;
+  schoolId?: string;
+  instanceId?: string;
+  nodeId?: string;
+  missingPrereqNodeIds?: string[];
+  abilitySlotsTotal?: number;
+  recoveryUntilTick?: number;
 }
 
 /** `message` is developer diagnostics only — player-facing rejection text is

@@ -1,6 +1,7 @@
 import type { ErrorCode } from './transport.js';
 import type { EventSummaryView, HaltReasonCode, RiskOutcome } from './events.js';
 import type { ManifestLine } from './commands.js';
+import type { CombatQuery, CombatQueryResultMap } from './combat/queries.js';
 
 export interface GetCharacter {
   type: 'GetCharacter';
@@ -63,7 +64,8 @@ export type Query =
   | GetTransactions
   | GetSummary
   | GetSettlementFacilities
-  | GetNotificationPrefs;
+  | GetNotificationPrefs
+  | CombatQuery;
 
 export type LocationState =
   | { kind: 'at'; settlementId: string }
@@ -258,7 +260,7 @@ export interface NotificationPrefsView {
   categories: { categoryId: string; optedIn: boolean; onlineVersionOnly: boolean }[];
 }
 
-export interface QueryResultMap {
+export interface QueryResultMap extends CombatQueryResultMap {
   GetCharacter: CharacterView | null;
   GetStorage: StorageView;
   GetActivities: ActivityView[];

@@ -1,4 +1,5 @@
 import type { ManifestLine } from './commands.js';
+import type { CombatEvent } from './combat/events.js';
 
 export type RiskOutcome =
   | { kind: 'none' }
@@ -186,4 +187,5 @@ export type GameEvent =
   | StateInvalidated
   | ConnectionStateChanged
   | WalletChanged
-  | StorageChanged;
+  | StorageChanged
+  | CombatEvent;

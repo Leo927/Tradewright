@@ -1,3 +1,5 @@
+import type { CombatCommand } from './combat/commands.js';
+
 export interface ManifestLine {
   itemId: string;
   qty: number;
@@ -80,4 +82,5 @@ export type Command =
   | TravelTo
   | ExpandStorage
   | SetNotificationPref
-  | SetDisplayLocale;
+  | SetDisplayLocale
+  | CombatCommand;
