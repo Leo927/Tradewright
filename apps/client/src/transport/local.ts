@@ -4,6 +4,7 @@ import {
   loadSave,
   serializeSave,
   launchContent,
+  getStorage,
   type SaveGame,
 } from '@tradewright/engine';
 import locales from '@tradewright/content/text/locales.json';
@@ -47,6 +48,12 @@ export async function createLocalTransport(): Promise<LocalBoot> {
       const { persistSaveJson } = await import('../persistence/indexeddb.js');
       await persistSaveJson(serializeSave(save));
     };
+    // E2E-only: seed raw materials into a settlement's storage so produce-chain
+    // flows (US3) can start from owned inputs without scripting every gather.
+    window.__twGrant = (settlementId, itemId, qty) => {
+      const storage = getStorage(save, settlementId);
+      storage.slots[itemId] = (storage.slots[itemId] ?? 0) + qty;
+    };
   }
   return { host, save };
 }
@@ -58,5 +65,6 @@ function newWorldSeed(): number {
 declare global {
   interface Window {
     __twFlushSave?: () => Promise<void>;
+    __twGrant?: (settlementId: string, itemId: string, qty: number) => void;
   }
 }

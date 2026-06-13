@@ -233,20 +233,20 @@ passes in `pseudo-expand`.
 
 ### Design artifact
 
-- [ ] T073 [US3] Design artifact for refining/crafting screens (recipe browser with lock states, input/output display, missing-input messaging; primary/deferred split) in `specs/001-tradewright-core/design/crafting.md`
+- [X] T073 [US3] Design artifact for refining/crafting screens (recipe browser with lock states, input/output display, missing-input messaging; primary/deferred split) in `specs/001-tradewright-core/design/crafting.md`
 
 ### Tests for User Story 3 (write first) ⚠️
 
-- [ ] T074 [P] [US3] Engine unit tests: input consumption at stated ratios (atomic consume+produce per action), insufficient-input rejection listing exact missing items+quantities (as item ids + counts — the GUI renders names from catalogs), inputs-exhausted halt (online + via catch-up), station-tier gate (refining/crafting requires local station effective tier ≥ activity tier), cross-settlement materials unusable with the holding settlement(s) named in the rejection (spec edge case) in `packages/engine/tests/crafting.test.ts`
-- [ ] T075 [P] [US3] Playwright flow (quickstart US3): refine seeded inputs → craft a two-skill finished good → missing-input rejection shows shortfall → locked recipe shows required tier in `apps/client/tests/e2e/crafting.spec.ts`
+- [X] T074 [P] [US3] Engine unit tests: input consumption at stated ratios (atomic consume+produce per action), insufficient-input rejection listing exact missing items+quantities (as item ids + counts — the GUI renders names from catalogs), inputs-exhausted halt (online + via catch-up), station-tier gate (refining/crafting requires local station effective tier ≥ activity tier), cross-settlement materials unusable with the holding settlement(s) named in the rejection (spec edge case) in `packages/engine/tests/crafting.test.ts`
+- [X] T075 [P] [US3] Playwright flow (quickstart US3): refine seeded inputs → craft a two-skill finished good → missing-input rejection shows shortfall → locked recipe shows required tier in `apps/client/tests/e2e/crafting.spec.ts`
 
 ### Implementation for User Story 3
 
-- [ ] T076 [US3] Engine: input-consuming action resolution (consume inputs + produce outputs + XP atomically; halt `inputs-exhausted` with report) extending `packages/engine/src/skills/activities.ts`
-- [ ] T077 [US3] Engine: station gating — facility effective-tier lookup per settlement, assignment validation against `stationFamily` (FR-037) in `packages/engine/src/world/facilities.ts`
-- [ ] T078 [US3] Adapter: GetActivities lock reasons extended with missing inputs (item id+qty, plus the settlement id(s) where missing items are stored when they exist elsewhere — spec edge case) and station-tier locks; GetSettlementFacilities query in `packages/engine/src/adapter/local-game-host.ts`
-- [ ] T079 [US3] Client: recipe/craft browser per design artifact — inputs/outputs/ratios, locked recipes with tier shown, missing-input explanation on attempt naming the settlement(s) where the missing items are stored when held elsewhere in `apps/client/src/screens/crafting.tsx`
-- [ ] T080 [US3] Pseudo-locale pass: US3 strings + crafting content text (recipe/item names via `<defId>.<field>` keys) covered, text gates green, T075's flow passes in the `pseudo` project in `apps/client/tests/e2e/crafting.spec.ts`
+- [X] T076 [US3] Engine: input-consuming action resolution (consume inputs + produce outputs + XP atomically; halt `inputs-exhausted` with report) extending `packages/engine/src/skills/activities.ts`
+- [X] T077 [US3] Engine: station gating — facility effective-tier lookup per settlement, assignment validation against `stationFamily` (FR-037) in `packages/engine/src/world/facilities.ts`
+- [X] T078 [US3] Adapter: GetActivities lock reasons extended with missing inputs (item id+qty, plus the settlement id(s) where missing items are stored when they exist elsewhere — spec edge case) and station-tier locks; GetSettlementFacilities query in `packages/engine/src/adapter/local-game-host.ts`
+- [X] T079 [US3] Client: recipe/craft browser per design artifact — inputs/outputs/ratios, locked recipes with tier shown, missing-input explanation on attempt naming the settlement(s) where the missing items are stored when held elsewhere in `apps/client/src/screens/crafting.tsx`
+- [X] T080 [US3] Pseudo-locale pass: US3 strings + crafting content text (recipe/item names via `<defId>.<field>` keys) covered, text gates green, T075's flow passes in the `pseudo` project in `apps/client/tests/e2e/crafting.spec.ts`
 
 **Checkpoint**: US1–US3 — full produce loop (gather → refine → craft) playable and tested.
 

@@ -18,6 +18,7 @@ import { EngineError } from '../world/ledger.js';
 import { createCharacter } from '../world/character.js';
 import { activityDef, assignActivity, stopActivity } from '../skills/activities.js';
 import { missingItems } from '../world/storage.js';
+import { effectiveStationTier } from '../world/facilities.js';
 import { levelForXp, tierForLevel, xpForLevelUp } from '../skills/progression.js';
 
 export interface LocalGameHostOptions {
@@ -229,7 +230,10 @@ export class LocalGameHost implements GameTransport {
           kind: f.kind,
           craftFamily: f.craftFamily ?? null,
           baseTier: f.baseTier,
-          effectiveTier: f.baseTier,
+          effectiveTier:
+            f.kind === 'station' && f.craftFamily
+              ? effectiveStationTier(this.content, settlement.id, f.craftFamily)
+              : f.baseTier,
         }));
       }
       case 'GetNotificationPrefs':
@@ -263,6 +267,17 @@ export class LocalGameHost implements GameTransport {
             skillId: a.skillId,
             currentTier,
           });
+        }
+        if (a.stationFamily) {
+          const stationTier = effectiveStationTier(this.content, settlementId, a.stationFamily);
+          if (stationTier < a.tier) {
+            lockReasons.push({
+              code: 'STATION_TIER_LOW',
+              stationFamily: a.stationFamily,
+              requiredTier: a.tier,
+              effectiveTier: stationTier,
+            });
+          }
         }
         if (a.inputs.length > 0) {
           const missing = missingItems(this.save, settlementId, a.inputs);

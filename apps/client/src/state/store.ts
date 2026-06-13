@@ -160,9 +160,10 @@ export async function boot(): Promise<void> {
 }
 
 export function navigate(screen: ScreenId): void {
-  if (screen === 'activities') {
+  if (screen === 'activities' || screen === 'crafting') {
     setState({ screen, newlyUnlockedSkillIds: [] });
     void refreshActivities();
+    void refreshStorage();
     return;
   }
   setState({ screen });

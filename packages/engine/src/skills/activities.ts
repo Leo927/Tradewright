@@ -12,6 +12,7 @@ import {
   settlementDef,
   weightOfLines,
 } from '../world/storage.js';
+import { effectiveStationTier } from '../world/facilities.js';
 import {
   activitiesUnlockedAtTier,
   levelForXp,
@@ -55,6 +56,16 @@ export function assignActivity(
       requiredTier: def.tier,
       effectiveTier: tier,
     });
+  }
+  if (def.stationFamily) {
+    const stationTier = effectiveStationTier(content, settlementId, def.stationFamily);
+    if (stationTier < def.tier) {
+      throw new EngineError(
+        'STATION_TIER_LOW',
+        `${def.id} requires a tier ${def.tier} ${def.stationFamily} station at ${settlementId}`,
+        { stationFamily: def.stationFamily, requiredTier: def.tier, effectiveTier: stationTier },
+      );
+    }
   }
   if (def.inputs.length > 0) {
     const missing = missingItems(save, settlementId, def.inputs);
