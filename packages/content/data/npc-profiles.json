@@ -63,9 +63,10 @@
     ],
     "floorBuyList": [
       { "itemId": "item.emberbloom", "floorPrice": 2 },
-      { "itemId": "item.bittergreen", "floorPrice": 1 }
+      { "itemId": "item.bittergreen", "floorPrice": 1 },
+      { "itemId": "item.pinewood", "floorPrice": 10 }
     ],
-    "floorBudgetPerPeriod": 150,
+    "floorBudgetPerPeriod": 300,
     "sweep": { "periodTicks": 30, "budgetPerPeriod": 100 }
   }
 ]
