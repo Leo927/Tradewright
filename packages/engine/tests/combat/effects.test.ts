@@ -69,8 +69,9 @@ const allEffects: EffectExpr[] = [
 describe('EffectExpr PvE-only audit (SC-208)', () => {
   it('no effect kind can name an ally/party combatant as a damage victim', () => {
     const s = state();
+    const player = s.combatants.find((c) => c.ref === 'player')!;
     for (const effect of allEffects) {
-      const victims = damageVictimRefs(effect, 'player', s);
+      const victims = damageVictimRefs(effect, player, s);
       for (const ref of victims) {
         const c = s.combatants.find((x) => x.ref === ref)!;
         // a victim is only ever the source (self-cost) or an enemy — never another player
@@ -81,8 +82,9 @@ describe('EffectExpr PvE-only audit (SC-208)', () => {
 
   it('only damage/dot have victims at all; support effects never do', () => {
     const s = state();
+    const player = s.combatants.find((c) => c.ref === 'player')!;
     for (const effect of allEffects) {
-      const victims = damageVictimRefs(effect, 'player', s);
+      const victims = damageVictimRefs(effect, player, s);
       if (effect.kind === 'damage' || effect.kind === 'dot') {
         expect(victims.length).toBeGreaterThan(0);
       } else {
@@ -93,18 +95,26 @@ describe('EffectExpr PvE-only audit (SC-208)', () => {
 });
 
 describe('target resolution (PvE semantics)', () => {
-  it('resolves self/enemy/ally/party against living combatants', () => {
+  it('resolves self/enemy/ally/party against living combatants (faction-relative)', () => {
     const s = state();
-    expect(resolveTargets({ kind: 'heal', target: 'self', magnitude: 1 }, 'player', s)).toEqual(['player']);
-    expect(resolveTargets({ kind: 'damage', damageType: 'phys', target: 'enemy', magnitude: 1 }, 'player', s)).toEqual(['enemy']);
-    expect(resolveTargets({ kind: 'heal', target: 'ally', magnitude: 1 }, 'player', s)).toEqual(['ally']);
-    expect(resolveTargets({ kind: 'heal', target: 'party', magnitude: 1 }, 'player', s)).toEqual(['player', 'ally']);
+    const player = s.combatants.find((c) => c.ref === 'player')!;
+    expect(resolveTargets({ kind: 'heal', target: 'self', magnitude: 1 }, player, s)).toEqual(['player']);
+    expect(resolveTargets({ kind: 'damage', damageType: 'phys', target: 'enemy', magnitude: 1 }, player, s)).toEqual(['enemy']);
+    expect(resolveTargets({ kind: 'heal', target: 'ally', magnitude: 1 }, player, s)).toEqual(['ally']);
+    expect(resolveTargets({ kind: 'heal', target: 'party', magnitude: 1 }, player, s)).toEqual(['player', 'ally']);
+  });
+
+  it("an enemy's 'enemy' target is the player (foes are the opposite faction)", () => {
+    const s = state();
+    const enemy = s.combatants.find((c) => c.ref === 'enemy')!;
+    expect(resolveTargets({ kind: 'damage', damageType: 'phys', target: 'enemy', magnitude: 1 }, enemy, s)).toEqual(['player', 'ally']);
   });
 
   it('skips dead combatants', () => {
     const s = state();
+    const player = s.combatants.find((c) => c.ref === 'player')!;
     s.combatants[1]!.health = 0; // ally down
-    expect(resolveTargets({ kind: 'heal', target: 'party', magnitude: 1 }, 'player', s)).toEqual(['player']);
+    expect(resolveTargets({ kind: 'heal', target: 'party', magnitude: 1 }, player, s)).toEqual(['player']);
   });
 });
 

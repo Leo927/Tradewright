@@ -10,27 +10,31 @@ import { mitigationFraction } from './curves.js';
  * never widens it.
  */
 
-/** Combatant refs an effect can land on as a DAMAGE VICTIM. Empty for any
- *  non-damaging kind; for damage/dot only {self, enemies}. The SC-208 surface. */
-export function damageVictimRefs(effect: EffectExpr, sourceRef: string, state: CombatState): string[] {
+/** Combatant refs an effect can land on as a DAMAGE VICTIM. Targets are
+ *  faction-relative to the caster: a foe is anyone on the opposite side. Empty
+ *  for any non-damaging kind; for damage/dot only {caster-self, foes}. This is
+ *  the SC-208 surface: a player-cast effect can never name a same-faction
+ *  combatant (an ally) as a victim — `'enemy'` resolves only to foes. */
+export function damageVictimRefs(effect: EffectExpr, caster: Combatant, state: CombatState): string[] {
   if (effect.kind !== 'damage' && effect.kind !== 'dot') return [];
-  if (effect.target === 'self') return [sourceRef];
-  return state.combatants.filter((c) => c.isEnemy && c.health > 0).map((c) => c.ref);
+  if (effect.target === 'self') return [caster.ref];
+  return state.combatants.filter((c) => c.isEnemy !== caster.isEnemy && c.health > 0).map((c) => c.ref);
 }
 
-/** All refs an effect lands on, per its target (PvE semantics). */
-export function resolveTargets(effect: EffectExpr, sourceRef: string, state: CombatState): string[] {
+/** All refs an effect lands on, per its target (PvE, faction-relative). */
+export function resolveTargets(effect: EffectExpr, caster: Combatant, state: CombatState): string[] {
   const target = 'target' in effect ? effect.target : 'self';
   const living = state.combatants.filter((c) => c.health > 0);
+  const isFoe = (c: Combatant) => c.isEnemy !== caster.isEnemy;
   switch (target) {
     case 'self':
-      return [sourceRef];
+      return [caster.ref];
     case 'enemy':
-      return living.filter((c) => c.isEnemy).map((c) => c.ref);
+      return living.filter(isFoe).map((c) => c.ref);
     case 'ally':
-      return living.filter((c) => !c.isEnemy && c.ref !== sourceRef).map((c) => c.ref);
+      return living.filter((c) => !isFoe(c) && c.ref !== caster.ref).map((c) => c.ref);
     case 'party':
-      return living.filter((c) => !c.isEnemy).map((c) => c.ref);
+      return living.filter((c) => !isFoe(c)).map((c) => c.ref);
     default:
       return [];
   }
