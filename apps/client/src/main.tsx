@@ -1,13 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import App from './App.js';
+import { boot } from './state/store.js';
 import './styles.css';
 
-function Placeholder() {
-  return null;
-}
+void boot();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Placeholder />
+    <App />
   </StrictMode>,
 );

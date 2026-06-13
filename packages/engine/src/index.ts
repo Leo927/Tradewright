@@ -5,3 +5,6 @@ export * from './world/character.js';
 export * from './simulation/clock.js';
 export * from './simulation/rng.js';
 export * from './simulation/tick.js';
+export * from './skills/progression.js';
+export * from './adapter/local-game-host.js';
+export { content as launchContent } from '@tradewright/content';
