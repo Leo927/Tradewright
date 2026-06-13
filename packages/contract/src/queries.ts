@@ -253,7 +253,9 @@ export interface FacilityView {
 }
 
 export interface NotificationPrefsView {
-  categories: { categoryId: string; optedIn: boolean }[];
+  /** `onlineVersionOnly` lets the GUI label categories no V1 moment fires
+   *  (FR-262) without reading mechanics content. */
+  categories: { categoryId: string; optedIn: boolean; onlineVersionOnly: boolean }[];
 }
 
 export interface QueryResultMap {

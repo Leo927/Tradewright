@@ -1,6 +1,6 @@
 import type { ContentIndex, SettlementDef } from '@tradewright/content';
 import { getStorage, type SaveGame, type SettlementStorage } from './state.js';
-import { EngineError } from './ledger.js';
+import { applyTransaction, EngineError } from './ledger.js';
 
 export function settlementDef(content: ContentIndex, settlementId: string): SettlementDef {
   const def = content.settlements.find((s) => s.id === settlementId);
@@ -59,6 +59,32 @@ export function missingItems(
     }
   }
   return missing;
+}
+
+/** Highest expansion level the settlement's storage facility allows (FR-037):
+ *  capacity cannot be expanded past the storage facility's tier. */
+export function storageExpansionCap(content: ContentIndex, settlementId: string): number {
+  const settlement = settlementDef(content, settlementId);
+  return settlement.facilities.find((f) => f.kind === 'storage')?.baseTier ?? 0;
+}
+
+/** Buy one level of storage capacity (FR-023): an escalating coin sink
+ *  (`costBase × costGrowth^level`), capped by the storage facility tier
+ *  (FR-037). The cost is the same one disclosed in StorageView.nextExpansion. */
+export function expandStorage(save: SaveGame, content: ContentIndex, settlementId: string): void {
+  const settlement = settlementDef(content, settlementId);
+  const storage = getStorage(save, settlementId);
+  if (storage.expansionLevel >= storageExpansionCap(content, settlementId)) {
+    throw new EngineError('EXPANSION_CAPPED', `storage at ${settlementId} is at its facility-tier limit`, {
+      settlementId,
+    });
+  }
+  const cost = Math.round(
+    settlement.storageExpansion.costBase *
+      Math.pow(settlement.storageExpansion.costGrowth, storage.expansionLevel),
+  );
+  applyTransaction(save, { kind: 'storage-expansion', coinDelta: -cost, settlementId });
+  storage.expansionLevel += 1;
 }
 
 export function addItems(

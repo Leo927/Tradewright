@@ -5,6 +5,7 @@ import type {
   EventSummaryView,
   GameEvent,
   MarketView,
+  NotificationPrefsView,
   OrderView,
   RouteView,
   ShipmentView,
@@ -14,6 +15,12 @@ import type {
 import { setTransport, transport } from '../transport/index.js';
 import { createLocalTransport } from '../transport/local.js';
 import { resolveInitialLocale } from '../i18n/locale.js';
+import {
+  ensureNotificationPermission,
+  scheduleNotifications,
+  clearScheduledNotifications,
+  type PendingMoment,
+} from '../notifications/scheduler.js';
 
 export type ScreenId =
   | 'first-run'
@@ -44,6 +51,7 @@ export interface AppState {
   routes: RouteView[];
   shipments: ShipmentView[];
   composerRouteId: string | null;
+  notificationPrefs: NotificationPrefsView | null;
 }
 
 let state: AppState = {
@@ -62,6 +70,7 @@ let state: AppState = {
   routes: [],
   shipments: [],
   composerRouteId: null,
+  notificationPrefs: null,
 };
 
 const subscribers = new Set<() => void>();
@@ -131,6 +140,43 @@ export async function refreshShipments(): Promise<void> {
   setState({ shipments });
 }
 
+export async function refreshNotificationPrefs(): Promise<void> {
+  const notificationPrefs = await transport().query({ type: 'GetNotificationPrefs' });
+  setState({ notificationPrefs });
+}
+
+/** Best-effort V1: (re)schedule device notifications for opted-in categories
+ *  from the moments visible in current state (FR-064, research R15). */
+function rescheduleNotifications(): void {
+  const character = state.character;
+  const prefs = state.notificationPrefs?.categories ?? [];
+  const optedIn = new Set(prefs.filter((c) => c.optedIn).map((c) => c.categoryId));
+  if (!character || optedIn.size === 0) {
+    clearScheduledNotifications();
+    return;
+  }
+  const moments: PendingMoment[] = [];
+  if (optedIn.has('caravan-arrival')) {
+    for (const s of state.shipments) {
+      if (s.status === 'in-transit') {
+        moments.push({ categoryId: 'caravan-arrival', fireAtTick: s.arriveAtTick, settlementId: s.toSettlementId });
+      }
+    }
+  }
+  if (optedIn.has('order-filled-expired')) {
+    for (const o of state.myOrders) {
+      if (o.status === 'open' || o.status === 'partially-filled') {
+        moments.push({ categoryId: 'order-filled-expired', fireAtTick: o.expiresAtTick, settlementId: o.settlementId });
+      }
+    }
+  }
+  scheduleNotifications(moments, {
+    currentTick: character.currentTick,
+    tickSeconds: character.tickSeconds,
+    locale: state.locale,
+  });
+}
+
 export async function refreshWorld(): Promise<void> {
   await refreshCharacter();
   await Promise.all([refreshActivities(), refreshStorage()]);
@@ -138,6 +184,22 @@ export async function refreshWorld(): Promise<void> {
   if (state.screen === 'transactions') await refreshTransactions(state.transactions?.offset ?? 0);
   if (state.screen === 'map') await refreshRoutes();
   if (state.screen === 'caravans') await Promise.all([refreshRoutes(), refreshShipments()]);
+  rescheduleNotifications();
+}
+
+export async function setNotificationPrefAction(
+  categoryId: string,
+  optIn: boolean,
+): Promise<void> {
+  // The preference persists regardless of OS permission; permission is only
+  // needed to actually deliver, so request it in the background (FR-064).
+  await transport().send({ type: 'SetNotificationPref', categoryId, optIn });
+  await refreshNotificationPrefs();
+  if (optIn) {
+    void ensureNotificationPermission().then(() => rescheduleNotifications());
+  } else {
+    rescheduleNotifications();
+  }
 }
 
 let refreshQueued = false;
@@ -187,11 +249,13 @@ export async function boot(): Promise<void> {
   const locale = resolveInitialLocale(save.settings.displayLocale);
   const character = await host.query({ type: 'GetCharacter' });
   const summary = await host.query({ type: 'GetSummary' });
+  const notificationPrefs = await host.query({ type: 'GetNotificationPrefs' });
   setState({
     phase: 'ready',
     locale,
     character,
     summary,
+    notificationPrefs,
     screen: character ? 'home' : 'first-run',
   });
   if (character) await refreshWorld();
@@ -230,6 +294,16 @@ export function navigate(screen: ScreenId): void {
   if (screen === 'transactions') {
     setState({ screen });
     void refreshTransactions(0);
+    return;
+  }
+  if (screen === 'settings') {
+    setState({ screen });
+    void refreshNotificationPrefs();
+    return;
+  }
+  if (screen === 'storage') {
+    setState({ screen });
+    void refreshStorage();
     return;
   }
   if (screen === 'map') {
@@ -331,6 +405,14 @@ export async function travelToAction(
   const ack = await transport().send({ type: 'TravelTo', routeId, confirmHaltAssignment });
   if (!ack.accepted) return ack.code;
   await refreshWorld();
+  return null;
+}
+
+export async function expandStorageAction(settlementId: string): Promise<string | null> {
+  const ack = await transport().send({ type: 'ExpandStorage', settlementId });
+  if (!ack.accepted) return ack.code;
+  await refreshWorld();
+  await refreshStorage();
   return null;
 }
 

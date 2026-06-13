@@ -348,7 +348,7 @@ const facilityView: FacilityView = {
 };
 
 const notificationPrefs: NotificationPrefsView = {
-  categories: [{ categoryId: 'caravan-arrival', optedIn: false }],
+  categories: [{ categoryId: 'caravan-arrival', optedIn: false, onlineVersionOnly: false }],
 };
 
 const queryResults: Record<string, unknown> = {

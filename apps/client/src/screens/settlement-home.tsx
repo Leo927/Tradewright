@@ -148,6 +148,9 @@ export function SettlementHomeScreen() {
               </li>
             ))}
           </ul>
+          <button data-testid="manage-storage" onClick={() => navigate('storage')}>
+            <FormattedMessage id="storage.manage" />
+          </button>
         </section>
       ) : null}
     </main>

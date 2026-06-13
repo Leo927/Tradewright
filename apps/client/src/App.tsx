@@ -9,6 +9,7 @@ import { CraftingScreen } from './screens/crafting.js';
 import { MarketScreen } from './screens/market.js';
 import { MapScreen } from './screens/map.js';
 import { CaravansScreen } from './screens/caravans.js';
+import { StorageScreen } from './screens/storage.js';
 import { TransactionsScreen } from './screens/transactions.js';
 import { ReturnSummaryModal } from './screens/return-summary.js';
 
@@ -98,6 +99,8 @@ function Screens() {
         return <MapScreen />;
       case 'caravans':
         return <CaravansScreen />;
+      case 'storage':
+        return <StorageScreen />;
       case 'transactions':
         return <TransactionsScreen />;
       default:

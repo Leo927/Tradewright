@@ -24,7 +24,7 @@ import { accumulateSummary, mergeSummaries } from '../simulation/summary.js';
 import { EngineError } from '../world/ledger.js';
 import { createCharacter } from '../world/character.js';
 import { activityDef, assignActivity, stopActivity } from '../skills/activities.js';
-import { missingItems } from '../world/storage.js';
+import { missingItems, expandStorage } from '../world/storage.js';
 import { effectiveStationTier } from '../world/facilities.js';
 import { placeOrder, cancelOrder } from '../market/orderbook.js';
 import { dispatchCaravan, otherEndpoint } from '../caravan/shipments.js';
@@ -221,6 +221,14 @@ export class LocalGameHost implements GameTransport {
         });
         return;
       }
+      case 'ExpandStorage': {
+        const character = this.save.character;
+        if (!character) throw new EngineError('NO_CHARACTER', 'create a character first');
+        expandStorage(this.save, this.content, command.settlementId);
+        this.emit({ type: 'WalletChanged', balance: character.wallet });
+        this.emit({ type: 'StorageChanged', settlementId: command.settlementId });
+        return;
+      }
       case 'SetDisplayLocale': {
         if (!this.opts.supportedLocaleIds.includes(command.localeId)) {
           throw new EngineError('UNSUPPORTED_LOCALE', `unknown locale ${command.localeId}`);
@@ -235,8 +243,11 @@ export class LocalGameHost implements GameTransport {
         this.save.settings.notificationPrefs.categories[command.categoryId] = command.optIn;
         return;
       }
-      default:
-        throw new EngineError('NOT_FOUND', `command ${command.type} not yet supported`);
+      default: {
+        const unreachable: never = command;
+        void unreachable;
+        return;
+      }
     }
   }
 
@@ -300,6 +311,7 @@ export class LocalGameHost implements GameTransport {
           categories: this.content.notificationCategories.map((c) => ({
             categoryId: c.id,
             optedIn: this.save.settings.notificationPrefs.categories[c.id] ?? false,
+            onlineVersionOnly: c.onlineVersionOnly,
           })),
         };
     }

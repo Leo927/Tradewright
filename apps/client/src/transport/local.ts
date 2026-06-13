@@ -54,6 +54,11 @@ export async function createLocalTransport(): Promise<LocalBoot> {
       const storage = getStorage(save, settlementId);
       storage.slots[itemId] = (storage.slots[itemId] ?? 0) + qty;
     };
+    // E2E-only: top up the wallet so coin-sink flows (storage expansion) can be
+    // exercised without scripting a full earn loop.
+    window.__twGrantCoin = (amount) => {
+      if (save.character) save.character.wallet += amount;
+    };
   }
   return { host, save };
 }
@@ -66,5 +71,6 @@ declare global {
   interface Window {
     __twFlushSave?: () => Promise<void>;
     __twGrant?: (settlementId: string, itemId: string, qty: number) => void;
+    __twGrantCoin?: (amount: number) => void;
   }
 }
