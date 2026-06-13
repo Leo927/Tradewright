@@ -4,7 +4,10 @@ import type {
   CharacterView,
   EventSummaryView,
   GameEvent,
+  MarketView,
+  OrderView,
   StorageView,
+  TransactionsPage,
 } from '@tradewright/contract';
 import { setTransport, transport } from '../transport/index.js';
 import { createLocalTransport } from '../transport/local.js';
@@ -32,6 +35,10 @@ export interface AppState {
   storage: StorageView | null;
   summary: EventSummaryView | null;
   newlyUnlockedSkillIds: string[];
+  marketSettlementId: string | null;
+  market: MarketView | null;
+  myOrders: OrderView[];
+  transactions: TransactionsPage | null;
 }
 
 let state: AppState = {
@@ -43,6 +50,10 @@ let state: AppState = {
   storage: null,
   summary: null,
   newlyUnlockedSkillIds: [],
+  marketSettlementId: null,
+  market: null,
+  myOrders: [],
+  transactions: null,
 };
 
 const subscribers = new Set<() => void>();
@@ -89,9 +100,24 @@ export async function refreshStorage(): Promise<void> {
   setState({ storage });
 }
 
+export async function refreshMarket(settlementId?: string): Promise<void> {
+  const id = settlementId ?? state.marketSettlementId;
+  if (!id) return;
+  const market = await transport().query({ type: 'GetMarket', settlementId: id });
+  const myOrders = await transport().query({ type: 'GetMyOrders' });
+  setState({ marketSettlementId: id, market, myOrders });
+}
+
+export async function refreshTransactions(offset = 0): Promise<void> {
+  const transactions = await transport().query({ type: 'GetTransactions', offset, limit: 20 });
+  setState({ transactions });
+}
+
 export async function refreshWorld(): Promise<void> {
   await refreshCharacter();
   await Promise.all([refreshActivities(), refreshStorage()]);
+  if (state.screen === 'market') await refreshMarket();
+  if (state.screen === 'transactions') await refreshTransactions(state.transactions?.offset ?? 0);
 }
 
 let refreshQueued = false;
@@ -122,6 +148,10 @@ function onGameEvent(e: GameEvent): void {
     case 'WalletChanged':
     case 'StorageChanged':
     case 'TravelArrived':
+    case 'OrderFilled':
+    case 'OrderPartiallyFilled':
+    case 'OrderExpired':
+    case 'OrderCancelled':
       queueRefresh();
       break;
     default:
@@ -166,6 +196,21 @@ export function navigate(screen: ScreenId): void {
     void refreshStorage();
     return;
   }
+  if (screen === 'market') {
+    const here =
+      state.character?.locationState.kind === 'at'
+        ? state.character.locationState.settlementId
+        : null;
+    setState({ screen });
+    void refreshMarket(state.marketSettlementId ?? here ?? undefined);
+    void refreshStorage();
+    return;
+  }
+  if (screen === 'transactions') {
+    setState({ screen });
+    void refreshTransactions(0);
+    return;
+  }
   setState({ screen });
 }
 
@@ -201,6 +246,35 @@ export async function assignActivityAction(
 export async function stopActivityAction(): Promise<void> {
   await transport().send({ type: 'StopActivity' });
   await refreshWorld();
+}
+
+export function selectMarketSettlement(settlementId: string): void {
+  void refreshMarket(settlementId);
+}
+
+export interface PlaceOrderForm {
+  settlementId: string;
+  side: 'buy' | 'sell';
+  itemId: string;
+  qty: number;
+  unitPrice: number;
+  durationHours: number;
+}
+
+export async function placeOrderAction(form: PlaceOrderForm): Promise<string | null> {
+  const ack = await transport().send({ type: 'PlaceOrder', ...form });
+  if (!ack.accepted) return ack.code;
+  await refreshWorld();
+  await refreshMarket(form.settlementId);
+  return null;
+}
+
+export async function cancelOrderAction(orderId: string): Promise<string | null> {
+  const ack = await transport().send({ type: 'CancelOrder', orderId });
+  if (!ack.accepted) return ack.code;
+  await refreshWorld();
+  await refreshMarket();
+  return null;
 }
 
 export function collectSummaryAction(): void {

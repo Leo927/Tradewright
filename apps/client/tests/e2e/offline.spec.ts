@@ -56,6 +56,34 @@ test('US2: an absence beyond the cap states the cap', async ({ page }, testInfo)
   await expect(page.getByTestId('summary-row-0')).toContainText('1,440');
 });
 
+test('US4: an order filled by the NPC during absence appears in the return summary', async ({
+  page,
+}, testInfo) => {
+  await gotoApp(page, testInfo);
+  await page.getByTestId('begin').click();
+  await page.getByTestId('name-input').fill('Lister');
+  await page.getByTestId('settlement-settlement.brackwater').click();
+  await page.getByTestId('create-begin').click();
+  await expect(page.locator('[data-screen="home"]')).toBeVisible();
+
+  // List a sell above the NPC band so only a demand sweep takes it mid-absence.
+  await page.evaluate(() => window.__twGrant!('settlement.brackwater', 'item.silverfin', 5));
+  await page.getByTestId('nav-market').click();
+  await page.getByTestId('market-item-item.silverfin').click();
+  await page.getByTestId('order-side-sell').click();
+  await page.getByTestId('order-qty').fill('5');
+  await page.getByTestId('order-price').fill('20');
+  await page.getByTestId('place-order').click();
+  await expect(page.locator('[data-testid^="my-order-"]')).toHaveCount(1);
+  await page.evaluate(() => window.__twFlushSave!());
+
+  await returnAfter(page, 8);
+  const modal = page.getByTestId('return-summary');
+  await expect(modal).toBeVisible();
+  await expect(modal.locator('[data-summary-kind="order"]')).toBeVisible();
+  if (isPseudoProject(testInfo.project.name)) await assertNoPseudoLeakage(page);
+});
+
 test('US2: storage filling mid-absence shows the halt with time and reason', async ({
   page,
 }, testInfo) => {

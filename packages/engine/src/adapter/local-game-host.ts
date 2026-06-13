@@ -7,6 +7,11 @@ import type {
   QueryResultMap,
   CharacterView,
   StorageView,
+  MarketView,
+  MarketItemView,
+  MarketDepthLine,
+  OrderView,
+  TradeView,
   Unsubscribe,
 } from '@tradewright/contract';
 import { content as defaultContent, type ContentIndex } from '@tradewright/content';
@@ -19,6 +24,8 @@ import { createCharacter } from '../world/character.js';
 import { activityDef, assignActivity, stopActivity } from '../skills/activities.js';
 import { missingItems } from '../world/storage.js';
 import { effectiveStationTier } from '../world/facilities.js';
+import { placeOrder, cancelOrder } from '../market/orderbook.js';
+import { NPC_OWNER } from '../npc/state.js';
 import { levelForXp, tierForLevel, xpForLevelUp } from '../skills/progression.js';
 
 export interface LocalGameHostOptions {
@@ -162,6 +169,34 @@ export class LocalGameHost implements GameTransport {
         this.save.pendingSummary = null;
         return;
       }
+      case 'PlaceOrder': {
+        const character = this.save.character;
+        if (!character) throw new EngineError('NO_CHARACTER', 'create a character first');
+        placeOrder(
+          this.save,
+          this.content,
+          {
+            settlementId: command.settlementId,
+            ownerId: character.id,
+            side: command.side,
+            itemId: command.itemId,
+            qty: command.qty,
+            unitPrice: command.unitPrice,
+            durationHours: command.durationHours,
+          },
+          this.ctx,
+        );
+        this.emit({ type: 'WalletChanged', balance: character.wallet });
+        this.emit({ type: 'StorageChanged', settlementId: command.settlementId });
+        return;
+      }
+      case 'CancelOrder': {
+        const character = this.save.character;
+        if (!character) throw new EngineError('NO_CHARACTER', 'create a character first');
+        cancelOrder(this.save, command.orderId, this.ctx, character.id);
+        this.emit({ type: 'WalletChanged', balance: character.wallet });
+        return;
+      }
       case 'SetDisplayLocale': {
         if (!this.opts.supportedLocaleIds.includes(command.localeId)) {
           throw new EngineError('UNSUPPORTED_LOCALE', `unknown locale ${command.localeId}`);
@@ -195,9 +230,9 @@ export class LocalGameHost implements GameTransport {
       case 'GetActivities':
         return this.activityViews();
       case 'GetMarket':
-        return { settlementId: q.settlementId, items: [] };
+        return this.marketView(q.settlementId, q.itemId);
       case 'GetMyOrders':
-        return [];
+        return this.myOrdersView();
       case 'GetRoutes':
         return [];
       case 'GetShipments':
@@ -295,6 +330,90 @@ export class LocalGameHost implements GameTransport {
           lockReasons,
         };
       });
+  }
+
+  /** Linked-market global visibility (FR-035): any settlement's book is
+   *  browsable from anywhere, but it only ever holds that settlement's orders. */
+  private marketView(settlementId: string, itemId?: string): MarketView {
+    const settlement = this.content.settlements.find((s) => s.id === settlementId);
+    if (!settlement) throw new EngineError('NOT_FOUND', `unknown settlement ${settlementId}`);
+    const itemIds = new Set<string>();
+    if (itemId) {
+      itemIds.add(itemId);
+    } else {
+      const profile = this.content.npcProfiles.find((p) => p.id === settlement.npcProfileId);
+      for (const e of profile?.entries ?? []) itemIds.add(e.itemId);
+      for (const o of this.save.orders) {
+        if (o.settlementId === settlementId && (o.status === 'open' || o.status === 'partially-filled')) {
+          itemIds.add(o.itemId);
+        }
+      }
+    }
+    const items = [...itemIds]
+      .sort()
+      .map((id) => this.marketItemView(settlementId, id));
+    return {
+      settlementId,
+      listingFeeRate: settlement.listingFeeRate,
+      salesTaxRate: settlement.salesTaxRate,
+      items,
+    };
+  }
+
+  private marketItemView(settlementId: string, itemId: string): MarketItemView {
+    const active = this.save.orders.filter(
+      (o) =>
+        o.settlementId === settlementId &&
+        o.itemId === itemId &&
+        (o.status === 'open' || o.status === 'partially-filled') &&
+        o.qtyRemaining > 0,
+    );
+    const buys = active.filter((o) => o.side === 'buy');
+    const sells = active.filter((o) => o.side === 'sell');
+    const bestBid = buys.length ? Math.max(...buys.map((o) => o.unitPrice)) : null;
+    const bestAsk = sells.length ? Math.min(...sells.map((o) => o.unitPrice)) : null;
+    const depthMap = new Map<string, MarketDepthLine>();
+    for (const o of active) {
+      const key = `${o.side}:${o.unitPrice}`;
+      const line = depthMap.get(key) ?? { side: o.side, unitPrice: o.unitPrice, qty: 0 };
+      line.qty += o.qtyRemaining;
+      depthMap.set(key, line);
+    }
+    const depth = [...depthMap.values()].sort(
+      (a, b) => (a.side === b.side ? b.unitPrice - a.unitPrice : a.side === 'buy' ? -1 : 1),
+    );
+    const recentTrades: TradeView[] = this.save.trades
+      .filter((t) => t.settlementId === settlementId && t.itemId === itemId)
+      .slice(-10)
+      .reverse()
+      .map((t) => ({
+        itemId: t.itemId,
+        qty: t.qty,
+        unitPrice: t.unitPrice,
+        executedAtTick: t.executedAtTick,
+      }));
+    return { itemId, bestBid, bestAsk, depth, recentTrades };
+  }
+
+  private myOrdersView(): OrderView[] {
+    const id = this.save.character?.id;
+    if (!id) return [];
+    return this.save.orders
+      .filter((o) => o.ownerId === id && o.ownerId !== NPC_OWNER)
+      .slice()
+      .reverse()
+      .map((o) => ({
+        orderId: o.id,
+        settlementId: o.settlementId,
+        side: o.side,
+        itemId: o.itemId,
+        qtyTotal: o.qtyTotal,
+        qtyRemaining: o.qtyRemaining,
+        unitPrice: o.unitPrice,
+        placedAtTick: o.placedAtTick,
+        expiresAtTick: o.expiresAtTick,
+        status: o.status,
+      }));
   }
 
   private characterView(): CharacterView | null {

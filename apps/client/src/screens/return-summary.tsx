@@ -66,7 +66,7 @@ function Row({
     }
     case 'order':
       return (
-        <li data-testid={testid}>
+        <li data-testid={testid} data-summary-kind="order">
           <FormattedMessage
             id="summary.order"
             values={{

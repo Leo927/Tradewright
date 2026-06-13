@@ -5,6 +5,7 @@ import { createSave } from '../src/world/save.js';
 import { createCharacter } from '../src/world/character.js';
 import { getStorage, type SaveGame } from '../src/world/state.js';
 import { assignActivity } from '../src/skills/activities.js';
+import { placeOrder } from '../src/market/orderbook.js';
 import { fastForward, runTick } from '../src/simulation/tick.js';
 import { elapsedSecondsSince } from '../src/simulation/clock.js';
 import { accumulateSummary } from '../src/simulation/summary.js';
@@ -106,6 +107,53 @@ describe('storage-full halt mid-absence (FR-016, quickstart US2)', () => {
     if (halt?.kind === 'halt') {
       expect(halt.reason).toBe('storage-full');
       expect(halt.atTick).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('market events in the return summary (FR-014, T091)', () => {
+  it('an order filled by the NPC during absence appears in the summary with proceeds and tax', () => {
+    const save = createSave(content, 7);
+    createCharacter(save, content, { name: 'Lister', startSettlementId: 'settlement.brackwater' });
+    getStorage(save, 'settlement.brackwater').slots['item.silverfin'] = 5;
+    // Price above the NPC band so only a demand sweep can take it — a clean,
+    // deterministic fill mid-absence with a non-trivial tax.
+    placeOrder(
+      save,
+      content,
+      {
+        settlementId: 'settlement.brackwater',
+        ownerId: save.character!.id,
+        side: 'sell',
+        itemId: 'item.silverfin',
+        qty: 5,
+        unitPrice: 20,
+        durationHours: 24,
+      },
+      { emit: () => {} },
+    );
+    const events: GameEvent[] = [];
+    const walletBefore = save.character!.wallet;
+    const fromTick = save.tick;
+    fastForward(save, 8 * 3600, { content, emit: (e) => events.push(e) });
+    const summary = accumulateSummary({
+      events,
+      fromTick,
+      toTick: save.tick,
+      tickSeconds: TICK,
+      elapsedSeconds: 8 * 3600,
+      capped: false,
+      capHours: null,
+      netCoinDelta: save.character!.wallet - walletBefore,
+    });
+    const order = summary.entries.find((e) => e.kind === 'order');
+    expect(order).toBeDefined();
+    if (order?.kind === 'order') {
+      expect(order.outcome).toBe('filled');
+      expect(order.side).toBe('sell');
+      expect(order.itemId).toBe('item.silverfin');
+      expect(order.proceeds).toBe(100);
+      expect(order.taxPaid).toBe(5);
     }
   });
 });

@@ -2,7 +2,7 @@ import type { ContentIndex } from '@tradewright/content';
 import type { GameEvent } from '@tradewright/contract';
 import type { SaveGame } from '../world/state.js';
 import { resolveActivityTick } from '../skills/activities.js';
-import { runMarketTick } from '../market/matching.js';
+import { runMarketTick } from '../market/orderbook.js';
 import { runNpcTick } from '../npc/simulation.js';
 import { resolveArrivals } from '../caravan/shipments.js';
 import { resolveTravelTick } from '../world/travel.js';

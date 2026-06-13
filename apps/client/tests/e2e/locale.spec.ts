@@ -87,6 +87,39 @@ declare global {
   }
 }
 
+test('US0-b (US4): a locale switch re-renders populated transaction history (FR-076)', async ({
+  page,
+}, testInfo) => {
+  await gotoApp(page, testInfo);
+  await page.getByTestId('begin').click();
+  await page.getByTestId('name-input').fill('Ledger');
+  await page.getByTestId('settlement-settlement.brackwater').click();
+  await page.getByTestId('create-begin').click();
+
+  // Populate the ledger with a trade in addition to the starter grant.
+  await page.evaluate(() => window.__twGrant!('settlement.brackwater', 'item.silverfin', 5));
+  await page.getByTestId('nav-market').click();
+  await page.getByTestId('market-item-item.silverfin').click();
+  await page.getByTestId('order-side-sell').click();
+  await page.getByTestId('order-qty').fill('5');
+  await page.getByTestId('order-price').fill('2');
+  await page.getByTestId('place-order').click();
+  await advanceClock(page, 30 * 60);
+
+  await page.getByTestId('nav-transactions').click();
+  const list = page.getByTestId('txn-list');
+  await expect(list).toBeVisible();
+
+  const startLocale = projectLocale(testInfo);
+  const target = startLocale === 'en' ? 'pseudo-expand' : 'en';
+  await page.evaluate((l) => window.__twSetLocale!(l), target);
+  if (target === 'pseudo-expand') {
+    await expect(list).toContainText('⟦', { timeout: 2000 });
+  } else {
+    await expect(list).toContainText('Starting coin', { timeout: 2000 });
+  }
+});
+
 test('US0-g: player-authored names render verbatim in every locale (FR-078)', async ({
   page,
 }, testInfo) => {

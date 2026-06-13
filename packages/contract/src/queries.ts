@@ -156,6 +156,10 @@ export interface MarketItemView {
 
 export interface MarketView {
   settlementId: string;
+  /** Disclosed so the GUI can show fee/tax before confirm (FR-051) without
+   *  reading mechanics content. */
+  listingFeeRate: number;
+  salesTaxRate: number;
   items: MarketItemView[];
 }
 

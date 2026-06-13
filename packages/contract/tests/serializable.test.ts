@@ -253,6 +253,8 @@ const activityView: ActivityView = {
 
 const marketView: MarketView = {
   settlementId: 'settlement.brackwater',
+  listingFeeRate: 0.02,
+  salesTaxRate: 0.05,
   items: [
     {
       itemId: 'item.driftwood',

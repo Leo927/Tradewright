@@ -6,6 +6,8 @@ import { CreateCharacterScreen } from './screens/create-character.js';
 import { SettlementHomeScreen } from './screens/settlement-home.js';
 import { ActivitiesScreen } from './screens/activities.js';
 import { CraftingScreen } from './screens/crafting.js';
+import { MarketScreen } from './screens/market.js';
+import { TransactionsScreen } from './screens/transactions.js';
 import { ReturnSummaryModal } from './screens/return-summary.js';
 
 function SettingsButton() {
@@ -57,6 +59,8 @@ function BottomNav() {
       {tab('home', 'nav.home')}
       {tab('activities', 'nav.activities')}
       {tab('crafting', 'nav.crafting')}
+      {tab('market', 'nav.market')}
+      {tab('transactions', 'nav.transactions')}
       {tab('settings', 'nav.settings')}
     </nav>
   );
@@ -85,6 +89,10 @@ function Screens() {
         return <ActivitiesScreen />;
       case 'crafting':
         return <CraftingScreen />;
+      case 'market':
+        return <MarketScreen />;
+      case 'transactions':
+        return <TransactionsScreen />;
       default:
         return <SettlementHomeScreen />;
     }
