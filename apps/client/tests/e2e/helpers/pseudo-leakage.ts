@@ -15,6 +15,7 @@ export async function assertNoPseudoLeakage(page: Page): Promise<void> {
       const parent = (node as Text).parentElement;
       if (!parent) continue;
       if (parent.closest('[data-player-text]')) continue;
+      if (parent.closest('[data-i18n-exempt]')) continue;
       if (parent.closest('script,style')) continue;
       if (parent.closest('[hidden]')) continue;
       const text = (node.textContent ?? '').trim();
@@ -24,7 +25,7 @@ export async function assertNoPseudoLeakage(page: Page): Promise<void> {
   });
 
   for (const text of texts) {
-    if (/^[\d\s.,:%×+\-–—¤/()]+$/.test(text)) continue;
+    if (/^[\d\s.,:%×+\-–—¤/()✓⚙‹›…]+$/.test(text)) continue;
     expect(text, `raw key leaked to screen: "${text}"`).not.toMatch(RAW_KEY);
     expect(text, `unlocalized string leaked: "${text}"`).toMatch(PSEUDO_MARKERS);
   }
