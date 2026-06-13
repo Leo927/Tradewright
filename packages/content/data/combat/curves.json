@@ -1,0 +1,9 @@
+{
+  "healthCurve": { "base": 120, "perUnitRate": 12 },
+  "attributeScaling": { "base": 1.0, "perUnitRate": 0.04, "floor": 1.0 },
+  "masteryScaling": { "base": 1.0, "perUnitRate": 0.03, "floor": 1.0 },
+  "armorMitigation": { "base": 0, "perUnitRate": 0.01, "floor": 0, "cap": 0.75 },
+  "threatFactors": { "sustainFactor": 0.5 },
+  "recoveryMinutes": { "base": 2, "perUnitRate": 1, "floor": 1 },
+  "retreatDurabilityPenalty": 5
+}

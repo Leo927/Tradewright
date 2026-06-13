@@ -19,7 +19,7 @@ export const xpCurve = z
 export const skillDef = z
   .object({
     id: slug,
-    family: z.enum(['gathering', 'refining', 'crafting', 'hauling']),
+    family: z.enum(['gathering', 'refining', 'crafting', 'hauling', 'combat']),
     xpCurve,
     tiers: z.array(tierDef).min(5),
   })
