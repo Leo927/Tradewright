@@ -302,19 +302,19 @@ passes in `pseudo-expand` with locale-correct duration formatting.
 
 ### Design artifact
 
-- [ ] T093 [US5] Design artifact for map/routes, caravan composition, and shipment-tracking screens (weight gauge, duration/risk/cost pre-confirm, in-transit progress; duration displays through the shared locale duration helper — FR-073; primary/deferred split) in `specs/001-tradewright-core/design/caravans-map.md`
+- [X] T093 [US5] Design artifact for map/routes, caravan composition, and shipment-tracking screens (weight gauge, duration/risk/cost pre-confirm, in-transit progress; duration displays through the shared locale duration helper — FR-073; primary/deferred split) in `specs/001-tradewright-core/design/caravans-map.md`
 
 ### Tests for User Story 5 (write first) ⚠️
 
-- [ ] T094 [P] [US5] Engine unit tests: dispatch validation (weight ≤ capacity, slot limit with explanation, costs payable), risk rolled exactly once per shipment from state RNG, mitigation reduces loss by factor, arrival deposits into destination storage (online and via catch-up), hauling skill levels by completed shipments growing capacity/slots, personal travel halts assignment + location transitions (FR-002/044), and a caravan and personal travel dispatched on the same route run their timers independently (spec edge case) in `packages/engine/tests/caravan.test.ts`
+- [X] T094 [P] [US5] Engine unit tests: dispatch validation (weight ≤ capacity, slot limit with explanation, costs payable), risk rolled exactly once per shipment from state RNG, mitigation reduces loss by factor, arrival deposits into destination storage (online and via catch-up), hauling skill levels by completed shipments growing capacity/slots, personal travel halts assignment + location transitions (FR-002/044), and a caravan and personal travel dispatched on the same route run their timers independently (spec edge case) in `packages/engine/tests/caravan.test.ts`
 - [ ] T095 [P] [US5] Playwright flow (quickstart US5): buy low in A → dispatch caravan to B (weight/duration/risk/costs shown pre-confirm) → advance clock → travel to B → sell high → profit matches prediction; UI never blocks during transit; over-limit dispatch explains slot availability in `apps/client/tests/e2e/caravan.spec.ts`
 
 ### Implementation for User Story 5
 
-- [ ] T096 [US5] Caravan module: shipment lifecycle (manifest escrow from storage, departAt/arriveAt timers independent of assignment, seeded risk resolution + mitigation, delivery deposit, caravan-loss Transactions) in `packages/engine/src/caravan/shipments.ts`
-- [ ] T097 [US5] Hauling progression: skill XP per completed shipment driving capacity and concurrent-slot growth (FR-041) in `packages/engine/src/caravan/hauling.ts`
-- [ ] T098 [US5] Personal travel: locationState `traveling` transitions on route travelMinutes, assignment halt `travel`, arrival enables destination activities/market/storage in `packages/engine/src/world/travel.ts`
-- [ ] T099 [US5] Adapter: DispatchCaravan, TravelTo commands; GetRoutes (durations/risk/costs from current settlement), GetShipments (progress + ETA) queries; CaravanArrived (with risk outcome detail as codes/values), TravelArrived events in `packages/engine/src/adapter/local-game-host.ts`
+- [X] T096 [US5] Caravan module: shipment lifecycle (manifest escrow from storage, departAt/arriveAt timers independent of assignment, seeded risk resolution + mitigation, delivery deposit, caravan-loss Transactions) in `packages/engine/src/caravan/shipments.ts`
+- [X] T097 [US5] Hauling progression: skill XP per completed shipment driving capacity and concurrent-slot growth (FR-041) in `packages/engine/src/caravan/hauling.ts`
+- [X] T098 [US5] Personal travel: locationState `traveling` transitions on route travelMinutes, assignment halt `travel`, arrival enables destination activities/market/storage in `packages/engine/src/world/travel.ts`
+- [X] T099 [US5] Adapter: DispatchCaravan, TravelTo commands; GetRoutes (durations/risk/costs from current settlement), GetShipments (progress + ETA) queries; CaravanArrived (with risk outcome detail as codes/values), TravelArrived events in `packages/engine/src/adapter/local-game-host.ts`
 - [ ] T100 [US5] Client: map/routes screen per design artifact (destination, caravan + personal durations, risk, costs — durations via the shared locale helper) in `apps/client/src/screens/map.tsx`
 - [ ] T101 [US5] Client: caravan composition flow (weight gauge, mitigation option, full cost pre-confirm) + shipment tracking with arrival countdown in `apps/client/src/screens/caravans.tsx`
 - [ ] T102 [US5] Extend EventSummary for caravan events: arrivals (with risk outcome detail) and personal-travel completions resolved during absence appear in the return summary (FR-014) — accumulation in `packages/engine/src/simulation/summary.ts`, unit tests added to `packages/engine/tests/offline.test.ts`, summary-modal assertion added to `apps/client/tests/e2e/offline.spec.ts`

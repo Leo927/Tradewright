@@ -3,5 +3,12 @@
   "marketCadenceTicks": 5,
   "offlineCapHours": 24,
   "caravanDurationBand": { "minHours": 2, "maxHours": 6 },
-  "starterCoin": 100
+  "starterCoin": 100,
+  "caravan": {
+    "baseCapacityWeight": 60,
+    "capacityWeightPerLevel": 4,
+    "baseSlots": 1,
+    "slotsPerTier": 1,
+    "haulingXpPerShipment": 40
+  }
 }

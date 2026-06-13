@@ -26,7 +26,7 @@ export function createCharacter(
     wallet: 0,
     skills: Object.fromEntries(content.skills.map((s) => [s.id, { xp: 0, level: 1 }])),
     assignment: null,
-    caravanSlots: 1,
+    caravanSlots: content.world.caravan.baseSlots,
   };
   save.character = character;
   getStorage(save, input.startSettlementId);

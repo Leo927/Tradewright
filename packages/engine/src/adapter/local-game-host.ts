@@ -11,6 +11,8 @@ import type {
   MarketItemView,
   MarketDepthLine,
   OrderView,
+  RouteView,
+  ShipmentView,
   TradeView,
   Unsubscribe,
 } from '@tradewright/contract';
@@ -25,6 +27,8 @@ import { activityDef, assignActivity, stopActivity } from '../skills/activities.
 import { missingItems } from '../world/storage.js';
 import { effectiveStationTier } from '../world/facilities.js';
 import { placeOrder, cancelOrder } from '../market/orderbook.js';
+import { dispatchCaravan, otherEndpoint } from '../caravan/shipments.js';
+import { travelTo } from '../world/travel.js';
 import { NPC_OWNER } from '../npc/state.js';
 import { levelForXp, tierForLevel, xpForLevelUp } from '../skills/progression.js';
 
@@ -197,6 +201,25 @@ export class LocalGameHost implements GameTransport {
         this.emit({ type: 'WalletChanged', balance: character.wallet });
         return;
       }
+      case 'DispatchCaravan': {
+        const character = this.save.character;
+        if (!character) throw new EngineError('NO_CHARACTER', 'create a character first');
+        const shipment = dispatchCaravan(this.save, this.content, {
+          routeId: command.routeId,
+          manifest: command.manifest,
+          mitigation: command.mitigation,
+        });
+        this.emit({ type: 'WalletChanged', balance: character.wallet });
+        this.emit({ type: 'StorageChanged', settlementId: shipment.fromSettlementId });
+        return;
+      }
+      case 'TravelTo': {
+        travelTo(this.save, this.content, {
+          routeId: command.routeId,
+          confirmHaltAssignment: command.confirmHaltAssignment,
+        });
+        return;
+      }
       case 'SetDisplayLocale': {
         if (!this.opts.supportedLocaleIds.includes(command.localeId)) {
           throw new EngineError('UNSUPPORTED_LOCALE', `unknown locale ${command.localeId}`);
@@ -234,9 +257,9 @@ export class LocalGameHost implements GameTransport {
       case 'GetMyOrders':
         return this.myOrdersView();
       case 'GetRoutes':
-        return [];
+        return this.routesView();
       case 'GetShipments':
-        return [];
+        return this.shipmentsView();
       case 'GetTransactions': {
         const all = [...this.save.transactions].reverse();
         return {
@@ -393,6 +416,54 @@ export class LocalGameHost implements GameTransport {
         executedAtTick: t.executedAtTick,
       }));
     return { itemId, bestBid, bestAsk, depth, recentTrades };
+  }
+
+  /** Routes reachable from the current settlement (FR-040): each row leaves the
+   *  current settlement for the route's other endpoint. */
+  private routesView(): RouteView[] {
+    const c = this.save.character;
+    if (!c || c.locationState.kind !== 'at') return [];
+    const from = c.locationState.settlementId;
+    const views: RouteView[] = [];
+    for (const r of this.content.routes) {
+      const to = otherEndpoint(r, from);
+      if (to === null) continue;
+      views.push({
+        routeId: r.id,
+        fromSettlementId: from,
+        toSettlementId: to,
+        caravanMinutes: r.caravanMinutes,
+        travelMinutes: r.travelMinutes,
+        riskLevel: r.riskLevel,
+        riskChance: r.riskChance,
+        lossFraction: r.lossFraction,
+        mitigationCost: r.mitigationCost,
+        mitigationFactor: r.mitigationFactor,
+        dispatchCost: r.dispatchCost,
+      });
+    }
+    return views;
+  }
+
+  private shipmentsView(): ShipmentView[] {
+    const id = this.save.character?.id;
+    if (!id) return [];
+    return this.save.shipments
+      .filter((s) => s.ownerId === id)
+      .slice()
+      .reverse()
+      .map((s) => ({
+        shipmentId: s.id,
+        routeId: s.routeId,
+        fromSettlementId: s.fromSettlementId,
+        toSettlementId: s.toSettlementId,
+        manifest: s.manifest,
+        departAtTick: s.departAtTick,
+        arriveAtTick: s.arriveAtTick,
+        mitigationPurchased: s.mitigationPurchased,
+        status: s.status,
+        riskOutcome: s.riskOutcome,
+      }));
   }
 
   private myOrdersView(): OrderView[] {

@@ -12,6 +12,18 @@ export const worldTuningDef = z
       })
       .strict(),
     starterCoin: z.number().int().positive(),
+    /** Hauling pacing — the single authored source for caravan capacity and
+     *  slot growth; the engine reads these, never hardcodes them (Principle IV,
+     *  FR-041). Capacity is weight units; slots are concurrent shipments. */
+    caravan: z
+      .object({
+        baseCapacityWeight: z.number().positive(),
+        capacityWeightPerLevel: z.number().min(0),
+        baseSlots: z.number().int().positive(),
+        slotsPerTier: z.number().int().min(0),
+        haulingXpPerShipment: z.number().min(0),
+      })
+      .strict(),
   })
   .strict();
 
