@@ -40,7 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` (v1.6.0):
+Gates derived from `.specify/memory/constitution.md` (v1.7.0):
 
 - [ ] **Test-First Quality (I)**: Plan includes unit test tasks for all new/changed
   logic and Playwright E2E tasks for all new/changed user-facing flows. Tests are
@@ -71,6 +71,10 @@ Gates derived from `.specify/memory/constitution.md` (v1.6.0):
   (docs, agent context files, specs, design artifacts) this feature
   invalidates and schedules its update or removal in the same work — nothing
   invalidated is left to drift.
+- [ ] **Deterministic Tests (XI)**: Test tasks in the plan are deterministic by
+  design — time/randomness/order are injected or fixed, external systems are
+  stubbed, and tests wait on observable conditions, not sleeps. No test depends
+  on a value it does not control.
 
 Violations MUST be justified in Complexity Tracking below or the plan reworked.
 

@@ -1,18 +1,21 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.5.0 → 1.6.0 (MINOR — new principle added)
+Version change: 1.6.0 → 1.7.0 (MINOR — new principle added)
 Modified principles: none renamed or redefined
 Added sections:
-  - Core Principle X. No Stale Content (all persistent artifacts must describe
-    the project as it currently is; changes update or delete the content they
-    invalidate in the same change; generalizes Principle VI repository-wide)
-  - Quality Gate 7 — Staleness (PR updates/removes content it invalidates)
+  - Core Principle XI. Deterministic Tests (every automated test produces the
+    same result on every run, in any order, on any machine; generalizes the
+    prior Playwright-only determinism rule to the whole test suite)
+  - Quality Gate 8 — Determinism (new/changed tests are deterministic; flaky
+    tests fixed or quarantined with a tracking issue in the same session)
+Modified sections:
+  - Quality Gates testing-standards note generalized from Playwright-only to
+    all automated tests, now referencing Principle XI
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — version reference updated to v1.6.0;
-    new Constitution Check gate: plan identifies existing docs/specs/context
-    files the feature invalidates and schedules their update or removal
+  ✅ .specify/templates/plan-template.md — version reference updated to v1.7.0;
+    new Constitution Check gate added for Deterministic Tests (XI)
   ✅ .specify/templates/tasks-template.md — no change needed
   ✅ .specify/templates/spec-template.md — no change needed
   ⚠ README.md / docs/quickstart.md — do not exist yet; document local test commands when created
@@ -237,6 +240,35 @@ it from code; a repository whose words cannot be trusted forces re-verifying
 everything, everywhere. Principle VI applies this discipline to code
 comments; this principle extends it to every artifact that persists.
 
+### XI. Deterministic Tests
+
+Every automated test MUST be deterministic: given the same code, it produces
+the same result on every run, in any order, on any machine. A test whose
+pass/fail outcome can change because of timing, execution order, environment,
+or chance is a defect — regardless of what it nominally verifies.
+
+- **No uncontrolled nondeterministic inputs**: wall-clock time, real dates,
+  time zones, locale, and randomness MUST be fixed or injected (clock
+  injection, seeded RNG, pinned fixtures). A test MUST NOT depend on a value
+  it does not control.
+- **Order- and isolation-independent**: tests MUST NOT rely on execution order
+  or shared mutable state. Each test sets up and tears down its own state and
+  passes run alone, in any order, and in parallel.
+- **No arbitrary waits**: tests wait on observable conditions (web-first
+  assertions, explicit signals), never on a guessed sleep duration.
+- **No uncontrolled external systems**: network, filesystem, and third-party
+  services are stubbed, mocked, or pinned so the outcome is decided only by the
+  code under test.
+- **Flaky means failing**: a test that intermittently fails is treated as a
+  failing test — fixed, or quarantined with a tracking issue, within one
+  working session. It MUST NOT be silently retried into green.
+
+**Rationale**: A nondeterministic gate cannot enforce the other principles. A
+suite that fails at random trains developers to ignore red; one that passes at
+random hides real regressions. Determinism is what makes Test-First Quality (I)
+and CI/Local Test Parity (II) trustworthy instead of theatrical. This
+generalizes the prior Playwright-only determinism rule to the whole suite.
+
 ## Quality Gates & Testing Standards
 
 These gates apply to every pull request:
@@ -262,10 +294,16 @@ These gates apply to every pull request:
 - **Gate 7 — Staleness**: The PR updates or removes every piece of written
   content (docs, agent context files, specs, design artifacts, comments) that
   its changes invalidate; no content presents future intent as current fact.
+- **Gate 8 — Determinism**: New/changed tests are deterministic per Principle
+  XI — no wall-clock/random/order dependence, no arbitrary sleeps, external
+  systems stubbed; any flaky test is fixed or quarantined with a tracking issue
+  in the same working session.
 
-Playwright tests MUST be deterministic: no arbitrary sleeps, use web-first
-assertions and test fixtures. Flaky tests are fixed or quarantined with a
-tracking issue within one working session — never silently retried forever.
+All automated tests MUST be deterministic (Principle XI): no arbitrary sleeps,
+no wall-clock/random/order dependence, external systems stubbed. Playwright
+tests in particular use web-first assertions and test fixtures rather than
+sleeps. Flaky tests are fixed or quarantined with a tracking issue within one
+working session — never silently retried forever.
 
 ## Development Workflow
 
@@ -304,4 +342,4 @@ constitution wins.
   principles above. Every PR review verifies the Quality Gates. Deviations
   MUST be justified in the plan's Complexity Tracking table or rejected.
 
-**Version**: 1.6.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-11
+**Version**: 1.7.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-12
