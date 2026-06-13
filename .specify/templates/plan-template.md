@@ -40,7 +40,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Gates derived from `.specify/memory/constitution.md` (v1.7.0):
+Gates derived from `.specify/memory/constitution.md` (v1.7.1):
 
 - [ ] **Test-First Quality (I)**: Plan includes unit test tasks for all new/changed
   logic and Playwright E2E tasks for all new/changed user-facing flows. Tests are

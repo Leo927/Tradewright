@@ -1,345 +1,278 @@
 <!--
 Sync Impact Report
 ==================
-Version change: 1.6.0 → 1.7.0 (MINOR — new principle added)
-Modified principles: none renamed or redefined
-Added sections:
-  - Core Principle XI. Deterministic Tests (every automated test produces the
-    same result on every run, in any order, on any machine; generalizes the
-    prior Playwright-only determinism rule to the whole test suite)
-  - Quality Gate 8 — Determinism (new/changed tests are deterministic; flaky
-    tests fixed or quarantined with a tracking issue in the same session)
-Modified sections:
-  - Quality Gates testing-standards note generalized from Playwright-only to
-    all automated tests, now referencing Principle XI
+Version change: 1.7.0 → 1.7.1 (PATCH — presentation/wording refinement)
+Rationale: Condensed prose, added per-principle icons, a principles summary
+  table, an architecture-boundary diagram, and a quality-gates table. No
+  principle was added, removed, renamed, or redefined; every normative
+  MUST/SHOULD rule and rationale is preserved. This is a non-semantic
+  refinement → PATCH.
+Modified principles: none (wording condensed only)
+Added sections: Principles-at-a-glance table; Architecture Boundaries diagram;
+  Quality Gates table
 Removed sections: none
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md — version reference updated to v1.7.0;
-    new Constitution Check gate added for Deterministic Tests (XI)
+  ✅ .specify/templates/plan-template.md — version reference v1.7.0 → v1.7.1;
+    Constitution Check gates unchanged (principles unchanged)
   ✅ .specify/templates/tasks-template.md — no change needed
   ✅ .specify/templates/spec-template.md — no change needed
-  ⚠ README.md / docs/quickstart.md — do not exist yet; document local test commands when created
+  ⚠ README.md / docs/quickstart.md — do not exist yet; document local test
+    commands when created
 Follow-up TODOs: none
 -->
 
-# TradeWright Constitution
+# 📜 TradeWright Constitution
+
+`v1.7.1` · 🗓️ Ratified 2026-06-11 · ✏️ Last Amended 2026-06-13
 
 ## Core Principles
 
-### I. Test-First Quality (NON-NEGOTIABLE)
+> 🚦 **Legend** — 🔴 blocks merge · ✅ compliance test · 🚫 prohibited
 
-Every feature MUST ship with automated tests. Two layers are mandatory:
+| # | 🔣 | Principle | In one line |
+|---|----|-----------|-------------|
+| I | 🧪 | Test-First Quality **(NON-NEGOTIABLE)** | No feature is done without passing unit + E2E tests. |
+| II | 🔁 | CI/Local Test Parity | Same suite, same commands, locally and in CI. |
+| III | 🧩 | Separation of Concerns | One module, one responsibility; deps point one way. |
+| IV | 📦 | Authoring–Implementation Separation | Content is declarative data, never hard-coded. |
+| V | 🔌 | GUI–Logic Boundary | Talk only through a serializable, server-ready contract. |
+| VI | 💬 | Comment Discipline | Default no comment; only non-inferable "why". |
+| VII | 🎨 | UI Design Fidelity | Build the design artifact exactly; no silent drift. |
+| VIII | 🪟 | Explorable UX | Neat up front, depth behind exploration. |
+| IX | ⚡ | Latency-Tolerant Client | Never freeze the UI on a round-trip. |
+| X | 🧹 | No Stale Content | Every written word describes the project as it is. |
+| XI | 🎲 | Deterministic Tests | Same code → same result, every run, every machine. |
 
-- **Unit tests**: All logic modules (business rules, state management, data
-  transformation) MUST have unit tests covering their public surface, including
-  error paths and boundary conditions.
-- **End-to-end tests**: Every user-facing flow MUST have Playwright tests that
-  exercise the GUI as a user would.
+### 🧪 I. Test-First Quality (NON-NEGOTIABLE)
 
-A feature is not "done" until both layers exist and pass. Test tasks are never
-optional in plans or task lists; a spec without testable acceptance scenarios
-is incomplete. Bug fixes MUST include a regression test that fails before the
-fix and passes after.
+Every feature MUST ship with two mandatory test layers:
 
-**Rationale**: Tests are the enforcement mechanism for every other principle in
-this constitution — boundary violations and regressions surface as test
-failures, not production surprises.
+- 🔬 **Unit** — all logic modules (rules, state, data transforms); public
+  surface + error paths + boundary conditions.
+- 🖱️ **E2E** — every user-facing flow, exercised as a user via Playwright.
 
-### II. CI/Local Test Parity
+✅ "Done" = both layers exist **and** pass. Test tasks are never optional. A
+spec without testable acceptance scenarios is incomplete. 🐛 Bug fixes MUST add
+a regression test that fails before the fix and passes after.
 
-The full test suite (unit + Playwright) MUST run in the GitHub Actions CI
-pipeline on every pull request and on every push to the main branch. A red
-pipeline blocks merge — no exceptions, no skipped suites.
+> **Why** — tests enforce every other principle; violations surface as failures,
+> not production surprises.
 
-The same suites MUST be runnable locally with single, documented commands
-(e.g., `npm test` for unit, `npm run test:e2e` for Playwright). CI MUST invoke
-the same commands developers run locally — no CI-only test logic. If a test
-passes locally it is expected to pass in CI; environment-specific divergence is
-a bug to fix, not tolerate.
+### 🔁 II. CI/Local Test Parity
 
-**Rationale**: Tests that only run in CI get debugged by push-and-pray; tests
-that only run locally rot. Parity keeps the feedback loop fast and the gate
-trustworthy.
+- The full suite (unit + Playwright) MUST run in GitHub Actions on every PR and
+  every push to main. 🔴 A red pipeline blocks merge — no skipped suites.
+- The same suites MUST run locally via single documented commands (e.g.
+  `npm test`, `npm run test:e2e`). CI invokes the **same** commands — no CI-only
+  test logic.
+- Local pass ⇒ CI pass; environment-specific divergence is a bug to fix.
 
-### III. Separation of Concerns
+> **Why** — CI-only tests get push-and-pray debugging; local-only tests rot.
 
-Every module MUST have a single, stated responsibility. Code that mixes
-concerns — rendering plus rules, persistence plus presentation, content plus
-behavior — MUST be split before merge. Dependencies point in one direction:
-presentation depends on logic; logic depends on nothing above it. Cross-cutting
-concerns (logging, configuration, persistence) are isolated behind their own
-interfaces rather than threaded through feature code.
+### 🧩 III. Separation of Concerns
 
-**Rationale**: Clean seams are what make the codebase testable in isolation
-(Principle I) and re-architectable later (Principle V). Principles IV and V are
-the two project-specific applications of this rule.
+- One module = one stated responsibility. 🚫 Mixed concerns (render + rules,
+  persist + present, content + behavior) MUST be split before merge.
+- ➡️ Dependencies point one way (see diagram). Cross-cutting concerns (logging,
+  config, persistence) live behind their own interfaces, not threaded through
+  feature code.
 
-### IV. Authoring–Implementation Separation
+```mermaid
+graph TD
+    GUI["🖥️ GUI / Presentation"] -->|serializable contract| LOGIC["⚙️ Application Logic"]
+    LOGIC -->|loads + validates| CONTENT["📦 Authored Content (data)"]
+    LOGIC -. depends on nothing above it .-> X(( ))
+    classDef ghost fill:none,stroke:none;
+    class X ghost;
+```
 
-Authored content MUST live separately from code implementation. Content —
-definitions, data, copy, scenarios, and other authored material — is expressed
-as declarative data (e.g., JSON/YAML/dedicated content files) in its own
-directory tree, never hard-coded into implementation source. Code loads,
-validates, and interprets content through a defined schema; it never embeds it.
+> **Why** — clean seams make code testable (I) and re-architectable (V).
+> IV and V are the two project-specific applications of this rule.
 
-The test of compliance: an author MUST be able to add or change content without
-touching implementation code, and an engineer MUST be able to refactor
-implementation without rewriting content. Content schemas MUST be validated
-(at load time or build time) so malformed content fails fast.
+### 📦 IV. Authoring–Implementation Separation
 
-**Rationale**: Authoring and engineering iterate at different speeds and
-potentially by different people/tools. Entangling them makes every content
-tweak a code review and every refactor a content migration.
+- Authored content (definitions, data, copy, scenarios) MUST be declarative data
+  in its own directory tree — never hard-coded into source.
+- Code loads, validates, and interprets content through a schema; it never
+  embeds it. Schemas MUST be validated at load/build time so malformed content
+  ⚡ fails fast.
+- ✅ **Test** — an author changes content without touching code; an engineer
+  refactors code without rewriting content.
 
-### V. GUI–Logic Boundary (Server-Ready Logic)
+> **Why** — authoring and engineering iterate at different speeds; entangling
+> them turns every tweak into a code review and every refactor into a migration.
 
-The GUI and the application logic MUST be separated by an explicit boundary,
-because the logic layer WILL eventually be moved to a separate server.
+### 🔌 V. GUI–Logic Boundary (Server-Ready Logic)
 
-- All GUI–logic communication goes through a defined contract interface
-  (typed API of commands/queries/events). The GUI MUST NOT reach into logic
-  internals, and logic modules MUST NOT import GUI code, framework components,
-  or rendering concerns.
-- The logic layer MUST be self-contained: no DOM access, no UI framework
-  dependencies, no assumptions that it runs in the same process as the GUI.
-  All data crossing the boundary MUST be serializable.
-- The architecture test: replacing the in-process logic implementation with a
-  remote server behind the same contract MUST require no GUI changes beyond
-  the transport adapter.
+The logic layer WILL move to a server, so the boundary is explicit now:
 
-Unit tests target the logic layer directly through the contract; Playwright
-tests exercise the GUI side of the boundary. Contract changes MUST update both.
+- 🔗 GUI ↔ logic communicate only through a defined contract (typed
+  commands/queries/events). 🚫 GUI MUST NOT reach logic internals; logic MUST NOT
+  import GUI/framework/render code.
+- 📦 Logic is self-contained: no DOM, no UI deps, no same-process assumption.
+  All boundary data MUST be serializable.
+- ✅ **Test** — swap in-process logic for a remote server behind the same
+  contract → no GUI change beyond the transport adapter.
+- Unit tests hit logic through the contract; Playwright hits the GUI side. A
+  contract change updates both.
 
-**Rationale**: Designing for the future server split now costs a thin
-interface; retrofitting it later costs a rewrite. The serializable contract
-also gives tests a stable seam.
+> **Why** — a thin interface now vs. a rewrite later; the serializable contract
+> also gives tests a stable seam.
 
-### VI. Comment Discipline
+### 💬 VI. Comment Discipline
 
-The default is NO comment. A comment MUST be written only when it provides
-obvious benefit — stating something the code itself cannot express:
+Default: **NO comment.** Write one ONLY for non-inferable knowledge:
 
-- A constraint, invariant, or contract the reader cannot infer from the code
-  (e.g., "order matters: schema validation must precede migration").
-- A non-obvious "why" — a workaround for an external bug, a deliberate
-  deviation from the expected approach, a performance trade-off.
+- 📌 a constraint/invariant/contract the reader cannot infer (e.g. "schema
+  validation MUST precede migration").
+- ❓ a non-obvious "why" — external-bug workaround, deliberate deviation, perf
+  trade-off.
 
-Comments that restate what the code does, narrate change history, describe the
-next line, or address a reviewer are prohibited and MUST be removed in review.
-If a comment is needed to explain *what* code does, prefer renaming or
-restructuring the code so it explains itself. Any comment that does exist MUST
-be kept accurate when the surrounding code changes — a stale comment is worse
-than none.
+🚫 Prohibited (remove in review): restating code, narrating history, describing
+the next line, addressing reviewers. Prefer renaming/restructuring over a "what"
+comment. Any surviving comment MUST be kept accurate.
 
-**Rationale**: Comments are unverified by tests and rot silently. Reserving
-them for genuinely non-inferable knowledge keeps the ones that remain
-trustworthy and the code as the single source of truth.
+> **Why** — comments are untested and rot silently; reserving them keeps the
+> survivors trustworthy and code the single source of truth.
 
-### VII. UI Design Fidelity
+### 🎨 VII. UI Design Fidelity
 
-UI implementation MUST follow the UI design faithfully. When a design artifact
-exists for a screen or flow — mockup, wireframe, design spec, design tokens —
-the implementation MUST match its layout, spacing, typography, colors, labels,
-component states, and interaction behavior. Implementers MUST NOT improvise
-visual or interaction changes during implementation.
+- Implementation MUST match the design artifact: layout, spacing, typography,
+  color, labels, component states, interactions. 🚫 No improvised visual or
+  interaction changes.
+- The design artifact is the source of truth and lives with content (IV).
+- ⚠️ Impractical/ambiguous/incomplete design → update the artifact (or record a
+  signed-off deviation) **before** the divergent code merges. Silent drift is a
+  violation.
+- Playwright SHOULD assert design-driven properties (structure, labels, visible
+  states) so fidelity regressions fail CI.
 
-- The design artifact is the source of truth for UI work. Per Principle IV it
-  lives with authored content, not inside implementation code.
-- If a design proves impractical, ambiguous, or incomplete during
-  implementation, the design artifact MUST be updated (or the deviation
-  explicitly signed off and recorded in the feature's spec/plan) BEFORE the
-  divergent implementation merges. Silent drift is a constitution violation.
-- Playwright tests for a flow SHOULD assert the design-driven properties that
-  define it (structure, labels, visible states), so fidelity regressions fail
-  CI rather than waiting for a human to notice.
+> **Why** — silent divergence makes artifacts untrustworthy and turns every
+> review into opinion; this extends IV to the visual layer.
 
-**Rationale**: When implementation silently diverges, design artifacts stop
-being trustworthy and every review becomes a matter of opinion. Keeping design
-as the single source of truth extends the authoring/implementation separation
-(Principle IV) to the visual layer.
+### 🪟 VIII. Explorable UX — Progressive Disclosure
 
-### VIII. Explorable UX — Progressive Disclosure
+Apple-spirit: **clarity, deference, depth** — neat up front, depth discoverable.
 
-UX design MUST follow progressive disclosure in the spirit of Apple's design
-philosophy (clarity, deference, depth): nice and neat up front, with deep
-information discoverable behind exploration.
+- 🧼 **Clean primary surfaces** — each screen shows only its primary task. Rework
+  before implementing anything that stacks advanced/dense/secondary content up
+  front.
+- 🔍 **Depth via exploration** — detail and advanced controls live one level
+  deeper, reached through obvious affordances. Hidden ≠ undiscoverable.
+- 🎯 **Never bury the primary action** — disclosure applies to secondary content
+  only.
+- Every UI artifact (VII) MUST state its primary task and what is deferred
+  deeper. Contested → default to the calmer surface.
 
-- **Clean primary surfaces**: each screen presents only what its primary task
-  needs. A design that stacks advanced options, dense data, or secondary
-  actions onto the first screen MUST be reworked before implementation.
-- **Depth through exploration**: detailed information and advanced controls
-  live one level deeper — drill-downs, expansions, detail views — reached
-  through obvious affordances. Hidden MUST NOT mean undiscoverable: every
-  deeper layer is reachable from a visible, self-explanatory entry point.
-- **Never bury the primary action**: progressive disclosure applies to
-  secondary content only; the main task is always immediately actionable.
-- Every UI design artifact (per Principle VII) MUST state the surface's
-  primary task and list what is deliberately deferred to deeper layers, so
-  reviewers can check the split rather than guess it.
-- When a UX decision is contested, default to the simpler, calmer surface.
+> **Why** — surfaces optimized for legibility serve daily use; depth behind
+> exploration serves experts; the stated split makes "neat up front" reviewable.
 
-**Rationale**: First impressions and day-to-day use happen on the primary
-surface; expert needs are occasional. Optimizing the surface for legibility
-and pushing depth behind exploration serves both without compromise, and
-stating the task/depth split in the design artifact makes "neat up front"
-reviewable instead of subjective.
+### ⚡ IX. Latency-Tolerant Client
 
-### IX. Latency-Tolerant Client
+Design around UX, not implementation convenience. 🚫 Anti-pattern: every
+interaction silently waiting on a server round-trip.
 
-Client-server architecture MUST be designed around user experience, not
-implementation convenience. The anti-pattern this principle forbids: every
-interaction silently waiting on a server round-trip before the UI reacts.
+- ⚡ **Immediate feedback, always** — UI acknowledges every interaction locally;
+  never frozen pending the network.
+- 🔮 **Optimistic by default** — predictable outcomes applied now, reconciled on
+  confirm. Rejection rolls back visibly and explains — never silently.
+- ⏳ **Honest pending states** — genuine server dependence shows a scoped
+  in-progress state; unrelated interactions stay responsive.
+- 🔌 The contract (V) MUST be asynchronous and support optimistic
+  apply + reconcile. A request-blocked contract is a design defect.
+- Designs classify each interaction: `local-immediate` ·
+  `optimistic-with-reconciliation` · `server-confirmed-with-pending`.
+  🚫 "Blocks the UI" is not a category.
 
-- **Immediate feedback, always**: the UI MUST acknowledge every interaction
-  instantly — locally, without waiting for the network. No interaction may
-  leave the interface frozen or unresponsive pending a server reply.
-- **Optimistic by default**: where the client can predict the outcome
-  (validation it can run locally, state it already holds), it MUST apply the
-  change optimistically and reconcile when the server confirms. If the server
-  rejects, the client rolls back visibly and explains why — never silently.
-- **Honest pending states**: where the outcome genuinely requires the server
-  (authoritative results, data the client lacks), the UI shows an explicit
-  in-progress state scoped to that operation; unrelated interactions stay
-  responsive.
-- **The contract enables this**: the GUI–logic contract (Principle V) MUST be
-  asynchronous and support optimistic application + reconciliation — fire
-  commands without blocking, receive confirmations/corrections as events.
-  A contract that forces request-blocked interaction is a design defect even
-  while logic still runs in-process.
-- Designs and plans for interactive features MUST classify each interaction:
-  local-immediate, optimistic-with-reconciliation, or server-confirmed-with-
-  pending-state. "Blocks the UI" is not a permitted category.
+> **Why** — logic moves to a server (V); if responsiveness isn't designed into
+> the contract now, every interaction inherits a round-trip later.
 
-**Rationale**: Logic will move to a server (Principle V); if responsiveness
-is not designed into the contract now, every interaction inherits a round-trip
-when it does. Games where each button click waits on the server demonstrate
-the failure mode: technically correct, miserable to use.
+### 🧹 X. No Stale Content
 
-### X. No Stale Content
+Every persistent artifact (docs, agent context files like CLAUDE.md, specs,
+plans, design artifacts, comments, config notes) MUST describe the project as it
+**currently is**. Stale content = wrong information under the repo's authority.
 
-Every persistent artifact in this repository — documentation, agent context
-files (e.g., CLAUDE.md), specs, plans, design artifacts, comments,
-configuration notes — MUST describe the project as it currently is. Stale
-content is not a cosmetic issue; it is wrong information published under the
-repository's authority.
+- A change that invalidates written content updates/deletes it in the **same**
+  change.
+- Stale content found mid-task → fix on the spot if small; else a tracking issue
+  in the same session. 🚫 Never left silently.
+- 🔮 No future intent as current fact; aspirational material is labeled planned
+  or omitted.
+- 🗑️ Unverifiable cheaply → prefer deletion (missing prompts a question; wrong
+  misleads).
 
-- A change that invalidates written content MUST update or delete that
-  content in the same change. Merging the code while leaving the now-wrong
-  words behind is a constitution violation.
-- Stale content discovered during any task MUST be corrected or removed on
-  the spot when the fix is small; when it is too large for the current
-  change, it gets a tracking issue in the same working session — never
-  silently left in place.
-- Content MUST NOT present future intent as current fact. Aspirational or
-  speculative material is either explicitly labeled as planned or omitted.
-- When accuracy cannot be cheaply verified, prefer deletion over retention:
-  missing guidance prompts a question; wrong guidance silently misleads.
+> **Why** — humans and agents act on what's written; untrustworthy words force
+> re-verifying everything. VI covers code comments; X covers every artifact.
 
-**Rationale**: Humans and agents act on what is written without re-deriving
-it from code; a repository whose words cannot be trusted forces re-verifying
-everything, everywhere. Principle VI applies this discipline to code
-comments; this principle extends it to every artifact that persists.
+### 🎲 XI. Deterministic Tests
 
-### XI. Deterministic Tests
+Every test MUST be deterministic: same code → same result, on every run, in any
+order, on any machine. An outcome that changes on timing/order/env/chance is a
+defect.
 
-Every automated test MUST be deterministic: given the same code, it produces
-the same result on every run, in any order, on any machine. A test whose
-pass/fail outcome can change because of timing, execution order, environment,
-or chance is a defect — regardless of what it nominally verifies.
+- ⏰ **No uncontrolled nondeterminism** — clock, dates, time zones, locale,
+  randomness MUST be fixed or injected.
+- 🔀 **Order/isolation-independent** — own setup/teardown; passes alone, in any
+  order, and in parallel.
+- ⏱️ **No arbitrary waits** — wait on observable conditions, never guessed
+  sleeps.
+- 🌐 **No uncontrolled externals** — network, filesystem, third parties stubbed
+  or pinned.
+- 🔴 **Flaky = failing** — fix or quarantine with a tracking issue within one
+  session; never silently retried into green.
 
-- **No uncontrolled nondeterministic inputs**: wall-clock time, real dates,
-  time zones, locale, and randomness MUST be fixed or injected (clock
-  injection, seeded RNG, pinned fixtures). A test MUST NOT depend on a value
-  it does not control.
-- **Order- and isolation-independent**: tests MUST NOT rely on execution order
-  or shared mutable state. Each test sets up and tears down its own state and
-  passes run alone, in any order, and in parallel.
-- **No arbitrary waits**: tests wait on observable conditions (web-first
-  assertions, explicit signals), never on a guessed sleep duration.
-- **No uncontrolled external systems**: network, filesystem, and third-party
-  services are stubbed, mocked, or pinned so the outcome is decided only by the
-  code under test.
-- **Flaky means failing**: a test that intermittently fails is treated as a
-  failing test — fixed, or quarantined with a tracking issue, within one
-  working session. It MUST NOT be silently retried into green.
-
-**Rationale**: A nondeterministic gate cannot enforce the other principles. A
-suite that fails at random trains developers to ignore red; one that passes at
-random hides real regressions. Determinism is what makes Test-First Quality (I)
-and CI/Local Test Parity (II) trustworthy instead of theatrical. This
-generalizes the prior Playwright-only determinism rule to the whole suite.
+> **Why** — a nondeterministic gate can't enforce anything. Determinism makes
+> Test-First Quality (I) and CI/Local Parity (II) trustworthy instead of
+> theatrical.
 
 ## Quality Gates & Testing Standards
 
-These gates apply to every pull request:
+Every PR MUST clear all gates (🔴 = blocks merge):
 
-- **Gate 1 — Unit tests**: New/changed logic has unit tests; full unit suite
-  passes in CI.
-- **Gate 2 — E2E tests**: New/changed user-facing flows have Playwright
-  coverage; full E2E suite passes in CI.
-- **Gate 3 — Boundary check**: No imports from GUI code into logic modules, no
-  logic internals accessed from GUI, no authored content embedded in
-  implementation code. Enforce mechanically where possible (lint rules,
-  dependency-cruiser or equivalent import-boundary checks) and via review
-  otherwise.
-- **Gate 4 — Local reproducibility**: Any new test type or tooling added to CI
-  MUST be runnable locally with a documented command before the CI step is
-  merged.
-- **Gate 5 — Comment discipline**: New/changed code contains no comments that
-  restate the code, narrate changes, or address reviewers; remaining comments
-  state non-inferable constraints or rationale only.
-- **Gate 6 — Design fidelity**: UI changes match the referenced design
-  artifact; any deviation is reflected in an updated design artifact or a
-  recorded sign-off before merge.
-- **Gate 7 — Staleness**: The PR updates or removes every piece of written
-  content (docs, agent context files, specs, design artifacts, comments) that
-  its changes invalidate; no content presents future intent as current fact.
-- **Gate 8 — Determinism**: New/changed tests are deterministic per Principle
-  XI — no wall-clock/random/order dependence, no arbitrary sleeps, external
-  systems stubbed; any flaky test is fixed or quarantined with a tracking issue
-  in the same working session.
+| Gate | 🔣 | Requirement |
+|------|----|-------------|
+| 1 — Unit tests | 🔬 | New/changed logic has unit tests; full unit suite passes in CI. |
+| 2 — E2E tests | 🖱️ | New/changed user-facing flows have Playwright coverage; full E2E suite passes in CI. |
+| 3 — Boundary | 🔌 | No GUI→logic-internals access, no logic→GUI imports, no content embedded in code. Enforce via lint/dependency-cruiser where possible, else review. |
+| 4 — Local repro | 🔁 | Any new test type/tooling in CI is runnable locally via a documented command before the CI step merges. |
+| 5 — Comments | 💬 | No comments that restate code, narrate changes, or address reviewers; survivors state non-inferable constraints/rationale only. |
+| 6 — Design fidelity | 🎨 | UI changes match the referenced design artifact; deviations reflected in an updated artifact or recorded sign-off before merge. |
+| 7 — Staleness | 🧹 | PR updates/removes every written artifact its changes invalidate; no future intent presented as current fact. |
+| 8 — Determinism | 🎲 | New/changed tests obey Principle XI; any flaky test fixed or quarantined with a tracking issue in the same session. |
 
-All automated tests MUST be deterministic (Principle XI): no arbitrary sleeps,
-no wall-clock/random/order dependence, external systems stubbed. Playwright
-tests in particular use web-first assertions and test fixtures rather than
-sleeps. Flaky tests are fixed or quarantined with a tracking issue within one
-working session — never silently retried forever.
+🎭 Playwright tests in particular use web-first assertions and fixtures rather
+than sleeps (Principle XI).
 
 ## Development Workflow
 
-- All work flows through the Spec Kit lifecycle: specify → plan → tasks →
-  implement. Plans MUST pass the Constitution Check before implementation
-  begins; violations require an explicit Complexity Tracking justification.
-- Task lists generated for features MUST include test tasks (unit and, for
-  user-facing stories, Playwright) — they are mandatory, not optional.
-- Repository layout MUST reflect the boundaries: logic, GUI, and authored
-  content live in distinct top-level directories (e.g., `src/logic/`,
-  `src/gui/`, `content/`), with tests mirroring that split (`tests/unit/`,
-  `tests/e2e/`).
-- The GitHub Actions workflow is part of the codebase: changes to it are
-  reviewed like any other code, and it MUST stay in sync with the locally
-  documented commands.
-- **Always commit and push**: every completed unit of work — a task, a spec or
-  plan artifact, a constitution amendment — MUST be committed to git with a
-  descriptive message and pushed to the remote immediately. Work MUST NOT
-  accumulate uncommitted across work sessions; an interrupted session loses at
-  most the unit in progress. Commits MUST be scoped to one logical change so
-  history stays reviewable and revertable.
+- 🔄 All work flows through Spec Kit: **specify → plan → tasks → implement**.
+  Plans MUST pass the Constitution Check before implementation; violations need
+  an explicit Complexity Tracking justification.
+- ✅ Feature task lists MUST include test tasks (unit, and Playwright for
+  user-facing stories) — mandatory, not optional.
+- 🗂️ Layout reflects the boundaries: `src/logic/`, `src/gui/`, `content/`, with
+  tests mirroring the split (`tests/unit/`, `tests/e2e/`).
+- ⚙️ The GitHub Actions workflow is code: reviewed like any other change and kept
+  in sync with the locally documented commands.
+- 📤 **Always commit and push** — every completed unit of work (a task, a
+  spec/plan artifact, a constitution amendment) is committed with a descriptive
+  message and pushed immediately, scoped to one logical change. Work MUST NOT
+  accumulate uncommitted across sessions.
 
 ## Governance
 
-This constitution supersedes all other development practices in this
-repository. Where a plan, task list, or review conflicts with it, the
-constitution wins.
+This constitution supersedes all other development practices. Where a plan, task
+list, or review conflicts with it, the constitution wins.
 
-- **Amendments**: Proposed via pull request that updates this file, states the
-  rationale, and includes a Sync Impact Report. Dependent templates
-  (`.specify/templates/*.md`) MUST be updated in the same change.
-- **Versioning**: Semantic versioning. MAJOR for removing or redefining a
-  principle in a backward-incompatible way; MINOR for adding a principle or
-  materially expanding guidance; PATCH for clarifications and wording.
-- **Compliance review**: Every plan's Constitution Check gates on the
-  principles above. Every PR review verifies the Quality Gates. Deviations
-  MUST be justified in the plan's Complexity Tracking table or rejected.
+- 📝 **Amendments** — via PR that updates this file, states the rationale, and
+  includes a Sync Impact Report. Dependent templates (`.specify/templates/*.md`)
+  MUST update in the same change.
+- 🔢 **Versioning** — semantic. **MAJOR** = remove/redefine a principle
+  backward-incompatibly · **MINOR** = add a principle or materially expand
+  guidance · **PATCH** = clarifications, wording, presentation.
+- 🛡️ **Compliance review** — every plan's Constitution Check gates on the
+  principles above; every PR review verifies the Quality Gates. Deviations are
+  justified in Complexity Tracking or rejected.
 
-**Version**: 1.7.0 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-12
+**Version**: 1.7.1 | **Ratified**: 2026-06-11 | **Last Amended**: 2026-06-13
