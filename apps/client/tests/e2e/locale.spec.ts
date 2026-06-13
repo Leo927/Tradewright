@@ -58,6 +58,35 @@ test('US0-e: a key missing from the active validation locale renders the base st
   await expect(begin).not.toHaveText(/firstrun\.begin/);
 });
 
+test('US0-b (US2): a locale switch re-renders a pending summary in place (FR-076)', async ({
+  page,
+}, testInfo) => {
+  await gotoApp(page, testInfo);
+  await createAndWork(page);
+  await page.evaluate(() => window.__twFlushSave!());
+  await page.evaluate(() => sessionStorage.setItem('tw-clock-offset', String(8 * 3600 * 1000)));
+  await page.reload();
+  await page.waitForFunction(() => !!window.__twTestClock);
+
+  const modal = page.getByTestId('return-summary');
+  await expect(modal).toBeVisible();
+  const startLocale = projectLocale(testInfo);
+  const target = startLocale === 'en' ? 'pseudo-expand' : 'en';
+  await page.evaluate((l) => window.__twSetLocale!(l), target);
+  if (target === 'pseudo-expand') {
+    await expect(modal.locator('h2')).toContainText('⟦', { timeout: 2000 });
+  } else {
+    await expect(modal.locator('h2')).toHaveText('While you were away', { timeout: 2000 });
+  }
+  await expect(modal.getByTestId('summary-row-0')).toBeVisible();
+});
+
+declare global {
+  interface Window {
+    __twFlushSave?: () => Promise<void>;
+  }
+}
+
 test('US0-g: player-authored names render verbatim in every locale (FR-078)', async ({
   page,
 }, testInfo) => {

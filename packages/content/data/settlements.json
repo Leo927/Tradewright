@@ -4,8 +4,8 @@
     "activityTags": ["coastal"],
     "listingFeeRate": 0.02,
     "salesTaxRate": 0.05,
-    "baseStorageCapacity": 100,
-    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "baseStorageCapacity": 4000,
+    "storageExpansion": { "capacityPerLevel": 2000, "costBase": 200, "costGrowth": 1.6 },
     "facilities": [
       { "id": "facility.brackwater-storage", "kind": "storage", "baseTier": 3 },
       { "id": "facility.brackwater-tannery", "kind": "station", "craftFamily": "tanning", "baseTier": 3 },
@@ -20,8 +20,8 @@
     "activityTags": ["highland"],
     "listingFeeRate": 0.02,
     "salesTaxRate": 0.05,
-    "baseStorageCapacity": 100,
-    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "baseStorageCapacity": 4000,
+    "storageExpansion": { "capacityPerLevel": 2000, "costBase": 200, "costGrowth": 1.6 },
     "facilities": [
       { "id": "facility.emberfall-storage", "kind": "storage", "baseTier": 3 },
       { "id": "facility.emberfall-smelter", "kind": "station", "craftFamily": "smelting", "baseTier": 3 },
@@ -36,8 +36,8 @@
     "activityTags": ["forest"],
     "listingFeeRate": 0.02,
     "salesTaxRate": 0.05,
-    "baseStorageCapacity": 100,
-    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "baseStorageCapacity": 4000,
+    "storageExpansion": { "capacityPerLevel": 2000, "costBase": 200, "costGrowth": 1.6 },
     "facilities": [
       { "id": "facility.thornholt-storage", "kind": "storage", "baseTier": 3 },
       { "id": "facility.thornholt-sawmill", "kind": "station", "craftFamily": "sawmilling", "baseTier": 3 },
@@ -51,8 +51,8 @@
     "activityTags": ["crossroads"],
     "listingFeeRate": 0.02,
     "salesTaxRate": 0.05,
-    "baseStorageCapacity": 100,
-    "storageExpansion": { "capacityPerLevel": 50, "costBase": 200, "costGrowth": 1.6 },
+    "baseStorageCapacity": 4000,
+    "storageExpansion": { "capacityPerLevel": 2000, "costBase": 200, "costGrowth": 1.6 },
     "facilities": [
       { "id": "facility.greywatch-storage", "kind": "storage", "baseTier": 3 },
       { "id": "facility.greywatch-tinker-hall", "kind": "station", "craftFamily": "tinkering", "baseTier": 3 },

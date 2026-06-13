@@ -3,17 +3,23 @@
 export interface Clock {
   /** Wall-clock epoch milliseconds, as the host believes them. */
   now(): number;
+  /** Monotonic milliseconds where the host can provide them (research R8). */
+  monotonic?(): number;
 }
 
 export function createManualClock(startMs = 0): Clock & { advance(ms: number): void; set(ms: number): void } {
   let current = startMs;
+  let mono = 0;
   return {
     now: () => current,
+    monotonic: () => mono,
     advance: (ms) => {
       current += ms;
+      mono += ms;
     },
     set: (ms) => {
       current = ms;
+      mono += 1;
     },
   };
 }

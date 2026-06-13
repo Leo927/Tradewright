@@ -130,6 +130,7 @@ export interface Transaction {
 export interface EventSummaryState {
   fromTick: number;
   toTick: number;
+  tickSeconds: number;
   elapsedSeconds: number;
   capped: boolean;
   capHours: number | null;
@@ -155,6 +156,7 @@ export interface SaveGame {
   tick: number;
   rngState: number;
   lastSeenWallClock: number | null;
+  lastMonotonicMark: number | null;
   character: PlayerCharacter | null;
   storages: SettlementStorage[];
   orders: MarketOrder[];

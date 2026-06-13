@@ -13,6 +13,7 @@ import { content as defaultContent, type ContentIndex } from '@tradewright/conte
 import type { Clock } from '../simulation/clock.js';
 import { fastForward, type TickContext } from '../simulation/tick.js';
 import { nextId, getStorage, type SaveGame } from '../world/state.js';
+import { accumulateSummary, mergeSummaries } from '../simulation/summary.js';
 import { EngineError } from '../world/ledger.js';
 import { createCharacter } from '../world/character.js';
 import { activityDef, assignActivity, stopActivity } from '../skills/activities.js';
@@ -60,29 +61,60 @@ export class LocalGameHost implements GameTransport {
     this.opts.onMutate?.();
   }
 
-  /** Run catch-up on host boot, before the first query (T070). */
+  /** Run catch-up on host boot, before the first query (T070): elapsed ticks
+   *  replay with events folded into a pending summary instead of streamed. */
   start(): void {
-    this.pump();
+    const save = this.save;
+    const walletBefore = save.character?.wallet ?? 0;
+    const fromTick = save.tick;
+    const events: GameEvent[] = [];
+    const result = this.advance((e) => events.push(e));
+    if (result && result.ticksRun > 0) {
+      const summary = accumulateSummary({
+        events,
+        fromTick,
+        toTick: save.tick,
+        tickSeconds: this.content.world.worldTickSeconds,
+        elapsedSeconds: result.elapsedSeconds,
+        capped: result.capped,
+        capHours: result.capped ? this.content.world.offlineCapHours : null,
+        netCoinDelta: (save.character?.wallet ?? 0) - walletBefore,
+      });
+      if (summary.entries.length > 0 || summary.capped) {
+        save.pendingSummary = save.pendingSummary
+          ? mergeSummaries(save.pendingSummary, summary)
+          : summary;
+        this.emit({ type: 'SummaryReady', summary: save.pendingSummary });
+      }
+    }
   }
 
-  /** Advance world time to the host clock. Residual sub-tick time stays
-   *  anchored so no seconds are lost between pumps. */
+  /** Advance world time to the host clock, streaming events live. Residual
+   *  sub-tick time stays anchored so no seconds are lost between pumps. */
   pump(): void {
+    this.advance((e) => this.emit(e));
+  }
+
+  private advance(
+    emit: (e: GameEvent) => void,
+  ): { ticksRun: number; capped: boolean; elapsedSeconds: number } | null {
     const save = this.save;
     const now = this.opts.clock.now();
+    save.lastMonotonicMark = this.opts.clock.monotonic?.() ?? null;
     if (save.lastSeenWallClock === null) {
       save.lastSeenWallClock = now;
       this.mutated();
-      return;
+      return null;
     }
     const elapsedSeconds = Math.max(0, (now - save.lastSeenWallClock) / 1000);
     const tickSeconds = this.content.world.worldTickSeconds;
-    if (elapsedSeconds < tickSeconds) return;
-    const result = fastForward(save, elapsedSeconds, this.ctx);
+    if (elapsedSeconds < tickSeconds) return null;
+    const result = fastForward(save, elapsedSeconds, { content: this.content, emit });
     save.lastSeenWallClock = result.capped
       ? now
       : save.lastSeenWallClock + result.ticksRun * tickSeconds * 1000;
     if (result.ticksRun > 0) this.mutated();
+    return { ...result, elapsedSeconds };
   }
 
   send(command: Command): Promise<CommandAck> {
@@ -123,6 +155,10 @@ export class LocalGameHost implements GameTransport {
       }
       case 'StopActivity': {
         stopActivity(this.save);
+        return;
+      }
+      case 'CollectSummary': {
+        this.save.pendingSummary = null;
         return;
       }
       case 'SetDisplayLocale': {

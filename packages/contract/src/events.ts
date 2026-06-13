@@ -135,6 +135,9 @@ export type SummaryEntry =
 export interface EventSummaryView {
   fromTick: number;
   toTick: number;
+  /** Authored tick length at accumulation time — lets the GUI render tick
+   *  stamps as times/durations without reading mechanics content. */
+  tickSeconds: number;
   elapsedSeconds: number;
   capped: boolean;
   capHours: number | null;

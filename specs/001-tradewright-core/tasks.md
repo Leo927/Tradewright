@@ -200,20 +200,20 @@ storage-full mid-absence shows halt time and reason (quickstart US2); flow passe
 
 ### Design artifact
 
-- [ ] T065 [US2] Design artifact for the return-summary surface (summary modal content, cap/halt messaging, acknowledge flow; primary/deferred split) — including row treatments for the order-fill/expiry and caravan-arrival event kinds that join the summary in US4/US5 (FR-014) — in `specs/001-tradewright-core/design/return-summary.md`
+- [X] T065 [US2] Design artifact for the return-summary surface (summary modal content, cap/halt messaging, acknowledge flow; primary/deferred split) — including row treatments for the order-fill/expiry and caravan-arrival event kinds that join the summary in US4/US5 (FR-014) — in `specs/001-tradewright-core/design/return-summary.md`
 
 ### Tests for User Story 2 (write first) ⚠️
 
-- [ ] T066 [P] [US2] Engine unit tests: offline ≡ online property (same inputs: tick-replay state equals live-tick state to the unit, SC-005), cap behavior + cap-reached reporting, storage-full halt mid-absence, negative-elapsed clamp (clock set backwards grants nothing), 24 h catch-up completes within a named CI compute-budget constant (the CI-runner proxy for SC-002's 3 s mid-range-phone target; the derivation is recorded at the constant) in `packages/engine/tests/offline.test.ts`
-- [ ] T067 [P] [US2] Playwright flow (quickstart US2): activity running → advance test clock 8 h → reload → summary modal matches deterministic prediction; cap and halt variants in `apps/client/tests/e2e/offline.spec.ts`
+- [X] T066 [P] [US2] Engine unit tests: offline ≡ online property (same inputs: tick-replay state equals live-tick state to the unit, SC-005), cap behavior + cap-reached reporting, storage-full halt mid-absence, negative-elapsed clamp (clock set backwards grants nothing), 24 h catch-up completes within a named CI compute-budget constant (the CI-runner proxy for SC-002's 3 s mid-range-phone target; the derivation is recorded at the constant) in `packages/engine/tests/offline.test.ts`
+- [X] T067 [P] [US2] Playwright flow (quickstart US2): activity running → advance test clock 8 h → reload → summary modal matches deterministic prediction; cap and halt variants in `apps/client/tests/e2e/offline.spec.ts`
 
 ### Implementation for User Story 2
 
-- [ ] T068 [US2] EventSummary accumulation during fast-forward (actions, items, XP/levels, halts with when/why, net coin; cleared on acknowledgement) in `packages/engine/src/simulation/summary.ts` — built around typed event kinds carrying ids/codes/values only, so US4/US5 append order and caravan events without restructuring and the GUI renders each kind in the viewer's active locale at display time (FR-014/076)
-- [ ] T069 [US2] V1 time integrity: persist `lastSeenWallClock` + monotonic mark in SaveGame, clamp negative elapsed, accept forward up to cap in `packages/engine/src/simulation/clock.ts`; optional HTTP-Date network time probe host-side in `apps/client/src/transport/time-probe.ts` (research R8)
-- [ ] T070 [US2] Adapter: GetSummary query, CollectSummary command, SummaryReady event; run catch-up on host boot before first query in `packages/engine/src/adapter/local-game-host.ts`
-- [ ] T071 [US2] Client: return summary modal per design artifact, composing each structured event kind via ICU messages in the active locale (a locale switch re-renders a pending summary — FR-076), shown on boot when a summary is pending in `apps/client/src/screens/return-summary.tsx`
-- [ ] T072 [US2] Pseudo-locale pass: US2 strings externalized, text gates green, T067's flow passes in the `pseudo` project; locale-switch re-render of a populated summary asserted in `apps/client/tests/e2e/locale.spec.ts` (quickstart US0-b)
+- [X] T068 [US2] EventSummary accumulation during fast-forward (actions, items, XP/levels, halts with when/why, net coin; cleared on acknowledgement) in `packages/engine/src/simulation/summary.ts` — built around typed event kinds carrying ids/codes/values only, so US4/US5 append order and caravan events without restructuring and the GUI renders each kind in the viewer's active locale at display time (FR-014/076)
+- [X] T069 [US2] V1 time integrity: persist `lastSeenWallClock` + monotonic mark in SaveGame, clamp negative elapsed, accept forward up to cap in `packages/engine/src/simulation/clock.ts`; optional HTTP-Date network time probe host-side in `apps/client/src/transport/time-probe.ts` (research R8)
+- [X] T070 [US2] Adapter: GetSummary query, CollectSummary command, SummaryReady event; run catch-up on host boot before first query in `packages/engine/src/adapter/local-game-host.ts`
+- [X] T071 [US2] Client: return summary modal per design artifact, composing each structured event kind via ICU messages in the active locale (a locale switch re-renders a pending summary — FR-076), shown on boot when a summary is pending in `apps/client/src/screens/return-summary.tsx`
+- [X] T072 [US2] Pseudo-locale pass: US2 strings externalized, text gates green, T067's flow passes in the `pseudo` project; locale-switch re-render of a populated summary asserted in `apps/client/tests/e2e/locale.spec.ts` (quickstart US0-b)
 
 **Checkpoint**: US1+US2 — the idle game survives closing the app; determinism proven by
 tests; summaries are locale-independent data rendered at display.

@@ -61,6 +61,7 @@ const queries: Query[] = [
 const summary: EventSummaryView = {
   fromTick: 0,
   toTick: 480,
+  tickSeconds: 60,
   elapsedSeconds: 28800,
   capped: false,
   capHours: null,

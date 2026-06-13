@@ -1,5 +1,11 @@
 import { useSyncExternalStore } from 'react';
-import type { ActivityView, CharacterView, GameEvent, StorageView } from '@tradewright/contract';
+import type {
+  ActivityView,
+  CharacterView,
+  EventSummaryView,
+  GameEvent,
+  StorageView,
+} from '@tradewright/contract';
 import { setTransport, transport } from '../transport/index.js';
 import { createLocalTransport } from '../transport/local.js';
 import { resolveInitialLocale } from '../i18n/locale.js';
@@ -24,6 +30,7 @@ export interface AppState {
   character: CharacterView | null;
   activities: ActivityView[];
   storage: StorageView | null;
+  summary: EventSummaryView | null;
   newlyUnlockedSkillIds: string[];
 }
 
@@ -34,6 +41,7 @@ let state: AppState = {
   character: null,
   activities: [],
   storage: null,
+  summary: null,
   newlyUnlockedSkillIds: [],
 };
 
@@ -105,12 +113,15 @@ function onGameEvent(e: GameEvent): void {
       }
       queueRefresh();
       break;
+    case 'SummaryReady':
+      setState({ summary: e.summary });
+      queueRefresh();
+      break;
     case 'ActionCompleted':
     case 'ActivityHalted':
     case 'WalletChanged':
     case 'StorageChanged':
     case 'TravelArrived':
-    case 'SummaryReady':
       queueRefresh();
       break;
     default:
@@ -124,17 +135,25 @@ export async function boot(): Promise<void> {
   host.subscribe(onGameEvent);
   const locale = resolveInitialLocale(save.settings.displayLocale);
   const character = await host.query({ type: 'GetCharacter' });
+  const summary = await host.query({ type: 'GetSummary' });
   setState({
     phase: 'ready',
     locale,
     character,
+    summary,
     screen: character ? 'home' : 'first-run',
   });
   if (character) await refreshWorld();
   if (import.meta.env.DEV) {
     window.__twSetLocale = setLocale;
     window.__twWorldState = () => {
-      const { settings: _settings, nextIds: _nextIds, ...world } = save;
+      const {
+        settings: _settings,
+        nextIds: _nextIds,
+        lastSeenWallClock: _wall,
+        lastMonotonicMark: _mono,
+        ...world
+      } = save;
       return JSON.stringify(world);
     };
   }
@@ -181,6 +200,11 @@ export async function assignActivityAction(
 export async function stopActivityAction(): Promise<void> {
   await transport().send({ type: 'StopActivity' });
   await refreshWorld();
+}
+
+export function collectSummaryAction(): void {
+  setState({ summary: null });
+  void transport().send({ type: 'CollectSummary' });
 }
 
 declare global {

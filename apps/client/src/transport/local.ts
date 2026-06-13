@@ -9,6 +9,7 @@ import {
 import locales from '@tradewright/content/text/locales.json';
 import { loadSaveJson, wireAutosave, scheduleAutosave } from '../persistence/indexeddb.js';
 import { createClientClock } from './test-clock.js';
+import { probeNetworkTime } from './time-probe.js';
 
 export interface LocalBoot {
   host: LocalGameHost;
@@ -40,9 +41,22 @@ export async function createLocalTransport(): Promise<LocalBoot> {
   wireAutosave(() => serializeSave(save));
   host.start();
   window.setInterval(() => host.pump(), 1000);
+  void probeNetworkTime();
+  if (import.meta.env.DEV) {
+    window.__twFlushSave = async () => {
+      const { persistSaveJson } = await import('../persistence/indexeddb.js');
+      await persistSaveJson(serializeSave(save));
+    };
+  }
   return { host, save };
 }
 
 function newWorldSeed(): number {
   return (Date.now() ^ (Math.random() * 0xffffffff)) | 0;
+}
+
+declare global {
+  interface Window {
+    __twFlushSave?: () => Promise<void>;
+  }
 }

@@ -145,11 +145,12 @@ describe('atomic action resolution (FR-011/012)', () => {
 
   it('a long absence halts at capacity, never overfilling (FR-016)', () => {
     withCharacter();
-    assignActivity(save, content, { activityId: FELL_PINES });
-    fastForward(save, 2 * 3600, ctx());
     const settlement = content.settlements.find((s) => s.id === 'settlement.thornholt')!;
     const pinewood = content.items.find((i) => i.id === 'item.pinewood')!;
     const fits = Math.floor(settlement.baseStorageCapacity / pinewood.weight);
+    getStorage(save, 'settlement.thornholt').slots['item.pinewood'] = fits - 10;
+    assignActivity(save, content, { activityId: FELL_PINES });
+    fastForward(save, 2 * 3600, ctx());
     expect(getStorage(save, 'settlement.thornholt').slots['item.pinewood']).toBe(fits);
     expect(save.character!.assignment?.haltReason).toBe('storage-full');
   });

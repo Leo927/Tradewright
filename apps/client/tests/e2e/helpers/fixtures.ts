@@ -25,6 +25,7 @@ export async function gotoApp(
   if (opts.fresh !== false) {
     await page.goto(url);
     await page.evaluate(() => {
+      sessionStorage.clear();
       const req = indexedDB.deleteDatabase('tradewright');
       return new Promise((resolve) => {
         req.onsuccess = req.onerror = req.onblocked = () => resolve(null);

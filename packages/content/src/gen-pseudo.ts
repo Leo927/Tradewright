@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { loadTextTree, packageRoot, type LocaleText } from './loader.js';
 
@@ -53,9 +53,10 @@ function transformLocale(base: LocaleText, transform: (s: string) => string): Lo
   return { ui, content };
 }
 
+/** Overwrites in place (no delete-then-write) so concurrently running test
+ *  projects never observe a missing catalog file. */
 function writeLocale(root: string, localeId: string, text: LocaleText) {
   const dir = join(root, 'text', localeId);
-  rmSync(dir, { recursive: true, force: true });
   mkdirSync(join(dir, 'content'), { recursive: true });
   const stable = (obj: Record<string, string>) =>
     JSON.stringify(Object.fromEntries(Object.entries(obj).sort(([a], [b]) => (a < b ? -1 : 1))), null, 2) + '\n';

@@ -15,12 +15,16 @@ declare global {
  *  the hook code is eliminated with the dead `import.meta.env.DEV` branch. */
 export function createClientClock(onShift?: () => void): Clock {
   if (import.meta.env.DEV) {
-    let offset = 0;
+    let offset = Number(sessionStorage.getItem('tw-clock-offset') ?? '0');
     let pinned: number | null = null;
-    const clock: Clock = { now: () => (pinned ?? Date.now()) + offset };
+    const clock: Clock = {
+      now: () => (pinned ?? Date.now()) + offset,
+      monotonic: () => performance.now() + offset,
+    };
     window.__twTestClock = {
       advance(ms: number) {
         offset += ms;
+        sessionStorage.setItem('tw-clock-offset', String(offset));
         onShift?.();
       },
       set(epochMs: number) {
@@ -32,5 +36,5 @@ export function createClientClock(onShift?: () => void): Clock {
     };
     return clock;
   }
-  return { now: () => Date.now() };
+  return { now: () => Date.now(), monotonic: () => performance.now() };
 }

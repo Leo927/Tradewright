@@ -5,6 +5,7 @@ import { SettingsScreen } from './screens/settings.js';
 import { CreateCharacterScreen } from './screens/create-character.js';
 import { SettlementHomeScreen } from './screens/settlement-home.js';
 import { ActivitiesScreen } from './screens/activities.js';
+import { ReturnSummaryModal } from './screens/return-summary.js';
 
 function SettingsButton() {
   const intl = useIntl();
@@ -88,6 +89,7 @@ function Screens() {
     <>
       {body}
       <BottomNav />
+      <ReturnSummaryModal />
     </>
   );
 }

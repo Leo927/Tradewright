@@ -211,6 +211,7 @@ const pendingSummary = z
   .object({
     fromTick: z.number().int(),
     toTick: z.number().int(),
+    tickSeconds: z.number().positive(),
     elapsedSeconds: z.number().min(0),
     capped: z.boolean(),
     capHours: z.number().nullable(),
@@ -234,6 +235,7 @@ export const saveGameSchema = z
     tick: z.number().int().min(0),
     rngState: z.number(),
     lastSeenWallClock: z.number().nullable(),
+    lastMonotonicMark: z.number().nullable(),
     character: character.nullable(),
     storages: z.array(storage),
     orders: z.array(order),
@@ -268,6 +270,7 @@ export function createSave(content: ContentIndex, worldSeed: number): SaveGame {
     tick: 0,
     rngState: worldSeed | 0,
     lastSeenWallClock: null,
+    lastMonotonicMark: null,
     character: null,
     storages: [],
     orders: [],
