@@ -1,7 +1,10 @@
 import { FormattedMessage, useIntl } from 'react-intl';
 import { I18nProvider } from './i18n/provider.js';
-import { useAppState, navigate } from './state/store.js';
+import { useAppState, navigate, type ScreenId } from './state/store.js';
 import { SettingsScreen } from './screens/settings.js';
+import { CreateCharacterScreen } from './screens/create-character.js';
+import { SettlementHomeScreen } from './screens/settlement-home.js';
+import { ActivitiesScreen } from './screens/activities.js';
 
 function SettingsButton() {
   const intl = useIntl();
@@ -29,23 +32,30 @@ function FirstRun() {
       <p>
         <FormattedMessage id="firstrun.tagline" />
       </p>
-      <button className="primary" data-testid="begin">
+      <button
+        className="primary"
+        data-testid="begin"
+        onClick={() => navigate('create-character')}
+      >
         <FormattedMessage id="firstrun.begin" />
       </button>
     </main>
   );
 }
 
-function Home() {
+function BottomNav() {
+  const { screen } = useAppState();
+  const tab = (id: ScreenId, labelKey: string) => (
+    <button aria-pressed={screen === id} data-testid={`nav-${id}`} onClick={() => navigate(id)}>
+      <FormattedMessage id={labelKey} />
+    </button>
+  );
   return (
-    <main className="screen" data-screen="home">
-      <header className="screen-header">
-        <h1>
-          <FormattedMessage id="app.title" />
-        </h1>
-        <SettingsButton />
-      </header>
-    </main>
+    <nav className="bottom-nav">
+      {tab('home', 'nav.home')}
+      {tab('activities', 'nav.activities')}
+      {tab('settings', 'nav.settings')}
+    </nav>
   );
 }
 
@@ -54,14 +64,32 @@ function Screens() {
   if (phase === 'booting') {
     return <main className="screen" data-screen="booting" aria-busy="true" />;
   }
-  switch (screen) {
-    case 'settings':
-      return <SettingsScreen />;
-    case 'first-run':
-      return character ? <Home /> : <FirstRun />;
-    default:
-      return <Home />;
+  if (!character) {
+    switch (screen) {
+      case 'settings':
+        return <SettingsScreen />;
+      case 'create-character':
+        return <CreateCharacterScreen />;
+      default:
+        return <FirstRun />;
+    }
   }
+  const body = (() => {
+    switch (screen) {
+      case 'settings':
+        return <SettingsScreen />;
+      case 'activities':
+        return <ActivitiesScreen />;
+      default:
+        return <SettlementHomeScreen />;
+    }
+  })();
+  return (
+    <>
+      {body}
+      <BottomNav />
+    </>
+  );
 }
 
 export default function App() {

@@ -2,18 +2,20 @@
  *  duration helper so timers read identically on every screen, coin as a
  *  locale-grouped integer with the game's coin mark — never ISO currency. */
 
+import { intlLocale } from './locale.js';
+
 export const COIN_MARK = '¤';
 
-export function formatNumber(locale: string, value: number): string {
-  return new Intl.NumberFormat(locale).format(value);
+export function formatNumber(appLocale: string, value: number): string {
+  return new Intl.NumberFormat(intlLocale(appLocale)).format(value);
 }
 
-export function formatCoin(locale: string, amount: number): string {
-  return `${new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(amount)} ${COIN_MARK}`;
+export function formatCoin(appLocale: string, amount: number): string {
+  return `${new Intl.NumberFormat(intlLocale(appLocale), { maximumFractionDigits: 0 }).format(amount)} ${COIN_MARK}`;
 }
 
-export function formatDateTime(locale: string, epochMs: number): string {
-  return new Intl.DateTimeFormat(locale, {
+export function formatDateTime(appLocale: string, epochMs: number): string {
+  return new Intl.DateTimeFormat(intlLocale(appLocale), {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(epochMs));
@@ -27,7 +29,8 @@ interface IntlWithDuration {
   DurationFormat?: new (locale: string, opts: { style: string }) => DurationFormatLike;
 }
 
-export function formatDuration(locale: string, totalSeconds: number): string {
+export function formatDuration(appLocale: string, totalSeconds: number): string {
+  const locale = intlLocale(appLocale);
   const seconds = Math.max(0, Math.round(totalSeconds));
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);

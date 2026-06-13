@@ -1,11 +1,12 @@
 import { useSyncExternalStore } from 'react';
-import type { CharacterView, GameEvent } from '@tradewright/contract';
+import type { ActivityView, CharacterView, GameEvent, StorageView } from '@tradewright/contract';
 import { setTransport, transport } from '../transport/index.js';
 import { createLocalTransport } from '../transport/local.js';
 import { resolveInitialLocale } from '../i18n/locale.js';
 
 export type ScreenId =
   | 'first-run'
+  | 'create-character'
   | 'home'
   | 'activities'
   | 'crafting'
@@ -21,6 +22,9 @@ export interface AppState {
   locale: string;
   screen: ScreenId;
   character: CharacterView | null;
+  activities: ActivityView[];
+  storage: StorageView | null;
+  newlyUnlockedSkillIds: string[];
 }
 
 let state: AppState = {
@@ -28,6 +32,9 @@ let state: AppState = {
   locale: 'en',
   screen: 'first-run',
   character: null,
+  activities: [],
+  storage: null,
+  newlyUnlockedSkillIds: [],
 };
 
 const subscribers = new Set<() => void>();
@@ -56,14 +63,55 @@ export async function refreshCharacter(): Promise<void> {
   setState({ character });
 }
 
+export async function refreshActivities(): Promise<void> {
+  const activities = await transport().query({ type: 'GetActivities' });
+  setState({ activities });
+}
+
+export async function refreshStorage(): Promise<void> {
+  const c = state.character;
+  if (!c || c.locationState.kind !== 'at') {
+    setState({ storage: null });
+    return;
+  }
+  const storage = await transport().query({
+    type: 'GetStorage',
+    settlementId: c.locationState.settlementId,
+  });
+  setState({ storage });
+}
+
+export async function refreshWorld(): Promise<void> {
+  await refreshCharacter();
+  await Promise.all([refreshActivities(), refreshStorage()]);
+}
+
+let refreshQueued = false;
+
+function queueRefresh(): void {
+  if (refreshQueued) return;
+  refreshQueued = true;
+  setTimeout(() => {
+    refreshQueued = false;
+    void refreshWorld();
+  }, 50);
+}
+
 function onGameEvent(e: GameEvent): void {
   switch (e.type) {
-    case 'WalletChanged':
     case 'SkillLeveled':
+      if (e.unlockedActivityIds.length > 0 && !state.newlyUnlockedSkillIds.includes(e.skillId)) {
+        setState({ newlyUnlockedSkillIds: [...state.newlyUnlockedSkillIds, e.skillId] });
+      }
+      queueRefresh();
+      break;
     case 'ActionCompleted':
     case 'ActivityHalted':
+    case 'WalletChanged':
+    case 'StorageChanged':
     case 'TravelArrived':
-      void refreshCharacter();
+    case 'SummaryReady':
+      queueRefresh();
       break;
     default:
       break;
@@ -82,9 +130,22 @@ export async function boot(): Promise<void> {
     character,
     screen: character ? 'home' : 'first-run',
   });
+  if (character) await refreshWorld();
+  if (import.meta.env.DEV) {
+    window.__twSetLocale = setLocale;
+    window.__twWorldState = () => {
+      const { settings: _settings, nextIds: _nextIds, ...world } = save;
+      return JSON.stringify(world);
+    };
+  }
 }
 
 export function navigate(screen: ScreenId): void {
+  if (screen === 'activities') {
+    setState({ screen, newlyUnlockedSkillIds: [] });
+    void refreshActivities();
+    return;
+  }
   setState({ screen });
 }
 
@@ -93,4 +154,38 @@ export function navigate(screen: ScreenId): void {
 export function setLocale(localeId: string): void {
   setState({ locale: localeId });
   void transport().send({ type: 'SetDisplayLocale', localeId });
+}
+
+export async function createCharacterAction(
+  name: string,
+  startSettlementId: string,
+): Promise<string | null> {
+  const ack = await transport().send({ type: 'CreateCharacter', name, startSettlementId });
+  if (!ack.accepted) return ack.code;
+  await refreshWorld();
+  setState({ screen: 'home' });
+  return null;
+}
+
+export async function assignActivityAction(
+  activityId: string,
+  confirmReplace: boolean,
+): Promise<string | null> {
+  const ack = await transport().send({ type: 'AssignActivity', activityId, confirmReplace });
+  if (!ack.accepted) return ack.code;
+  await refreshWorld();
+  setState({ screen: 'home' });
+  return null;
+}
+
+export async function stopActivityAction(): Promise<void> {
+  await transport().send({ type: 'StopActivity' });
+  await refreshWorld();
+}
+
+declare global {
+  interface Window {
+    __twSetLocale?: (localeId: string) => void;
+    __twWorldState?: () => string;
+  }
 }

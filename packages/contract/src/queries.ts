@@ -1,5 +1,5 @@
 import type { ErrorCode } from './transport.js';
-import type { EventSummaryView, RiskOutcome } from './events.js';
+import type { EventSummaryView, HaltReasonCode, RiskOutcome } from './events.js';
 import type { ManifestLine } from './commands.js';
 
 export interface GetCharacter {
@@ -82,6 +82,8 @@ export interface AssignmentView {
   settlementId: string;
   startedAtTick: number;
   nextActionAtTick: number;
+  haltReason: HaltReasonCode | null;
+  haltedAtTick: number | null;
 }
 
 export interface CharacterView {

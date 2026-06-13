@@ -25,7 +25,7 @@ export async function assertNoPseudoLeakage(page: Page): Promise<void> {
   });
 
   for (const text of texts) {
-    if (/^[\d\s.,:%×+\-–—¤/()✓⚙‹›…]+$/.test(text)) continue;
+    if (/^[\d\s.,:%×+\-–—·¤/()✓⚙‹›…🔒]+$/.test(text)) continue;
     expect(text, `raw key leaked to screen: "${text}"`).not.toMatch(RAW_KEY);
     expect(text, `unlocalized string leaked: "${text}"`).toMatch(PSEUDO_MARKERS);
   }

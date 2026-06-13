@@ -2,6 +2,18 @@ import { locales, BASE_LOCALE } from './catalogs.js';
 
 const knownIds = new Set(locales.map((l) => l.id));
 
+/** App locale → a structurally valid Intl locale. `pseudo-cjk` is not a
+ *  valid BCP-47 tag for Intl; it formats with CJK conventions instead. */
+export function intlLocale(appLocale: string): string {
+  if (appLocale === 'pseudo-cjk') return 'zh';
+  try {
+    Intl.getCanonicalLocales(appLocale);
+    return appLocale;
+  } catch {
+    return 'en';
+  }
+}
+
 export function shippedLocales(): { id: string; endonym: string }[] {
   return locales.filter((l) => l.status === 'shipped');
 }

@@ -15,10 +15,10 @@ export function projectLocale(testInfo: TestInfo): string {
 export async function gotoApp(
   page: Page,
   testInfo: TestInfo,
-  opts: { fresh?: boolean } = {},
+  opts: { fresh?: boolean; params?: Record<string, string> } = {},
 ): Promise<void> {
   const locale = projectLocale(testInfo);
-  const params = new URLSearchParams();
+  const params = new URLSearchParams(opts.params ?? {});
   if (locale !== 'en') params.set('locale', locale);
   const query = params.toString();
   const url = query ? `/?${query}` : '/';

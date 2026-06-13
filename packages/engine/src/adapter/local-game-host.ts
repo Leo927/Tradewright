@@ -15,6 +15,8 @@ import { fastForward, type TickContext } from '../simulation/tick.js';
 import { nextId, getStorage, type SaveGame } from '../world/state.js';
 import { EngineError } from '../world/ledger.js';
 import { createCharacter } from '../world/character.js';
+import { activityDef, assignActivity, stopActivity } from '../skills/activities.js';
+import { missingItems } from '../world/storage.js';
 import { levelForXp, tierForLevel, xpForLevelUp } from '../skills/progression.js';
 
 export interface LocalGameHostOptions {
@@ -112,6 +114,17 @@ export class LocalGameHost implements GameTransport {
         this.emit({ type: 'StorageChanged', settlementId: command.startSettlementId });
         return;
       }
+      case 'AssignActivity': {
+        assignActivity(this.save, this.content, {
+          activityId: command.activityId,
+          confirmReplace: command.confirmReplace,
+        });
+        return;
+      }
+      case 'StopActivity': {
+        stopActivity(this.save);
+        return;
+      }
       case 'SetDisplayLocale': {
         if (!this.opts.supportedLocaleIds.includes(command.localeId)) {
           throw new EngineError('UNSUPPORTED_LOCALE', `unknown locale ${command.localeId}`);
@@ -143,7 +156,7 @@ export class LocalGameHost implements GameTransport {
       case 'GetStorage':
         return this.storageView(q.settlementId);
       case 'GetActivities':
-        return [];
+        return this.activityViews();
       case 'GetMarket':
         return { settlementId: q.settlementId, items: [] };
       case 'GetMyOrders':
@@ -193,6 +206,46 @@ export class LocalGameHost implements GameTransport {
     }
   }
 
+  private activityViews() {
+    const c = this.save.character;
+    if (!c || c.locationState.kind !== 'at') return [];
+    const settlementId = c.locationState.settlementId;
+    const settlement = this.content.settlements.find((s) => s.id === settlementId);
+    if (!settlement) return [];
+    const skillById = new Map(this.content.skills.map((s) => [s.id, s]));
+    return this.content.activities
+      .filter((a) => a.settlementTags.some((t) => settlement.activityTags.includes(t)))
+      .map((a) => {
+        const skill = skillById.get(a.skillId)!;
+        const state = c.skills[a.skillId] ?? { xp: 0, level: 1 };
+        const currentTier = tierForLevel(skill, levelForXp(skill.xpCurve, state.xp));
+        const lockReasons: import('@tradewright/contract').ActivityLockReason[] = [];
+        if (currentTier < a.tier) {
+          lockReasons.push({
+            code: 'TIER_LOCKED',
+            requiredTier: a.tier,
+            skillId: a.skillId,
+            currentTier,
+          });
+        }
+        if (a.inputs.length > 0) {
+          const missing = missingItems(this.save, settlementId, a.inputs);
+          if (missing.length > 0) lockReasons.push({ code: 'INSUFFICIENT_INPUTS', missing });
+        }
+        return {
+          activityId: a.id,
+          skillId: a.skillId,
+          tier: a.tier,
+          actionSeconds: a.actionSeconds,
+          inputs: a.inputs,
+          outputs: a.outputs,
+          xpPerAction: a.xpPerAction,
+          locked: lockReasons.length > 0,
+          lockReasons,
+        };
+      });
+  }
+
   private characterView(): CharacterView | null {
     const c = this.save.character;
     if (!c) return null;
@@ -218,7 +271,15 @@ export class LocalGameHost implements GameTransport {
             activityId: c.assignment.activityId,
             settlementId: c.assignment.settlementId,
             startedAtTick: c.assignment.startedAtTick,
-            nextActionAtTick: this.save.tick,
+            nextActionAtTick:
+              this.save.tick +
+              Math.ceil(
+                (activityDef(this.content, c.assignment.activityId).actionSeconds -
+                  c.assignment.progressSeconds) /
+                  this.content.world.worldTickSeconds,
+              ),
+            haltReason: c.assignment.haltReason,
+            haltedAtTick: c.assignment.haltedAtTick,
           }
         : null,
       caravanSlotsTotal: c.caravanSlots,

@@ -139,6 +139,149 @@ button:disabled {
   padding: var(--space);
 }
 
+.card {
+  background: var(--surface);
+  border: 1px solid #323a4d;
+  border-radius: var(--radius);
+  padding: var(--space);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card.halted {
+  border-color: var(--accent);
+}
+
+.plain-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plain-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  color: var(--accent);
+  font-style: normal;
+  font-weight: 700;
+  font-size: 0.75rem;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+}
+
+.chip {
+  font-style: normal;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  border: 1px solid #3c4458;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.wallet {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.error {
+  color: var(--danger);
+}
+
+.progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #323a4d;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0;
+}
+
+.progress-anim {
+  animation-name: tw-progress;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes tw-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 10;
+}
+
+.sheet {
+  background: var(--surface-raised);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: var(--space);
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: calc(var(--space) + env(safe-area-inset-bottom));
+}
+
+.sheet-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.sheet-actions button {
+  flex: 1;
+}
+
+.bottom-nav {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 6px;
+  padding: 8px var(--space) calc(8px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid #323a4d;
+}
+
+.bottom-nav button {
+  flex: 1;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.bottom-nav button[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 input,
 select {
   font: inherit;
