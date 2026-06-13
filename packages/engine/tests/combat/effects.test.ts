@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { CombatCurves, EffectExpr } from '@tradewright/content';
-import type { Combatant, CombatState, TimedEffect } from '../../src/combat/types.js';
+import type { Combatant, CombatState } from '../../src/combat/types.js';
 import {
   applyDamage,
   applyHeal,

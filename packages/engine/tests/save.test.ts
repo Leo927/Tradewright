@@ -1,13 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { content } from '@tradewright/content';
-import {
-  createSave,
-  loadSave,
-  serializeSave,
-  registerMigration,
-  SAVE_FORMAT_VERSION,
-} from '../src/world/save.js';
+import { createSave, loadSave, serializeSave, SAVE_FORMAT_VERSION } from '../src/world/save.js';
 import { createCharacter } from '../src/world/character.js';
+import { getStorage } from '../src/world/state.js';
 
 describe('SaveGame validation + migration (research R7)', () => {
   it('round-trips a fresh save through serialize/load', () => {
@@ -28,29 +23,37 @@ describe('SaveGame validation + migration (research R7)', () => {
     expect(() => loadSave(JSON.stringify(doc), content)).toThrow(/future/i);
   });
 
-  it('migrates older formats forward through registered migrations', () => {
+  it('migrates an M1 (v1) save forward, gaining empty combat state + gear lists (T132)', () => {
     const save = createSave(content, 7);
+    createCharacter(save, content, { name: 'Migrant', startSettlementId: 'settlement.brackwater' });
+    getStorage(save, 'settlement.brackwater').slots['item.pinewood'] = 5;
+    // shape a v1 document: no combat sub-state, storages without gearInstances
     const doc = JSON.parse(serializeSave(save));
-    doc.formatVersion = SAVE_FORMAT_VERSION - 1;
-    doc.legacyField = 'old';
-    const unregister = registerMigration(SAVE_FORMAT_VERSION - 1, (old) => {
-      const next = { ...(old as Record<string, unknown>) };
-      delete next['legacyField'];
-      next['formatVersion'] = SAVE_FORMAT_VERSION;
-      return next;
+    doc.formatVersion = 1;
+    delete doc.combat;
+    doc.storages = doc.storages.map((s: Record<string, unknown>) => {
+      const { gearInstances, ...rest } = s;
+      void gearInstances;
+      return rest;
     });
-    try {
-      const loaded = loadSave(JSON.stringify(doc), content);
-      expect(loaded.formatVersion).toBe(SAVE_FORMAT_VERSION);
-    } finally {
-      unregister();
-    }
+
+    const loaded = loadSave(JSON.stringify(doc), content);
+    expect(loaded.formatVersion).toBe(SAVE_FORMAT_VERSION);
+    expect(loaded.combat).toEqual({
+      masteries: [],
+      loadout: { equipped: {}, slottedAbilityIds: [], tactics: { rules: [] }, provisionPlan: [], retreatThresholdPct: 0, inertFlags: [] },
+      expedition: null,
+      recoveryUntilTick: null,
+    });
+    // economy data survives untouched; storage gains an empty gear list
+    expect(loaded.storages[0]!.slots['item.pinewood']).toBe(5);
+    expect(loaded.storages[0]!.gearInstances).toEqual([]);
   });
 
   it('fails loudly when no migration path exists', () => {
     const save = createSave(content, 7);
     const doc = JSON.parse(serializeSave(save));
-    doc.formatVersion = SAVE_FORMAT_VERSION - 1;
+    doc.formatVersion = 0; // no migration registered from 0
     expect(() => loadSave(JSON.stringify(doc), content)).toThrow(/migration/i);
   });
 });

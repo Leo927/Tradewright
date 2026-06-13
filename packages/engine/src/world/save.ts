@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import type { ContentIndex } from '@tradewright/content';
 import type { SaveGame } from './state.js';
+import { emptyCombatSave } from '../combat/types.js';
 
-export const SAVE_FORMAT_VERSION = 1;
+export const SAVE_FORMAT_VERSION = 2;
 
 const itemQty = z.object({ itemId: z.string(), qty: z.number().int() }).strict();
 
@@ -44,11 +45,22 @@ const character = z
   })
   .strict();
 
+const gearItemInstance = z
+  .object({
+    instanceId: z.string(),
+    itemDefId: z.string(),
+    gearScore: z.number(),
+    modifiers: z.array(z.string()),
+    durability: z.number().int().min(0),
+  })
+  .strict();
+
 const storage = z
   .object({
     settlementId: z.string(),
     slots: z.record(z.string(), z.number().int().min(0)),
     expansionLevel: z.number().int().min(0),
+    gearInstances: z.array(gearItemInstance),
   })
   .strict();
 
@@ -227,6 +239,149 @@ const settings = z
   })
   .strict();
 
+// --- Combat-core save sub-state (data-model Part II) ---
+
+const statRef = z.enum(['attack-power', 'armor-phys', 'armor-elem', 'damage-taken', 'heal-power']);
+const gearSlot = z.enum(['weapon-focus', 'head', 'chest', 'hands', 'legs', 'feet', 'trinket']);
+
+const schoolMastery = z
+  .object({
+    schoolId: z.string(),
+    xp: z.number().min(0),
+    level: z.number().int().min(0),
+    pointsEarned: z.number().int().min(0),
+    spentNodes: z.array(z.string()),
+  })
+  .strict();
+
+const tacticsTrigger = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('always') }).strict(),
+  z.object({ kind: z.literal('self-health-below'), pct: z.number() }).strict(),
+  z.object({ kind: z.literal('enemy-health-above'), pct: z.number() }).strict(),
+  z.object({ kind: z.literal('enemy-health-below'), pct: z.number() }).strict(),
+  z.object({ kind: z.literal('ally-health-below'), pct: z.number() }).strict(),
+  z.object({ kind: z.literal('buff-missing'), ref: z.string() }).strict(),
+  z.object({ kind: z.literal('debuff-present'), ref: z.string() }).strict(),
+  z.object({ kind: z.literal('at-expedition-start') }).strict(),
+]);
+
+const tacticsProgram = z
+  .object({ rules: z.array(z.object({ abilityId: z.string(), trigger: tacticsTrigger }).strict()) })
+  .strict();
+
+const inertFlag = z
+  .object({
+    kind: z.enum(['unslotted-ability', 'inert-rule', 'inert-modifier']),
+    ref: z.string(),
+  })
+  .strict();
+
+const loadout = z
+  .object({
+    equipped: z.record(gearSlot, z.string()),
+    slottedAbilityIds: z.array(z.string()),
+    tactics: tacticsProgram,
+    provisionPlan: z.array(z.object({ itemId: z.string(), thresholdPct: z.number() }).strict()),
+    retreatThresholdPct: z.number().min(0),
+    inertFlags: z.array(inertFlag),
+  })
+  .strict();
+
+const timedEffect = z
+  .object({
+    ref: z.string(),
+    kind: z.enum(['buff', 'debuff', 'hot', 'dot', 'shield', 'threat-amp']),
+    sourceRef: z.string(),
+    magnitude: z.number(),
+    remainingSeconds: z.number(),
+    stat: statRef.optional(),
+    damageType: z.enum(['phys', 'elem']).optional(),
+    shieldRemaining: z.number().optional(),
+  })
+  .strict();
+
+const combatant = z
+  .object({
+    ref: z.string(),
+    isEnemy: z.boolean(),
+    health: z.number(),
+    healthMax: z.number(),
+    attributeTotals: z.record(z.string(), z.number()),
+    armorPhys: z.number(),
+    armorElem: z.number(),
+    cooldowns: z.record(z.string(), z.number()),
+    basicAttackCooldown: z.number(),
+    effects: z.array(timedEffect),
+    joinOrder: z.number().int(),
+  })
+  .strict();
+
+const combatState = z
+  .object({
+    combatants: z.array(combatant),
+    threatTables: z.record(z.string(), z.record(z.string(), z.number())),
+    tickCount: z.number().int().min(0),
+    rngState: z.number(),
+  })
+  .strict();
+
+const buildSnapshot = z
+  .object({
+    schoolId: z.string(),
+    combatSkillId: z.string(),
+    slottedAbilityIds: z.array(z.string()),
+    scalingAttributeIds: z.array(z.string()),
+    masteryLevel: z.number().int().min(0),
+    attributeTotals: z.record(z.string(), z.number()),
+    armorPhys: z.number(),
+    armorElem: z.number(),
+    healthMax: z.number(),
+    treePassiveBuffs: z.array(timedEffect),
+    equipped: z.array(z.object({ slot: gearSlot, instanceId: z.string() }).strict()),
+  })
+  .strict();
+
+const expeditionInstance = z
+  .object({
+    id: z.string(),
+    characterId: z.string(),
+    groundId: z.string(),
+    enemyId: z.string(),
+    buildSnapshot,
+    combatState,
+    haul: z
+      .object({
+        items: z.record(z.string(), z.number()),
+        gearInstanceIds: z.array(z.string()),
+        xp: z.number().min(0),
+        masteryXp: z.number().min(0),
+        points: z.number().int().min(0),
+      })
+      .strict(),
+    provisionsRemaining: z.record(z.string(), z.number()),
+    provisionCooldowns: z.record(z.string(), z.number()),
+    startedAtTick: z.number().int(),
+    state: z.discriminatedUnion('kind', [
+      z.object({ kind: z.literal('fighting') }).strict(),
+      z
+        .object({
+          kind: z.literal('ended'),
+          reason: z.enum(['retreat', 'supplies', 'recalled', 'offline-cap']),
+        })
+        .strict(),
+    ]),
+  })
+  .strict();
+
+const combatSave = z
+  .object({
+    masteries: z.array(schoolMastery),
+    loadout,
+    expedition: expeditionInstance.nullable(),
+    recoveryUntilTick: z.number().int().nullable(),
+  })
+  .strict();
+
 export const saveGameSchema = z
   .object({
     formatVersion: z.number().int().positive(),
@@ -245,6 +400,7 @@ export const saveGameSchema = z
     faucetTelemetry: z.array(faucetTelemetry),
     transactions: z.array(transaction),
     pendingSummary: pendingSummary.nullable(),
+    combat: combatSave,
     nextIds: z.record(z.string(), z.number().int()),
     settings,
   })
@@ -280,6 +436,7 @@ export function createSave(content: ContentIndex, worldSeed: number): SaveGame {
     faucetTelemetry: [],
     transactions: [],
     pendingSummary: null,
+    combat: emptyCombatSave(),
     nextIds: {},
     settings: { displayLocale: null, notificationPrefs: { categories: {} } },
   };
@@ -296,6 +453,19 @@ export function registerMigration(fromVersion: number, migrate: Migration): () =
   migrations.set(fromVersion, migrate);
   return () => migrations.delete(fromVersion);
 }
+
+/** v1 → v2 (M2 combat core): M1 saves gain an empty combat sub-state and every
+ *  storage gains an empty gear-instance list. No economy data changes. */
+registerMigration(1, (old) => {
+  const doc = old as Record<string, unknown>;
+  const storages = Array.isArray(doc.storages) ? doc.storages : [];
+  return {
+    ...doc,
+    formatVersion: 2,
+    storages: storages.map((s) => ({ ...(s as object), gearInstances: [] })),
+    combat: emptyCombatSave(),
+  };
+});
 
 /** Validate on load; migrate older formats forward (research R7). */
 export function loadSave(json: string, _content: ContentIndex): SaveGame {

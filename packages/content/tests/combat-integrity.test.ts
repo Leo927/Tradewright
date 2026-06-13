@@ -24,7 +24,7 @@ const branchById = new Map(content.treeBranches.map((b) => [b.id, b]));
 function settlementRegions(): { settlementId: string; region: string; tags: string[] }[] {
   return content.settlements.map((s) => ({
     settlementId: s.id,
-    region: s.activityTags[0],
+    region: s.activityTags[0] ?? s.id,
     tags: s.activityTags,
   }));
 }

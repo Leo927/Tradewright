@@ -1,4 +1,5 @@
 import type { HaltReasonCode, RiskOutcome, SummaryEntry } from '@tradewright/contract';
+import type { CombatSave, GearItemInstance } from '../combat/types.js';
 
 export interface SkillState {
   xp: number;
@@ -40,6 +41,8 @@ export interface SettlementStorage {
   settlementId: string;
   slots: Record<string, number>;
   expansionLevel: number;
+  /** Non-fungible gear stored here (data-model Part II; combat core). */
+  gearInstances: GearItemInstance[];
 }
 
 export type OrderStatus = 'open' | 'partially-filled' | 'filled' | 'cancelled' | 'expired';
@@ -166,6 +169,8 @@ export interface SaveGame {
   faucetTelemetry: FaucetTelemetryPeriod[];
   transactions: Transaction[];
   pendingSummary: EventSummaryState | null;
+  /** Combat-core state (data-model Part II). M1 saves migrate to an empty one. */
+  combat: CombatSave;
   /** Deterministic id counters — replaces ambient randomness for ids. */
   nextIds: Record<string, number>;
   settings: ClientSettings;
@@ -180,7 +185,7 @@ export function nextId(save: SaveGame, kind: string): string {
 export function getStorage(save: SaveGame, settlementId: string): SettlementStorage {
   let storage = save.storages.find((s) => s.settlementId === settlementId);
   if (!storage) {
-    storage = { settlementId, slots: {}, expansionLevel: 0 };
+    storage = { settlementId, slots: {}, expansionLevel: 0, gearInstances: [] };
     save.storages.push(storage);
   }
   return storage;

@@ -2,7 +2,7 @@ import type { CombatCurves, EffectExpr } from '@tradewright/content';
 import type { CombatLogEntryView } from '@tradewright/contract';
 import type { RewardTableDef } from '@tradewright/content';
 import { rngNext } from '../simulation/rng.js';
-import type { Combatant, CombatState, TimedEffect } from './types.js';
+import type { Combatant, CombatState } from './types.js';
 import {
   applyDamage,
   applyHeal,
