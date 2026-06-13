@@ -28,6 +28,7 @@ import { missingItems } from '../world/storage.js';
 import { effectiveStationTier } from '../world/facilities.js';
 import { placeOrder, cancelOrder } from '../market/orderbook.js';
 import { dispatchCaravan, otherEndpoint } from '../caravan/shipments.js';
+import { caravanCapacityWeight } from '../caravan/hauling.js';
 import { travelTo } from '../world/travel.js';
 import { NPC_OWNER } from '../npc/state.js';
 import { levelForXp, tierForLevel, xpForLevelUp } from '../skills/progression.js';
@@ -527,7 +528,9 @@ export class LocalGameHost implements GameTransport {
       caravanSlotsBusy: this.save.shipments.filter(
         (s) => s.ownerId === c.id && s.status === 'in-transit',
       ).length,
+      caravanCapacityWeight: caravanCapacityWeight(this.save, this.content),
       currentTick: this.save.tick,
+      tickSeconds: this.content.world.worldTickSeconds,
     };
   }
 
@@ -550,7 +553,7 @@ export class LocalGameHost implements GameTransport {
       settlementId,
       slots: Object.entries(storage.slots)
         .filter(([, qty]) => qty > 0)
-        .map(([itemId, qty]) => ({ itemId, qty })),
+        .map(([itemId, qty]) => ({ itemId, qty, weight: itemById.get(itemId)?.weight ?? 0 })),
       capacityUsed,
       capacity,
       expansionLevel: storage.expansionLevel,

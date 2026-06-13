@@ -219,12 +219,14 @@ const characterView: CharacterView = {
   },
   caravanSlotsTotal: 1,
   caravanSlotsBusy: 0,
+  caravanCapacityWeight: 60,
   currentTick: 12,
+  tickSeconds: 60,
 };
 
 const storageView: StorageView = {
   settlementId: 'settlement.brackwater',
-  slots: [{ itemId: 'item.driftwood', qty: 12 }],
+  slots: [{ itemId: 'item.driftwood', qty: 12, weight: 1 }],
   capacityUsed: 12,
   capacity: 100,
   expansionLevel: 0,

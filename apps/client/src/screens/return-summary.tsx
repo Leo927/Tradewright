@@ -91,7 +91,7 @@ function Row({
       );
     case 'caravan':
       return (
-        <li data-testid={testid}>
+        <li data-testid={testid} data-summary-kind="caravan">
           <FormattedMessage
             id="summary.caravan"
             values={{
@@ -112,7 +112,7 @@ function Row({
       );
     case 'travel':
       return (
-        <li data-testid={testid}>
+        <li data-testid={testid} data-summary-kind="travel">
           <FormattedMessage
             id="summary.travel"
             values={{ settlement: name(entry.settlementId) }}

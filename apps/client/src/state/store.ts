@@ -6,6 +6,8 @@ import type {
   GameEvent,
   MarketView,
   OrderView,
+  RouteView,
+  ShipmentView,
   StorageView,
   TransactionsPage,
 } from '@tradewright/contract';
@@ -39,6 +41,9 @@ export interface AppState {
   market: MarketView | null;
   myOrders: OrderView[];
   transactions: TransactionsPage | null;
+  routes: RouteView[];
+  shipments: ShipmentView[];
+  composerRouteId: string | null;
 }
 
 let state: AppState = {
@@ -54,6 +59,9 @@ let state: AppState = {
   market: null,
   myOrders: [],
   transactions: null,
+  routes: [],
+  shipments: [],
+  composerRouteId: null,
 };
 
 const subscribers = new Set<() => void>();
@@ -113,11 +121,23 @@ export async function refreshTransactions(offset = 0): Promise<void> {
   setState({ transactions });
 }
 
+export async function refreshRoutes(): Promise<void> {
+  const routes = await transport().query({ type: 'GetRoutes' });
+  setState({ routes });
+}
+
+export async function refreshShipments(): Promise<void> {
+  const shipments = await transport().query({ type: 'GetShipments' });
+  setState({ shipments });
+}
+
 export async function refreshWorld(): Promise<void> {
   await refreshCharacter();
   await Promise.all([refreshActivities(), refreshStorage()]);
   if (state.screen === 'market') await refreshMarket();
   if (state.screen === 'transactions') await refreshTransactions(state.transactions?.offset ?? 0);
+  if (state.screen === 'map') await refreshRoutes();
+  if (state.screen === 'caravans') await Promise.all([refreshRoutes(), refreshShipments()]);
 }
 
 let refreshQueued = false;
@@ -148,6 +168,7 @@ function onGameEvent(e: GameEvent): void {
     case 'WalletChanged':
     case 'StorageChanged':
     case 'TravelArrived':
+    case 'CaravanArrived':
     case 'OrderFilled':
     case 'OrderPartiallyFilled':
     case 'OrderExpired':
@@ -211,7 +232,28 @@ export function navigate(screen: ScreenId): void {
     void refreshTransactions(0);
     return;
   }
+  if (screen === 'map') {
+    setState({ screen });
+    void refreshRoutes();
+    return;
+  }
+  if (screen === 'caravans') {
+    setState({ screen });
+    void refreshStorage();
+    void refreshRoutes();
+    void refreshShipments();
+    return;
+  }
   setState({ screen });
+}
+
+/** Opening the composer for a route navigates to the caravans screen with that
+ *  route preselected (the design's map → composer flow). */
+export function openCaravanComposer(routeId: string): void {
+  setState({ screen: 'caravans', composerRouteId: routeId });
+  void refreshStorage();
+  void refreshRoutes();
+  void refreshShipments();
 }
 
 /** Locale switch is local-immediate (SC-012): re-render now, persist behind
@@ -280,6 +322,31 @@ export async function cancelOrderAction(orderId: string): Promise<string | null>
 export function collectSummaryAction(): void {
   setState({ summary: null });
   void transport().send({ type: 'CollectSummary' });
+}
+
+export async function travelToAction(
+  routeId: string,
+  confirmHaltAssignment: boolean,
+): Promise<string | null> {
+  const ack = await transport().send({ type: 'TravelTo', routeId, confirmHaltAssignment });
+  if (!ack.accepted) return ack.code;
+  await refreshWorld();
+  return null;
+}
+
+export interface DispatchCaravanForm {
+  routeId: string;
+  manifest: { itemId: string; qty: number }[];
+  mitigation: boolean;
+}
+
+export async function dispatchCaravanAction(form: DispatchCaravanForm): Promise<string | null> {
+  const ack = await transport().send({ type: 'DispatchCaravan', ...form });
+  if (!ack.accepted) return ack.code;
+  setState({ composerRouteId: null });
+  await refreshWorld();
+  await Promise.all([refreshShipments(), refreshStorage()]);
+  return null;
 }
 
 declare global {

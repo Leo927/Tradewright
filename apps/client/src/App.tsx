@@ -7,6 +7,8 @@ import { SettlementHomeScreen } from './screens/settlement-home.js';
 import { ActivitiesScreen } from './screens/activities.js';
 import { CraftingScreen } from './screens/crafting.js';
 import { MarketScreen } from './screens/market.js';
+import { MapScreen } from './screens/map.js';
+import { CaravansScreen } from './screens/caravans.js';
 import { TransactionsScreen } from './screens/transactions.js';
 import { ReturnSummaryModal } from './screens/return-summary.js';
 
@@ -60,6 +62,7 @@ function BottomNav() {
       {tab('activities', 'nav.activities')}
       {tab('crafting', 'nav.crafting')}
       {tab('market', 'nav.market')}
+      {tab('map', 'nav.map')}
       {tab('transactions', 'nav.transactions')}
       {tab('settings', 'nav.settings')}
     </nav>
@@ -91,6 +94,10 @@ function Screens() {
         return <CraftingScreen />;
       case 'market':
         return <MarketScreen />;
+      case 'map':
+        return <MapScreen />;
+      case 'caravans':
+        return <CaravansScreen />;
       case 'transactions':
         return <TransactionsScreen />;
       default:

@@ -84,6 +84,31 @@ test('US4: an order filled by the NPC during absence appears in the return summa
   if (isPseudoProject(testInfo.project.name)) await assertNoPseudoLeakage(page);
 });
 
+test('US5: a caravan arriving during absence appears in the return summary', async ({
+  page,
+}, testInfo) => {
+  await gotoApp(page, testInfo);
+  await page.getByTestId('begin').click();
+  await page.getByTestId('name-input').fill('Hauler');
+  await page.getByTestId('settlement-settlement.brackwater').click();
+  await page.getByTestId('create-begin').click();
+  await expect(page.locator('[data-screen="home"]')).toBeVisible();
+
+  await page.evaluate(() => window.__twGrant!('settlement.brackwater', 'item.pinewood', 10));
+  await page.getByTestId('nav-map').click();
+  await page.getByTestId('load-caravan-route.brackwater-emberfall').click();
+  await page.getByTestId('manifest-qty-item.pinewood').fill('10');
+  await page.getByTestId('dispatch-caravan').click();
+  await expect(page.getByTestId('shipment-list')).toBeVisible();
+  await page.evaluate(() => window.__twFlushSave!());
+
+  await returnAfter(page, 4); // past the 3 h caravan time
+  const modal = page.getByTestId('return-summary');
+  await expect(modal).toBeVisible();
+  await expect(modal.locator('[data-summary-kind="caravan"]')).toBeVisible();
+  if (isPseudoProject(testInfo.project.name)) await assertNoPseudoLeakage(page);
+});
+
 test('US2: storage filling mid-absence shows the halt with time and reason', async ({
   page,
 }, testInfo) => {

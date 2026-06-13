@@ -6,6 +6,8 @@ import { createCharacter } from '../src/world/character.js';
 import { getStorage, type SaveGame } from '../src/world/state.js';
 import { assignActivity } from '../src/skills/activities.js';
 import { placeOrder } from '../src/market/orderbook.js';
+import { dispatchCaravan } from '../src/caravan/shipments.js';
+import { travelTo } from '../src/world/travel.js';
 import { fastForward, runTick } from '../src/simulation/tick.js';
 import { elapsedSecondsSince } from '../src/simulation/clock.js';
 import { accumulateSummary } from '../src/simulation/summary.js';
@@ -155,6 +157,59 @@ describe('market events in the return summary (FR-014, T091)', () => {
       expect(order.proceeds).toBe(100);
       expect(order.taxPaid).toBe(5);
     }
+  });
+});
+
+describe('caravan + travel events in the return summary (FR-014, T102)', () => {
+  it('a caravan that arrives during an absence appears in the summary', () => {
+    const save = createSave(content, 7);
+    createCharacter(save, content, { name: 'Hauler', startSettlementId: 'settlement.brackwater' });
+    getStorage(save, 'settlement.brackwater').slots['item.pinewood'] = 10;
+    dispatchCaravan(save, content, {
+      routeId: 'route.brackwater-emberfall',
+      manifest: [{ itemId: 'item.pinewood', qty: 10 }],
+    });
+    const events: GameEvent[] = [];
+    const fromTick = save.tick;
+    fastForward(save, 8 * 3600, { content, emit: (e) => events.push(e) });
+    const summary = accumulateSummary({
+      events,
+      fromTick,
+      toTick: save.tick,
+      tickSeconds: TICK,
+      elapsedSeconds: 8 * 3600,
+      capped: false,
+      capHours: null,
+      netCoinDelta: 0,
+    });
+    const caravan = summary.entries.find((e) => e.kind === 'caravan');
+    expect(caravan).toBeDefined();
+    if (caravan?.kind === 'caravan') {
+      expect(caravan.toSettlementId).toBe('settlement.emberfall');
+    }
+  });
+
+  it('a personal-travel completion during an absence appears in the summary', () => {
+    const save = createSave(content, 7);
+    createCharacter(save, content, { name: 'Walker', startSettlementId: 'settlement.brackwater' });
+    travelTo(save, content, { routeId: 'route.brackwater-emberfall' });
+    const events: GameEvent[] = [];
+    const fromTick = save.tick;
+    fastForward(save, 8 * 3600, { content, emit: (e) => events.push(e) });
+    const summary = accumulateSummary({
+      events,
+      fromTick,
+      toTick: save.tick,
+      tickSeconds: TICK,
+      elapsedSeconds: 8 * 3600,
+      capped: false,
+      capHours: null,
+      netCoinDelta: 0,
+    });
+    const travel = summary.entries.find((e) => e.kind === 'travel');
+    expect(travel).toBeDefined();
+    if (travel?.kind === 'travel') expect(travel.settlementId).toBe('settlement.emberfall');
+    expect(save.character!.locationState).toEqual({ kind: 'at', settlementId: 'settlement.emberfall' });
   });
 });
 

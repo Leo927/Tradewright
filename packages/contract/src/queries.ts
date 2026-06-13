@@ -95,12 +95,20 @@ export interface CharacterView {
   assignment: AssignmentView | null;
   caravanSlotsTotal: number;
   caravanSlotsBusy: number;
+  /** Hauling-derived caravan weight capacity (FR-041) — a raw value so the GUI
+   *  can draw the weight gauge without reading mechanics content. */
+  caravanCapacityWeight: number;
   currentTick: number;
+  /** Authored tick length — lets the GUI turn tick stamps (ETAs, countdowns)
+   *  into locale-formatted durations without reading mechanics content. */
+  tickSeconds: number;
 }
 
 export interface StorageView {
   settlementId: string;
-  slots: { itemId: string; qty: number }[];
+  /** `weight` is the per-unit item weight, surfaced so the caravan composer can
+   *  sum a manifest's load without reading mechanics content (Gate 3). */
+  slots: { itemId: string; qty: number; weight: number }[];
   capacityUsed: number;
   capacity: number;
   expansionLevel: number;
