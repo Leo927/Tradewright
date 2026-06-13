@@ -15,6 +15,7 @@ import type {
   ShipmentView,
   TradeView,
   Unsubscribe,
+  CombatCommand,
 } from '@tradewright/contract';
 import { content as defaultContent, type ContentIndex } from '@tradewright/content';
 import type { Clock } from '../simulation/clock.js';
@@ -243,12 +244,17 @@ export class LocalGameHost implements GameTransport {
         this.save.settings.notificationPrefs.categories[command.categoryId] = command.optIn;
         return;
       }
-      default: {
-        const unreachable: never = command;
-        void unreachable;
+      default:
+        // Combat commands (protocol Part II) are wired per story (US6+, T140).
+        this.handleCombatCommand(command);
         return;
-      }
     }
+  }
+
+  /** Combat-core command dispatch (protocol Part II). Implemented per story
+   *  starting at US6; until then a command surfaces an honest rejection. */
+  private handleCombatCommand(command: CombatCommand): void {
+    throw new EngineError('NOT_FOUND', `combat command ${command.type} not yet available`);
   }
 
   query<Q extends Query>(q: Q): Promise<QueryResultMap[Q['type']]> {
